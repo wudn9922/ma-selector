@@ -42,7 +42,8 @@ def test_reproducible():
 def test_no_price_access():
     src = (HERE / 'freeze_rescue_validation.py').read_text(encoding='utf-8'); code = '\n'.join(l for l in src.splitlines() if not l.strip().startswith('#'))
     for bad in ('fetch_yahoo', 'yfinance', 'urllib', 'requests', 'query1.finance', 'read_parquet', 'raw_outputs', 'core.select', 'from core', 'import core'): assert bad not in code.replace("'core/select.py'", ''), bad
-    assert not list(HERE.glob('*.csv')) and not list(HERE.glob('*.parquet')) and not list(HERE.glob('raw_outputs'))                     # 本目錄沒有任何價格／結果檔
+    assert not list(HERE.glob('*.csv')) and not list(HERE.glob('*.parquet'))
+    if not (HERE / 'execution_record.json').exists(): assert not list(HERE.glob('raw_outputs'))                                        # freeze 階段：本目錄沒有任何價格／結果檔（開封之後才會有 raw_outputs）
 
 def test_no_forbidden_changes():
     base = '1359ea2'                                                                                                          # 開始此階段前的 commit
