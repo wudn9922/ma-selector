@@ -15,6 +15,17 @@
 
 交接文件 46/61、17/61 ＝ snapshot 的 ±2；目前輸出 ±2 為 47/61、18/61。
 
+### 目前 production 設定（候選門檻 10 分、選參數用多空回測）的短期命中率（資訊用；上表為 LEGACY＝研究版設定 gap=15、只做多）
+
+| tolerance | candidate | final |
+|---|---|---|
+| ±0 | 15/61 | 2/61 |
+| ±1 | 33/61 | 12/61 |
+| ±2 | 37/61 | 17/61 |
+| ±3 | 46/61 | 29/61 |
+
+LEGACY → production，final 改變的檔數：短期 43、中期 27、長期 31（逐檔見 production_vs_legacy.csv）
+
 ## 2. 分類結果（主分類；依嚴重度）
 
 | range | FINAL_SELECTION_DRIFT | CANDIDATE_SET_DRIFT | BACKTEST_DRIFT | SCORE_DRIFT | ORDER_ONLY | EXACT_MATCH |
