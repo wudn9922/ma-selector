@@ -1,7 +1,7 @@
 {
   "batch": "CURRENT_V22_FRESH_HOLDOUT_1",
-  "status": "RAW_OUTPUTS_WRITTEN_PENDING_COMMIT",
-  "raw_output_commit_sha": null,
+  "status": "RAW_OUTPUTS_COMMITTED_BEFORE_REVIEW",
+  "raw_output_commit_sha": "bc3d73d2248682f72328013ab0941cb3526e25d6",
   "production": {
     "commit": "d4a604295c02d704eded90832a90b9c5c49ac265",
     "tree": "282e3b4e0bfb237e95d9a450c6003b308d5ccad3",
