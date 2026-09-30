@@ -1,0 +1,10 @@
+{
+  "ticker": "BRO",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "1a8fc2ff63adb7497c685441f90b1e571a1bfcb255bedb993adbc93398e0ed2b",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}
