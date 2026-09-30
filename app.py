@@ -21,7 +21,7 @@ def calc_select(tk, last, n, ws_key, _df, _S): return sel.select(_df, _S)
 def render(tk, last, n, p, title, _df): return charts.chart_png(_df, p, title)
 
 ref, meta = load_ref()
-st.title("趨勢分界均線選參數")
+st.markdown("#### 趨勢分界均線選參數")
 if ref is None:
     st.error("找不到 data/reference.parquet（83 檔的基準分佈）。請到 GitHub → Actions → build-reference → Run workflow 產生，或在本機執行 `python scripts/build_reference.py`。"); st.stop()
 
@@ -51,7 +51,7 @@ M = calc_metrics(tk, last, N, df); S = score.score_table(M, ref, ws)
 ws_key = json.dumps(ws, sort_keys=True); R = calc_select(tk, last, N, ws_key, df, S)
 suit_s, suit_l = sel.suitability(S)
 
-st.subheader(f"{tk}　資料到 {last}（{N} 根）")
+st.markdown(f"**{tk}**　<span style='font-size:0.85rem;color:gray'>資料到 {last}（{N} 根）</span>", unsafe_allow_html=True)
 c1, c2, c3, c4 = st.columns(4)
 c1.metric("股票適合度（短期最高分）", f"{suit_s:.0f} / 100"); c2.metric("長期最高分", f"{suit_l:.0f} / 100")
 c3.metric("短期最後選擇", f"SMA{R['短期']['final']}"); c4.metric("長期最後選擇", f"SMA{R['長期']['final']}")
