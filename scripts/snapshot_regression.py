@@ -20,6 +20,7 @@ EXPECT_SHA = 'f719ebd6f5fc33378069aab736bca4dfd932a9134b7157b2440e7d360b68e10a'
 RANGES = ('短期', '中期', '長期')
 PAT = re.compile(r'(\d+)（(\d+)、([+-]?\d+)%/([+-]?\d+)%）')
 PRIMARY = ['FINAL_SELECTION_DRIFT', 'CANDIDATE_SET_DRIFT', 'BACKTEST_DRIFT', 'SCORE_DRIFT', 'ORDER_ONLY', 'EXACT_MATCH']
+TOL_SCORE, TOL_RET = 1.0, 1.0   # snapshot 為整數（捨入或截斷方式不明），±1 視為同一格式精度內；另記錄最大差距供檢視
 NINE = ['ACN', 'ALSN', 'CSX', 'DUK', 'IBM', 'MMS', 'ROST', 'RRX', 'TSM']
 
 def md(df, index=True):
@@ -53,13 +54,14 @@ def cur_from(sel_out):
 def compare(s, c):
     sp, cp = [x[0] for x in s['cands']], [x[0] for x in c['cands']]; sm = {x[0]: x for x in s['cands']}; cm = {x[0]: x for x in c['cands']}
     f = dict(set_drift=set(sp) != set(cp), order_diff=set(sp) == set(cp) and sp != cp, final_drift=s['final'] != c['final'], score_drift=False, backtest_drift=False)
-    rows = []
+    rows = []; f['max_score_diff'] = 0.; f['max_ret_diff'] = 0.
     for p in sorted(set(sp) | set(cp)):
         a, b = sm.get(p), cm.get(p); r = dict(period=p, in_snapshot=a is not None, in_current=b is not None, snap_rank=sp.index(p) + 1 if a else '', cur_rank=cp.index(p) + 1 if b else '')
         if a and b:
             r.update(snap_score=a[1], cur_score=round(b[1], 2), score_diff=round(b[1] - a[1], 2), snap_simple=a[2], cur_simple=round(b[2] * 100, 2), snap_complex=a[3], cur_complex=round(b[3] * 100, 2))
-            if abs(b[1] - a[1]) > .5 + 1e-9: f['score_drift'] = True
-            if abs(b[2] * 100 - a[2]) > .5 + 1e-9 or abs(b[3] * 100 - a[3]) > .5 + 1e-9: f['backtest_drift'] = True
+            f['max_score_diff'] = max(f['max_score_diff'], abs(b[1] - a[1])); f['max_ret_diff'] = max(f['max_ret_diff'], abs(b[2] * 100 - a[2]), abs(b[3] * 100 - a[3]))
+            if abs(b[1] - a[1]) > TOL_SCORE + 1e-9: f['score_drift'] = True
+            if abs(b[2] * 100 - a[2]) > TOL_RET + 1e-9 or abs(b[3] * 100 - a[3]) > TOL_RET + 1e-9: f['backtest_drift'] = True
         elif a: r.update(snap_score=a[1], snap_simple=a[2], snap_complex=a[3])
         else: r.update(cur_score=round(b[1], 2), cur_simple=round(b[2] * 100, 2), cur_complex=round(b[3] * 100, 2))
         rows.append(r)
@@ -104,7 +106,7 @@ def main():
     P(f'# Snapshot regression（B）：原始 選均線_v22.csv vs 目前輸出（asof={a.asof}，{len(tks)} 檔）\n')
     P(f'- fixture：`regression/baselines/選均線_v22.csv`，SHA-256 `{sha}`（與 SHA256SUMS、程式內記錄一致；不一致時本程式直接中止）')
     P('- 這是第二條 regression baseline（B）。第一條（A，`regression.py`）是「重建的 research 舊實作 vs core 新實作」，兩者用途不同。')
-    P('- 比較精度：snapshot 分數為整數、報酬為整數百分比，故 |差| ≤ 0.5 視為相同。\n')
+    P('- 比較精度：snapshot 分數為整數、報酬為整數百分比，故 |差| ≤ 1（分／百分點）視為相同（捨入或截斷方式不明；最大差距另列在 CSV）。\n')
     # ── 1) 歷史命中定義 ──
     P('## 1. 歷史短期命中率（snapshot 本身 vs 目前輸出）\n\n| tolerance | snapshot candidate | snapshot final | 目前 candidate | 目前 final |\n|---|---|---|---|---|')
     def hr(src, tol):
@@ -122,14 +124,18 @@ def main():
     for tk in tks:
         for nm in RANGES:
             cls, f, dd = compare(snap[(tk, nm)], cur_new[(tk, nm)]); cls_o, _, _ = compare(snap[(tk, nm)], cur_old[(tk, nm)])
-            rows.append(dict(ticker=tk, range=nm, classification=cls, classification_frozen_old=cls_o, **f, snapshot_final=snap[(tk, nm)]['final'], current_final=cur_new[(tk, nm)]['final'],
+            rows.append(dict(ticker=tk, range=nm, in_61_short_labelled=any(p <= 33 for p in user.get(tk, [])), classification=cls, classification_frozen_old=cls_o, **f, snapshot_final=snap[(tk, nm)]['final'], current_final=cur_new[(tk, nm)]['final'],
                              snapshot_candidates=' '.join(f'{x[0]}({x[1]})' for x in snap[(tk, nm)]['cands']), current_candidates=' '.join(f'{x[0]}({x[1]:.1f})' for x in cur_new[(tk, nm)]['cands'])))
             diffs += [dict(ticker=tk, range=nm, **d) for d in dd]
-    C = pd.DataFrame(rows); C.to_csv(out / 'snapshot_comparison.csv', index=False); pd.DataFrame(diffs).to_csv(out / 'snapshot_candidate_diffs.csv', index=False)
+    C = pd.DataFrame(rows); C['max_score_diff'] = C['max_score_diff'].round(2); C['max_ret_diff'] = C['max_ret_diff'].round(2); C.to_csv(out / 'snapshot_comparison.csv', index=False); pd.DataFrame(diffs).to_csv(out / 'snapshot_candidate_diffs.csv', index=False)
     S = C.groupby(['range', 'classification']).size().unstack(fill_value=0).reindex(columns=PRIMARY, fill_value=0).reindex(list(RANGES)); S.to_csv(out / 'snapshot_summary.csv')
     F = C.groupby('range')[['set_drift', 'order_diff', 'score_drift', 'backtest_drift', 'final_drift']].sum().reindex(list(RANGES))
     P('## 2. 分類結果（主分類；依嚴重度）\n\n' + md(S) + '\n\n各旗標（同一列可有多個）：\n\n' + md(F) + '\n')
     P(f'舊（frozen research）與 core 對 snapshot 的分類是否完全相同：{"是" if (C.classification == C.classification_frozen_old).all() else "否，見 CSV"}\n')
+    C61 = C[C.in_61_short_labelled & (C['range'] == '短期')]; s61 = C61[C61.set_drift | C61.order_diff].ticker.tolist(); f61 = C61[C61.final_drift].ticker.tolist()
+    P(f'### 短期，限縮到有人工標記的 61 檔（與交接文件、使用者的分母一致）\n\n- 檔數：{len(C61)}；EXACT_MATCH：{int((C61.classification == "EXACT_MATCH").sum())}')
+    P(f'- 候選內容或排序有差異：{len(s61)} 檔 {s61}；其中 CANDIDATE_SET_DRIFT {int(C61.set_drift.sum())}、ORDER_ONLY（僅順序）{int((C61.order_diff & ~C61.set_drift).sum())}')
+    P(f'- final selection 不同：{len(f61)} 檔 {f61}；BACKTEST_DRIFT 旗標 {int(C61.backtest_drift.sum())}、SCORE_DRIFT 旗標 {int(C61.score_drift.sum())}\n')
     nz = C[(C.classification != 'EXACT_MATCH')]; P('## 3. 非 EXACT_MATCH 的 ticker × range\n\n| 股票 | range | 主分類 | snapshot 候選 → 選 | 目前候選 → 選 |\n|---|---|---|---|---|')
     for _, r in nz.iterrows(): P(f"| {r.ticker} | {r['range']} | {r.classification} | {r.snapshot_candidates} → {r.snapshot_final} | {r.current_candidates} → {r.current_final} |")
     short_bad = C[(C['range'] == '短期') & (C.classification != 'EXACT_MATCH')].ticker.tolist(); short_fin = C[(C['range'] == '短期') & C.final_drift].ticker.tolist()
@@ -180,6 +186,12 @@ def main():
     P('| 股票 | 變體 | 截止日 | 候選 | 選 | snapshot 候選 | snapshot 選 | 候選集合相同 | final 相同 |\n|---|---|---|---|---|---|---|---|---|')
     for _, r in V.iterrows(): P(f'| {r.ticker} | {r.variant} | {r.cutoff} | {r.candidates} | {r.final} | {r.snapshot_candidates} | {r.snapshot_final} | {r.set_match} | {r.final_match} |')
     rep = V[V.set_match & V.final_match & (V.variant != 'asof(今天)')]; P(f'\n有變體完全重現 snapshot 的股票：{sorted(set(rep.ticker)) or "無"}\n')
+    P('### 最後 6 根 K 線（asof 以前；日報酬＝收盤／前收 −1）\n')
+    for tk in deep:
+        d = dfs[tk].tail(7).reset_index(drop=True); d['ret'] = d.close.pct_change(); d = d.tail(6)
+        P(f'**{tk}**\n\n| 日期 | 開 | 高 | 低 | 收 | 量 | 日報酬 |\n|---|---|---|---|---|---|---|')
+        for _, r in d.iterrows(): P(f"| {r.date.date()} | {r.open:.2f} | {r.high:.2f} | {r.low:.2f} | {r.close:.2f} | {int(r.volume)} | {r.ret * 100:+.2f}% |")
+        P('')
     if 'ACN' in tks:
         P('ACN 32 vs 25 原始分差（32−25；>0＝符合使用者順序）：\n\n' + V[V.ticker == 'ACN'][['variant', 'acn_32_minus_25']].pipe(md, index=False) + '\n')
     # ── 6) ACN：少數事件差異能否重現 snapshot ──
