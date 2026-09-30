@@ -3,28 +3,35 @@ on:
   workflow_dispatch:
     inputs:
       asof:
-        description: '資料截止日（研究版＝2026-09-24）'
+        description: '資料截止日（frozen baseline＝2026-09-24，不要改）'
         default: '2026-09-24'
   push:
     branches: ['claude/**']
-    paths: ['scripts/regression.py', '.github/workflows/regression.yml', 'core/**']
+    paths: ['scripts/regression.py', 'scripts/regression_synth.py', '.github/workflows/regression.yml', 'core/**', 'research/**']
 permissions:
   contents: write
 jobs:
   regression:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
       - uses: actions/setup-python@v5
         with: { python-version: '3.11' }
       - run: sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk
       - run: pip install pandas numpy matplotlib pyarrow
-      - run: python scripts/regression.py --asof "${{ github.event.inputs.asof || '2026-09-24' }}" | tee regression_out.txt
-      - run: cat regression/report.md >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - name: run regression（frozen research/ 舊實作 vs core/ 新實作）
+        run: python scripts/regression.py --asof "${{ github.event.inputs.asof || '2026-09-24' }}" --out regression
+      - if: always()
+        run: test -f regression/regression_report.md && cat regression/regression_report.md >> "$GITHUB_STEP_SUMMARY" || true
+      - if: always()
+        uses: actions/upload-artifact@v4
         with: { name: regression, path: regression }
       - name: commit report
+        if: always()
         run: |
           git config user.name "github-actions"; git config user.email "actions@github.com"
+          git rm -q -r --ignore-unmatch regression/report.md
           git add regression
-          git diff --cached --quiet || (git commit -m "Regression report" && git pull --rebase -q origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}")
+          git diff --cached --quiet || (git commit -m "Regression report (frozen old-vs-new)" && git pull --rebase -q origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}")
