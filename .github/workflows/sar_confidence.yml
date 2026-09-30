@@ -1,0 +1,30 @@
+name: sar-confidence-experiment
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths: ['experiments/sar_confidence/sar_confidence_experiment.py', 'experiments/sar_confidence/test_sar_confidence.py', '.github/workflows/sar_confidence.yml']
+permissions:
+  contents: write
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install pandas numpy matplotlib pyarrow
+      - name: 單元測試（合成資料）
+        run: python experiments/sar_confidence/test_sar_confidence.py
+      - name: SAR confidence-aware finalist 診斷（只讀；asof 2026-09-24）
+        run: python experiments/sar_confidence/sar_confidence_experiment.py --asof 2026-09-24 --out experiments/sar_confidence
+      - if: always()
+        run: test -f experiments/sar_confidence/sar_confidence_report.md && cat experiments/sar_confidence/sar_confidence_report.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: commit diagnostic outputs（只 add experiments/sar_confidence）
+        if: always()
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add experiments/sar_confidence
+          git diff --cached --quiet || (git commit -m "SAR confidence-aware finalist diagnostic outputs (diagnostic only)" && git pull --rebase -q origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}")
