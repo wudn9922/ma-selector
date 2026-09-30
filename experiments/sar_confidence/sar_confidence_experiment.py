@@ -204,7 +204,8 @@ def main():
             if v in FIN:
                 fc = np.array([len(FIN[v][tk]) for tk in ids]); r_.update(mean_finalists=float(fc.mean()), median_finalists=float(np.median(fc)), all_survive=int(sum(len(FIN[v][tk]) == len(cands[tk]) for tk in ids)),
                                                                           all_survive_multi=int(sum(len(FIN[v][tk]) == len(cands[tk]) and len(cands[tk]) > 1 for tk in ids)), multi_cand=int(sum(len(cands[tk]) > 1 for tk in ids)))
-            if scope.startswith('labelled'): r_.update(gtrows[v])
+            assert r_['shorter'] + r_['same'] + r_['longer'] == len(ids)                         # 防止欄位名稱互相覆蓋
+            if scope.startswith('labelled'): r_.update({f'gt_{k}': x for k, x in gtrows[v].items()})
             summ.append(r_)
     Sm = pd.DataFrame(summ); Sm.to_csv(out / 'sar_confidence_summary.csv', index=False)
     # ── 指定股票 ──
