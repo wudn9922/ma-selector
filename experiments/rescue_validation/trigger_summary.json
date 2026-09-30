@@ -1,0 +1,34 @@
+{
+  "batch": "STRUCTURAL_RESCUE_FRESH_VALIDATION_100",
+  "raw_output_commit_sha": "07023d68ffb56588e978f2bc65af063966d10067",
+  "actual_validation_n": 100,
+  "trigger_count": 2,
+  "trigger_tickers": [
+    "PG",
+    "FDX"
+  ],
+  "VALIDATION_STATUS": "MANUAL_REVIEW_REQUIRED",
+  "triggers": [
+    {
+      "ticker": "PG",
+      "current_final": 22,
+      "rescue_final": 25,
+      "structural_score_advantage": 10.1594921352075,
+      "sar_gap": 0.0613109374490034,
+      "C1": true,
+      "C2": true,
+      "C3": true
+    },
+    {
+      "ticker": "FDX",
+      "current_final": 18,
+      "rescue_final": 21,
+      "structural_score_advantage": 14.897820448460507,
+      "sar_gap": 0.06802873612453442,
+      "C1": true,
+      "C2": true,
+      "C3": true
+    }
+  ],
+  "note": "本檔只產生結果，不判 PASS/FAIL。trigger=0 → INSUFFICIENT_VALIDATION（不是 PASS）；trigger≥1 → 全部 trigger case 都需人工 review（不抽樣）。10.0／10pp 不得調整。"
+}

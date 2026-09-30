@@ -1,7 +1,7 @@
 {
   "batch": "STRUCTURAL_RESCUE_FRESH_VALIDATION_100",
-  "status": "RAW_OUTPUTS_WRITTEN_PENDING_COMMIT",
-  "raw_output_commit_sha": null,
+  "status": "RAW_OUTPUTS_COMMITTED_BEFORE_EXPOSURE",
+  "raw_output_commit_sha": "07023d68ffb56588e978f2bc65af063966d10067",
   "production": {
     "commit": "d4a604295c02d704eded90832a90b9c5c49ac265",
     "tree": "282e3b4e0bfb237e95d9a450c6003b308d5ccad3",
@@ -1568,5 +1568,12 @@
     "github_sha": "c26efd14ae15df6db91314e2e2b00bd691056824"
   },
   "started_utc": "2026-09-30T14:11:11+00:00",
-  "finished_utc": "2026-09-30T14:14:00+00:00"
+  "finished_utc": "2026-09-30T14:14:00+00:00",
+  "trigger_count": 2,
+  "trigger_tickers": [
+    "PG",
+    "FDX"
+  ],
+  "VALIDATION_STATUS": "MANUAL_REVIEW_REQUIRED",
+  "trigger_summary_file": "experiments/rescue_validation/trigger_summary.json"
 }
