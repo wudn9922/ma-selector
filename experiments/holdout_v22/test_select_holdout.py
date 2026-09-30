@@ -42,8 +42,11 @@ check(len(sel) == 30 and len(set(M['PRIMARY_8'])) == 8, 'PRIMARY 8 檔互不重�
 check(sh.sha256_bytes(sh.RAW.read_bytes()) == M['source']['saved_raw_file_sha256'], '儲存的原始成分股檔 SHA-256 與 manifest 相同')
 check(cols == sh.META_COLUMNS, f'原始檔只有 metadata 欄位：{cols}')
 check(M['PRICE_DATA_ACCESSED'] is False and M['HOLDOUT_RESULTS_GENERATED'] is False, 'PRICE_DATA_ACCESSED=false、HOLDOUT_RESULTS_GENERATED=false')
-files = sorted(p.name for p in HERE.iterdir() if p.name != '__pycache__')
-check(files == ['freeze_manifest.json', 'freeze_manifest.md', 'select_holdout.py', 'sp500_constituents_raw.csv', 'test_select_holdout.py'], f'資料夾內沒有價格資料或結果檔：{files}')
+opened = (HERE / 'execution_record.json').exists()      # 開封之後（execution record 存在）這項 pre-open 檢查不適用
+if not opened:
+    files = sorted(p.name for p in HERE.iterdir() if p.name != '__pycache__')
+    check(not (HERE / 'raw_outputs').exists() and not any(('bars' in f or 'ohlc' in f.lower()) for f in files) and all(f in ('freeze_manifest.json', 'freeze_manifest.md', 'select_holdout.py', 'sp500_constituents_raw.csv', 'test_select_holdout.py', 'run_holdout.py', 'test_run_holdout.py') for f in files), f'開封前：資料夾內沒有價格資料或結果檔：{files}')
+else: print('SKIP 已開封：pre-open 的「沒有價格資料」檢查不適用')
 # 7) production 檔案 hash（若歷史中有該 commit）
 have = subprocess.run(['git', 'cat-file', '-e', sh.PROD_COMMIT + '^{commit}'], cwd=sh.ROOT).returncode == 0
 if have:
