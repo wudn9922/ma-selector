@@ -1,0 +1,10 @@
+{
+  "ticker": "PNC",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "80005e4f9ca7470905d5fa94e333c64d799bcf038ca6ff1f12a6b81b1a1513d0",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}

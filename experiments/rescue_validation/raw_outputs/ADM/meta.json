@@ -1,0 +1,10 @@
+{
+  "ticker": "ADM",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "0a6bd6b3059b5d22559a2cf9c919967f0ae3554a51cf54dc227e119032d3f413",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}

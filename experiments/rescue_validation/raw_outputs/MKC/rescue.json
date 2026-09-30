@@ -1,0 +1,47 @@
+{
+  "requested_primary_ticker": "MKC",
+  "actual_ticker": "MKC",
+  "primary_rank": 129,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 33,
+      "structural_score_unrounded": 66.93450886880856,
+      "score_displayed_rounded": 66.9,
+      "sar_return": 0.09491586607034619,
+      "sar_trades": 19
+    },
+    {
+      "period": 30,
+      "structural_score_unrounded": 57.99991633199463,
+      "score_displayed_rounded": 58.0,
+      "sar_return": 0.04449167195668724,
+      "sar_trades": 22
+    },
+    {
+      "period": 27,
+      "structural_score_unrounded": 52.35018197791163,
+      "score_displayed_rounded": 52.4,
+      "sar_return": -0.06886850222771601,
+      "sar_trades": 29
+    }
+  ],
+  "current_finalists": [
+    33
+  ],
+  "current_final": 33,
+  "structural_best_period": 33,
+  "structural_best_score": 66.93450886880856,
+  "observed_best_sar": 0.09491586607034619,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 33
+}

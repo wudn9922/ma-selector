@@ -1,0 +1,61 @@
+{
+  "requested_primary_ticker": "STZ",
+  "actual_ticker": "STZ",
+  "primary_rank": 46,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 24,
+      "structural_score_unrounded": 53.09597766064256,
+      "score_displayed_rounded": 53.1,
+      "sar_return": 0.09629913436054705,
+      "sar_trades": 26
+    },
+    {
+      "period": 30,
+      "structural_score_unrounded": 44.85703229585006,
+      "score_displayed_rounded": 44.9,
+      "sar_return": -0.13319640314990133,
+      "sar_trades": 29
+    },
+    {
+      "period": 15,
+      "structural_score_unrounded": 44.2609500502008,
+      "score_displayed_rounded": 44.3,
+      "sar_return": -0.15953911444607016,
+      "sar_trades": 41
+    },
+    {
+      "period": 27,
+      "structural_score_unrounded": 42.27786144578313,
+      "score_displayed_rounded": 42.3,
+      "sar_return": -0.10587000476163833,
+      "sar_trades": 32
+    },
+    {
+      "period": 18,
+      "structural_score_unrounded": 38.95394076305221,
+      "score_displayed_rounded": 39.0,
+      "sar_return": -0.11857496123761324,
+      "sar_trades": 37
+    }
+  ],
+  "current_finalists": [
+    24
+  ],
+  "current_final": 24,
+  "structural_best_period": 24,
+  "structural_best_score": 53.09597766064256,
+  "observed_best_sar": 0.09629913436054705,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 24
+}

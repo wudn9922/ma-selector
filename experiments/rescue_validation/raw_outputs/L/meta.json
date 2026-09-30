@@ -1,0 +1,10 @@
+{
+  "ticker": "L",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "226ef92d13b9e906108a0f097d27f17b65f5d3642ddc284f55cba63169f2f617",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}

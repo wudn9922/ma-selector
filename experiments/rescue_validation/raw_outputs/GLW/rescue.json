@@ -1,0 +1,62 @@
+{
+  "requested_primary_ticker": "GLW",
+  "actual_ticker": "GLW",
+  "primary_rank": 98,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 28,
+      "structural_score_unrounded": 51.7520080321285,
+      "score_displayed_rounded": 51.8,
+      "sar_return": -0.10560042819069759,
+      "sar_trades": 49
+    },
+    {
+      "period": 32,
+      "structural_score_unrounded": 50.628817352744306,
+      "score_displayed_rounded": 50.6,
+      "sar_return": -0.19150168308264348,
+      "sar_trades": 48
+    },
+    {
+      "period": 25,
+      "structural_score_unrounded": 44.492396670013385,
+      "score_displayed_rounded": 44.5,
+      "sar_return": -0.29899885131934156,
+      "sar_trades": 51
+    },
+    {
+      "period": 18,
+      "structural_score_unrounded": 43.25787525100401,
+      "score_displayed_rounded": 43.3,
+      "sar_return": -0.10119412035468,
+      "sar_trades": 52
+    },
+    {
+      "period": 15,
+      "structural_score_unrounded": 39.63390018406961,
+      "score_displayed_rounded": 39.6,
+      "sar_return": -0.3620311838365974,
+      "sar_trades": 58
+    }
+  ],
+  "current_finalists": [
+    18,
+    28
+  ],
+  "current_final": 28,
+  "structural_best_period": 28,
+  "structural_best_score": 51.7520080321285,
+  "observed_best_sar": -0.10119412035468,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.004406307836017587,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 28
+}

@@ -1,0 +1,10 @@
+{
+  "ticker": "FE",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "258fd3e4fc77427276429015ad0382e9f794a1e9ce8c11361bcd86588b9c03a1",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}

@@ -1,0 +1,48 @@
+{
+  "requested_primary_ticker": "ICE",
+  "actual_ticker": "ICE",
+  "primary_rank": 53,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 17,
+      "structural_score_unrounded": 72.99222933400267,
+      "score_displayed_rounded": 73.0,
+      "sar_return": 0.4748396032336426,
+      "sar_trades": 17
+    },
+    {
+      "period": 33,
+      "structural_score_unrounded": 67.22164700468541,
+      "score_displayed_rounded": 67.2,
+      "sar_return": 0.2488724517609182,
+      "sar_trades": 16
+    },
+    {
+      "period": 20,
+      "structural_score_unrounded": 60.884789156626496,
+      "score_displayed_rounded": 60.9,
+      "sar_return": 0.4729993774800396,
+      "sar_trades": 13
+    }
+  ],
+  "current_finalists": [
+    17,
+    20
+  ],
+  "current_final": 17,
+  "structural_best_period": 17,
+  "structural_best_score": 72.99222933400267,
+  "observed_best_sar": 0.4748396032336426,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 17
+}

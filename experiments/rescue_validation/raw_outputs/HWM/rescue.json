@@ -1,0 +1,62 @@
+{
+  "requested_primary_ticker": "GEV",
+  "actual_ticker": "HWM",
+  "primary_rank": 127,
+  "replacement_rank": 133,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 28,
+      "structural_score_unrounded": 46.285035977242295,
+      "score_displayed_rounded": 46.3,
+      "sar_return": -0.05321618637354519,
+      "sar_trades": 27
+    },
+    {
+      "period": 24,
+      "structural_score_unrounded": 42.605421686746986,
+      "score_displayed_rounded": 42.6,
+      "sar_return": -0.24839043463308297,
+      "sar_trades": 36
+    },
+    {
+      "period": 31,
+      "structural_score_unrounded": 36.45660768072288,
+      "score_displayed_rounded": 36.5,
+      "sar_return": -0.07296036735046496,
+      "sar_trades": 25
+    },
+    {
+      "period": 21,
+      "structural_score_unrounded": 35.719910893574294,
+      "score_displayed_rounded": 35.7,
+      "sar_return": -0.315997227850793,
+      "sar_trades": 43
+    },
+    {
+      "period": 17,
+      "structural_score_unrounded": 35.35135332998661,
+      "score_displayed_rounded": 35.4,
+      "sar_return": -0.22792051626045062,
+      "sar_trades": 42
+    }
+  ],
+  "current_finalists": [
+    28,
+    31
+  ],
+  "current_final": 28,
+  "structural_best_period": 28,
+  "structural_best_score": 46.285035977242295,
+  "observed_best_sar": -0.05321618637354519,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 28
+}

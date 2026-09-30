@@ -1,0 +1,48 @@
+{
+  "requested_primary_ticker": "IDXX",
+  "actual_ticker": "IDXX",
+  "primary_rank": 55,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 15,
+      "structural_score_unrounded": 31.96682563587684,
+      "score_displayed_rounded": 32.0,
+      "sar_return": -0.45676793110789193,
+      "sar_trades": 44
+    },
+    {
+      "period": 18,
+      "structural_score_unrounded": 22.944852325970544,
+      "score_displayed_rounded": 22.9,
+      "sar_return": -0.4674730170685202,
+      "sar_trades": 44
+    },
+    {
+      "period": 27,
+      "structural_score_unrounded": 17.110368557563586,
+      "score_displayed_rounded": 17.1,
+      "sar_return": -0.5197949651450087,
+      "sar_trades": 46
+    }
+  ],
+  "current_finalists": [
+    15,
+    18
+  ],
+  "current_final": 15,
+  "structural_best_period": 15,
+  "structural_best_score": 31.96682563587684,
+  "observed_best_sar": -0.45676793110789193,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 15
+}

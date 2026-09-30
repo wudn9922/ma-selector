@@ -1,0 +1,40 @@
+{
+  "requested_primary_ticker": "PFG",
+  "actual_ticker": "PFG",
+  "primary_rank": 52,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 33,
+      "structural_score_unrounded": 61.21896439926372,
+      "score_displayed_rounded": 61.2,
+      "sar_return": -0.089577010428183,
+      "sar_trades": 19
+    },
+    {
+      "period": 30,
+      "structural_score_unrounded": 52.113140060240966,
+      "score_displayed_rounded": 52.1,
+      "sar_return": -0.032560522208580855,
+      "sar_trades": 18
+    }
+  ],
+  "current_finalists": [
+    30
+  ],
+  "current_final": 30,
+  "structural_best_period": 33,
+  "structural_best_score": 61.21896439926372,
+  "observed_best_sar": -0.032560522208580855,
+  "structural_score_advantage": 9.105824339022753,
+  "sar_gap": 0.057016488219602146,
+  "C1": true,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 30
+}

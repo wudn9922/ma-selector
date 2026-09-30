@@ -1,0 +1,61 @@
+{
+  "requested_primary_ticker": "IEX",
+  "actual_ticker": "IEX",
+  "primary_rank": 112,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 15,
+      "structural_score_unrounded": 48.66842369477911,
+      "score_displayed_rounded": 48.7,
+      "sar_return": 0.11215920333499518,
+      "sar_trades": 26
+    },
+    {
+      "period": 33,
+      "structural_score_unrounded": 41.059812165327976,
+      "score_displayed_rounded": 41.1,
+      "sar_return": -0.016713550555137235,
+      "sar_trades": 17
+    },
+    {
+      "period": 18,
+      "structural_score_unrounded": 39.62438294846051,
+      "score_displayed_rounded": 39.6,
+      "sar_return": 0.20367544742402233,
+      "sar_trades": 19
+    },
+    {
+      "period": 26,
+      "structural_score_unrounded": 36.8319109772423,
+      "score_displayed_rounded": 36.8,
+      "sar_return": -0.034459160285290724,
+      "sar_trades": 22
+    },
+    {
+      "period": 30,
+      "structural_score_unrounded": 34.5288968373494,
+      "score_displayed_rounded": 34.5,
+      "sar_return": -0.043585727090421855,
+      "sar_trades": 21
+    }
+  ],
+  "current_finalists": [
+    18
+  ],
+  "current_final": 18,
+  "structural_best_period": 15,
+  "structural_best_score": 48.66842369477911,
+  "observed_best_sar": 0.20367544742402233,
+  "structural_score_advantage": 9.0440407463186,
+  "sar_gap": 0.09151624408902714,
+  "C1": true,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 18
+}

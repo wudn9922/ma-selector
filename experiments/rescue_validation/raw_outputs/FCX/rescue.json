@@ -1,0 +1,47 @@
+{
+  "requested_primary_ticker": "FCX",
+  "actual_ticker": "FCX",
+  "primary_rank": 61,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 21,
+      "structural_score_unrounded": 60.79087182061579,
+      "score_displayed_rounded": 60.8,
+      "sar_return": -0.3101695623440973,
+      "sar_trades": 42
+    },
+    {
+      "period": 24,
+      "structural_score_unrounded": 56.180712433065594,
+      "score_displayed_rounded": 56.2,
+      "sar_return": -0.4089351602950918,
+      "sar_trades": 46
+    },
+    {
+      "period": 18,
+      "structural_score_unrounded": 55.669448627844716,
+      "score_displayed_rounded": 55.7,
+      "sar_return": -0.18568980162552806,
+      "sar_trades": 47
+    }
+  ],
+  "current_finalists": [
+    18
+  ],
+  "current_final": 18,
+  "structural_best_period": 21,
+  "structural_best_score": 60.79087182061579,
+  "observed_best_sar": -0.18568980162552806,
+  "structural_score_advantage": 5.121423192771076,
+  "sar_gap": 0.12447976071856925,
+  "C1": true,
+  "C2": false,
+  "C3": false,
+  "trigger": false,
+  "rescue_final": 18
+}

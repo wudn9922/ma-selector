@@ -1,0 +1,55 @@
+{
+  "requested_primary_ticker": "NVDA",
+  "actual_ticker": "NVDA",
+  "primary_rank": 41,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 22,
+      "structural_score_unrounded": 62.34877008032129,
+      "score_displayed_rounded": 62.3,
+      "sar_return": -0.5764539170720335,
+      "sar_trades": 43
+    },
+    {
+      "period": 31,
+      "structural_score_unrounded": 58.77761044176705,
+      "score_displayed_rounded": 58.8,
+      "sar_return": -0.4258678155102409,
+      "sar_trades": 32
+    },
+    {
+      "period": 17,
+      "structural_score_unrounded": 54.61622531793842,
+      "score_displayed_rounded": 54.6,
+      "sar_return": -0.4259713634943326,
+      "sar_trades": 42
+    },
+    {
+      "period": 25,
+      "structural_score_unrounded": 50.78705446787148,
+      "score_displayed_rounded": 50.8,
+      "sar_return": -0.5634755218617402,
+      "sar_trades": 45
+    }
+  ],
+  "current_finalists": [
+    17,
+    31
+  ],
+  "current_final": 31,
+  "structural_best_period": 22,
+  "structural_best_score": 62.34877008032129,
+  "observed_best_sar": -0.4258678155102409,
+  "structural_score_advantage": 3.571159638554235,
+  "sar_gap": 0.15058610156179264,
+  "C1": true,
+  "C2": false,
+  "C3": false,
+  "trigger": false,
+  "rescue_final": 31
+}

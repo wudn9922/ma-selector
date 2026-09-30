@@ -1,0 +1,54 @@
+{
+  "requested_primary_ticker": "TPL",
+  "actual_ticker": "TPL",
+  "primary_rank": 67,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 32,
+      "structural_score_unrounded": 47.36775225903614,
+      "score_displayed_rounded": 47.4,
+      "sar_return": -0.1724885336587656,
+      "sar_trades": 38
+    },
+    {
+      "period": 28,
+      "structural_score_unrounded": 43.95106467536814,
+      "score_displayed_rounded": 44.0,
+      "sar_return": 0.009548429464038444,
+      "sar_trades": 39
+    },
+    {
+      "period": 25,
+      "structural_score_unrounded": 38.1186203145917,
+      "score_displayed_rounded": 38.1,
+      "sar_return": 0.06783696937883876,
+      "sar_trades": 39
+    },
+    {
+      "period": 18,
+      "structural_score_unrounded": 35.2806015729585,
+      "score_displayed_rounded": 35.3,
+      "sar_return": -0.14245877847864052,
+      "sar_trades": 51
+    }
+  ],
+  "current_finalists": [
+    25
+  ],
+  "current_final": 25,
+  "structural_best_period": 32,
+  "structural_best_score": 47.36775225903614,
+  "observed_best_sar": 0.06783696937883876,
+  "structural_score_advantage": 9.249131944444436,
+  "sar_gap": 0.24032550303760436,
+  "C1": true,
+  "C2": false,
+  "C3": false,
+  "trigger": false,
+  "rescue_final": 25
+}

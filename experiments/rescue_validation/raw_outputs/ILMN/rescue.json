@@ -1,0 +1,63 @@
+{
+  "requested_primary_ticker": "ILMN",
+  "actual_ticker": "ILMN",
+  "primary_rank": 106,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 15,
+      "structural_score_unrounded": 65.50472724230255,
+      "score_displayed_rounded": 65.5,
+      "sar_return": 0.3296282346838919,
+      "sar_trades": 35
+    },
+    {
+      "period": 19,
+      "structural_score_unrounded": 62.87310701137884,
+      "score_displayed_rounded": 62.9,
+      "sar_return": 0.22080635180655617,
+      "sar_trades": 36
+    },
+    {
+      "period": 26,
+      "structural_score_unrounded": 56.38732011378848,
+      "score_displayed_rounded": 56.4,
+      "sar_return": 0.5178488117868862,
+      "sar_trades": 32
+    },
+    {
+      "period": 22,
+      "structural_score_unrounded": 54.24050368139224,
+      "score_displayed_rounded": 54.2,
+      "sar_return": 0.4876245472826335,
+      "sar_trades": 31
+    },
+    {
+      "period": 30,
+      "structural_score_unrounded": 53.777348979250334,
+      "score_displayed_rounded": 53.8,
+      "sar_return": 0.500622630075596,
+      "sar_trades": 36
+    }
+  ],
+  "current_finalists": [
+    22,
+    26,
+    30
+  ],
+  "current_final": 26,
+  "structural_best_period": 15,
+  "structural_best_score": 65.50472724230255,
+  "observed_best_sar": 0.5178488117868862,
+  "structural_score_advantage": 9.117407128514067,
+  "sar_gap": 0.18822057710299434,
+  "C1": true,
+  "C2": false,
+  "C3": false,
+  "trigger": false,
+  "rescue_final": 26
+}

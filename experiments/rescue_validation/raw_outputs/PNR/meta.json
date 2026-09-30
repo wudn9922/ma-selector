@@ -1,0 +1,10 @@
+{
+  "ticker": "PNR",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "3b9f3130390131db7b5156c90cd06e3bbf107d522990a5b60e915029745d8373",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}

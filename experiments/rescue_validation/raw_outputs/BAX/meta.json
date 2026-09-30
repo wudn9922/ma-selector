@@ -1,0 +1,10 @@
+{
+  "ticker": "BAX",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "d30614156012ef5d8531fc30a0794f0381593c0b9f7723891405d16835c83537",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}

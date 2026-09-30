@@ -1,0 +1,10 @@
+{
+  "ticker": "CRL",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "c66bd8612b4fd695c8f6491508762edd0e57fa4423444258d17c92b8238137c9",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}

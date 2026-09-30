@@ -1,0 +1,61 @@
+{
+  "requested_primary_ticker": "FDX",
+  "actual_ticker": "FDX",
+  "primary_rank": 125,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 21,
+      "structural_score_unrounded": 73.10235734605087,
+      "score_displayed_rounded": 73.1,
+      "sar_return": 0.3675019146551781,
+      "sar_trades": 16
+    },
+    {
+      "period": 24,
+      "structural_score_unrounded": 70.76618975903614,
+      "score_displayed_rounded": 70.8,
+      "sar_return": 0.385043090726813,
+      "sar_trades": 16
+    },
+    {
+      "period": 28,
+      "structural_score_unrounded": 67.45189089692101,
+      "score_displayed_rounded": 67.5,
+      "sar_return": 0.3059357612901057,
+      "sar_trades": 16
+    },
+    {
+      "period": 31,
+      "structural_score_unrounded": 60.74187374497991,
+      "score_displayed_rounded": 60.7,
+      "sar_return": 0.1742060412247206,
+      "sar_trades": 18
+    },
+    {
+      "period": 18,
+      "structural_score_unrounded": 58.20453689759036,
+      "score_displayed_rounded": 58.2,
+      "sar_return": 0.43553065077971254,
+      "sar_trades": 19
+    }
+  ],
+  "current_finalists": [
+    18
+  ],
+  "current_final": 18,
+  "structural_best_period": 21,
+  "structural_best_score": 73.10235734605087,
+  "observed_best_sar": 0.43553065077971254,
+  "structural_score_advantage": 14.897820448460507,
+  "sar_gap": 0.06802873612453442,
+  "C1": true,
+  "C2": true,
+  "C3": true,
+  "trigger": true,
+  "rescue_final": 21
+}

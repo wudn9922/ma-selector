@@ -1,0 +1,62 @@
+{
+  "requested_primary_ticker": "HPE",
+  "actual_ticker": "HPE",
+  "primary_rank": 77,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 20,
+      "structural_score_unrounded": 48.98092369477911,
+      "score_displayed_rounded": 49.0,
+      "sar_return": 0.2048626559704314,
+      "sar_trades": 38
+    },
+    {
+      "period": 17,
+      "structural_score_unrounded": 48.95577100066934,
+      "score_displayed_rounded": 49.0,
+      "sar_return": -0.08110357880057817,
+      "sar_trades": 43
+    },
+    {
+      "period": 24,
+      "structural_score_unrounded": 47.762978999330656,
+      "score_displayed_rounded": 47.8,
+      "sar_return": 0.2002772465278677,
+      "sar_trades": 32
+    },
+    {
+      "period": 29,
+      "structural_score_unrounded": 43.41287023092369,
+      "score_displayed_rounded": 43.4,
+      "sar_return": 0.09063993112152313,
+      "sar_trades": 36
+    },
+    {
+      "period": 32,
+      "structural_score_unrounded": 38.4940281961178,
+      "score_displayed_rounded": 38.5,
+      "sar_return": -0.1978753733022779,
+      "sar_trades": 41
+    }
+  ],
+  "current_finalists": [
+    20,
+    24
+  ],
+  "current_final": 20,
+  "structural_best_period": 20,
+  "structural_best_score": 48.98092369477911,
+  "observed_best_sar": 0.2048626559704314,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 20
+}

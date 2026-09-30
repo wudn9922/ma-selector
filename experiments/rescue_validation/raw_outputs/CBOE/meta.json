@@ -1,0 +1,10 @@
+{
+  "ticker": "CBOE",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "b424279bf9c9c28dcd9c3e68d2c5de8e18c922b02eefc9720e0f1ed8804f54a9",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}

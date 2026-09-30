@@ -1,0 +1,55 @@
+{
+  "requested_primary_ticker": "PNC",
+  "actual_ticker": "PNC",
+  "primary_rank": 97,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 27,
+      "structural_score_unrounded": 70.74244896251673,
+      "score_displayed_rounded": 70.7,
+      "sar_return": 0.6768576592387785,
+      "sar_trades": 10
+    },
+    {
+      "period": 33,
+      "structural_score_unrounded": 70.22572059069611,
+      "score_displayed_rounded": 70.2,
+      "sar_return": 0.5081989227202912,
+      "sar_trades": 11
+    },
+    {
+      "period": 30,
+      "structural_score_unrounded": 60.53819444444445,
+      "score_displayed_rounded": 60.5,
+      "sar_return": 0.4969790878110705,
+      "sar_trades": 13
+    },
+    {
+      "period": 24,
+      "structural_score_unrounded": 57.91342453145917,
+      "score_displayed_rounded": 57.9,
+      "sar_return": 0.6467075072449082,
+      "sar_trades": 12
+    }
+  ],
+  "current_finalists": [
+    24,
+    27
+  ],
+  "current_final": 27,
+  "structural_best_period": 27,
+  "structural_best_score": 70.74244896251673,
+  "observed_best_sar": 0.6768576592387785,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 27
+}

@@ -1,0 +1,10 @@
+{
+  "ticker": "DHR",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "21a1c6e84f004867837eef8d660f7bb88f4aeeada5c0d7b092adf12e2b4ddc3f",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}

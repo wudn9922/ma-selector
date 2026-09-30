@@ -1,0 +1,61 @@
+{
+  "requested_primary_ticker": "NCLH",
+  "actual_ticker": "NCLH",
+  "primary_rank": 130,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 21,
+      "structural_score_unrounded": 75.36411270080322,
+      "score_displayed_rounded": 75.4,
+      "sar_return": 0.32699023072906197,
+      "sar_trades": 25
+    },
+    {
+      "period": 24,
+      "structural_score_unrounded": 65.19222724230254,
+      "score_displayed_rounded": 65.2,
+      "sar_return": -0.11605039141001217,
+      "sar_trades": 31
+    },
+    {
+      "period": 31,
+      "structural_score_unrounded": 63.440219210174035,
+      "score_displayed_rounded": 63.4,
+      "sar_return": -0.001861143692572842,
+      "sar_trades": 25
+    },
+    {
+      "period": 15,
+      "structural_score_unrounded": 61.64716156291834,
+      "score_displayed_rounded": 61.6,
+      "sar_return": 0.09860288729152478,
+      "sar_trades": 42
+    },
+    {
+      "period": 18,
+      "structural_score_unrounded": 61.14415997322624,
+      "score_displayed_rounded": 61.1,
+      "sar_return": 0.21313448557481873,
+      "sar_trades": 32
+    }
+  ],
+  "current_finalists": [
+    21
+  ],
+  "current_final": 21,
+  "structural_best_period": 21,
+  "structural_best_score": 75.36411270080322,
+  "observed_best_sar": 0.32699023072906197,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 21
+}

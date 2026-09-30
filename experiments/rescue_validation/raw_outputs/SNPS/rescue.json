@@ -1,0 +1,55 @@
+{
+  "requested_primary_ticker": "SNPS",
+  "actual_ticker": "SNPS",
+  "primary_rank": 58,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 25,
+      "structural_score_unrounded": 71.44478957496653,
+      "score_displayed_rounded": 71.4,
+      "sar_return": 0.5305093399215877,
+      "sar_trades": 22
+    },
+    {
+      "period": 29,
+      "structural_score_unrounded": 66.45163989290495,
+      "score_displayed_rounded": 66.5,
+      "sar_return": 0.49251142711059726,
+      "sar_trades": 22
+    },
+    {
+      "period": 22,
+      "structural_score_unrounded": 66.14687918340026,
+      "score_displayed_rounded": 66.1,
+      "sar_return": 0.07569639869129174,
+      "sar_trades": 30
+    },
+    {
+      "period": 19,
+      "structural_score_unrounded": 61.80864081325301,
+      "score_displayed_rounded": 61.8,
+      "sar_return": 0.13263862326812625,
+      "sar_trades": 34
+    }
+  ],
+  "current_finalists": [
+    25,
+    29
+  ],
+  "current_final": 25,
+  "structural_best_period": 25,
+  "structural_best_score": 71.44478957496653,
+  "observed_best_sar": 0.5305093399215877,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 25
+}

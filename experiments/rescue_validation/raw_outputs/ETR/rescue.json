@@ -1,0 +1,48 @@
+{
+  "requested_primary_ticker": "ETR",
+  "actual_ticker": "ETR",
+  "primary_rank": 95,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 31,
+      "structural_score_unrounded": 45.997322623828644,
+      "score_displayed_rounded": 46.0,
+      "sar_return": 0.07379731487702612,
+      "sar_trades": 14
+    },
+    {
+      "period": 27,
+      "structural_score_unrounded": 43.935847556894245,
+      "score_displayed_rounded": 43.9,
+      "sar_return": 0.0976017361463486,
+      "sar_trades": 16
+    },
+    {
+      "period": 24,
+      "structural_score_unrounded": 32.571117804551534,
+      "score_displayed_rounded": 32.6,
+      "sar_return": -0.015404856560501834,
+      "sar_trades": 22
+    }
+  ],
+  "current_finalists": [
+    27,
+    31
+  ],
+  "current_final": 31,
+  "structural_best_period": 31,
+  "structural_best_score": 45.997322623828644,
+  "observed_best_sar": 0.0976017361463486,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.023804421269322473,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 31
+}

@@ -1,0 +1,40 @@
+{
+  "requested_primary_ticker": "CFG",
+  "actual_ticker": "CFG",
+  "primary_rank": 123,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 27,
+      "structural_score_unrounded": 73.71951347054886,
+      "score_displayed_rounded": 73.7,
+      "sar_return": 0.4199695757060533,
+      "sar_trades": 17
+    },
+    {
+      "period": 30,
+      "structural_score_unrounded": 61.13652526773762,
+      "score_displayed_rounded": 61.1,
+      "sar_return": 0.36985406512934715,
+      "sar_trades": 15
+    }
+  ],
+  "current_finalists": [
+    27
+  ],
+  "current_final": 27,
+  "structural_best_period": 27,
+  "structural_best_score": 73.71951347054886,
+  "observed_best_sar": 0.4199695757060533,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 27
+}

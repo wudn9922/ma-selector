@@ -1,0 +1,54 @@
+{
+  "requested_primary_ticker": "VEEV",
+  "actual_ticker": "VEEV",
+  "primary_rank": 122,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 22,
+      "structural_score_unrounded": 47.325656793842036,
+      "score_displayed_rounded": 47.3,
+      "sar_return": 0.0650609937242439,
+      "sar_trades": 37
+    },
+    {
+      "period": 27,
+      "structural_score_unrounded": 44.69189257028113,
+      "score_displayed_rounded": 44.7,
+      "sar_return": 0.28215359480537416,
+      "sar_trades": 25
+    },
+    {
+      "period": 15,
+      "structural_score_unrounded": 41.28770289491298,
+      "score_displayed_rounded": 41.3,
+      "sar_return": 0.14519622213366112,
+      "sar_trades": 39
+    },
+    {
+      "period": 19,
+      "structural_score_unrounded": 34.620461010709505,
+      "score_displayed_rounded": 34.6,
+      "sar_return": -0.13035339017321168,
+      "sar_trades": 42
+    }
+  ],
+  "current_finalists": [
+    27
+  ],
+  "current_final": 27,
+  "structural_best_period": 22,
+  "structural_best_score": 47.325656793842036,
+  "observed_best_sar": 0.28215359480537416,
+  "structural_score_advantage": 2.6337642235609096,
+  "sar_gap": 0.21709260108113027,
+  "C1": true,
+  "C2": false,
+  "C3": false,
+  "trigger": false,
+  "rescue_final": 27
+}

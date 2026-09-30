@@ -1,0 +1,62 @@
+{
+  "requested_primary_ticker": "WFC",
+  "actual_ticker": "WFC",
+  "primary_rank": 65,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 15,
+      "structural_score_unrounded": 58.81651606425703,
+      "score_displayed_rounded": 58.8,
+      "sar_return": 0.11953829953600548,
+      "sar_trades": 30
+    },
+    {
+      "period": 33,
+      "structural_score_unrounded": 55.6372625920348,
+      "score_displayed_rounded": 55.6,
+      "sar_return": -0.13488156350648317,
+      "sar_trades": 21
+    },
+    {
+      "period": 18,
+      "structural_score_unrounded": 52.47024556559571,
+      "score_displayed_rounded": 52.5,
+      "sar_return": 0.14981416091610433,
+      "sar_trades": 21
+    },
+    {
+      "period": 22,
+      "structural_score_unrounded": 49.875596134538156,
+      "score_displayed_rounded": 49.9,
+      "sar_return": -0.05557020707971816,
+      "sar_trades": 23
+    },
+    {
+      "period": 29,
+      "structural_score_unrounded": 46.74751087684069,
+      "score_displayed_rounded": 46.7,
+      "sar_return": -0.16666437612469454,
+      "sar_trades": 25
+    }
+  ],
+  "current_finalists": [
+    15,
+    18
+  ],
+  "current_final": 15,
+  "structural_best_period": 15,
+  "structural_best_score": 58.81651606425703,
+  "observed_best_sar": 0.14981416091610433,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.030275861380098856,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 15
+}

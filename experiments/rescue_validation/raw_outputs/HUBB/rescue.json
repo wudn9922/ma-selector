@@ -1,0 +1,55 @@
+{
+  "requested_primary_ticker": "HUBB",
+  "actual_ticker": "HUBB",
+  "primary_rank": 31,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 26,
+      "structural_score_unrounded": 64.83930513721552,
+      "score_displayed_rounded": 64.8,
+      "sar_return": -0.17420267887196395,
+      "sar_trades": 22
+    },
+    {
+      "period": 17,
+      "structural_score_unrounded": 57.79811956157964,
+      "score_displayed_rounded": 57.8,
+      "sar_return": -0.16517037161987713,
+      "sar_trades": 30
+    },
+    {
+      "period": 30,
+      "structural_score_unrounded": 57.31697623828648,
+      "score_displayed_rounded": 57.3,
+      "sar_return": -0.32767739646362215,
+      "sar_trades": 25
+    },
+    {
+      "period": 23,
+      "structural_score_unrounded": 53.47122866465863,
+      "score_displayed_rounded": 53.5,
+      "sar_return": -0.34886158905359266,
+      "sar_trades": 30
+    }
+  ],
+  "current_finalists": [
+    17,
+    26
+  ],
+  "current_final": 26,
+  "structural_best_period": 26,
+  "structural_best_score": 64.83930513721552,
+  "observed_best_sar": -0.16517037161987713,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.009032307252086813,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 26
+}

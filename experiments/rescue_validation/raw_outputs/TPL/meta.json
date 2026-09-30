@@ -1,0 +1,10 @@
+{
+  "ticker": "TPL",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "1b6d511f1a696ba3ab7d777225511cfdf3b6b9afffdf1f828927e53e527019da",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}

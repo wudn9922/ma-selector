@@ -1,0 +1,10 @@
+{
+  "ticker": "SPGI",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "b89972b6ed7e3ba3d38e2aa6a37529dff8f908cc25b4a56ecee33f5e88953c4d",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}

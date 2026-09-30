@@ -1,0 +1,63 @@
+{
+  "requested_primary_ticker": "CNP",
+  "actual_ticker": "CNP",
+  "primary_rank": 49,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 27,
+      "structural_score_unrounded": 23.372866465863453,
+      "score_displayed_rounded": 23.4,
+      "sar_return": -0.18519665306888822,
+      "sar_trades": 22
+    },
+    {
+      "period": 31,
+      "structural_score_unrounded": 21.744373326639895,
+      "score_displayed_rounded": 21.7,
+      "sar_return": -0.20976176841149108,
+      "sar_trades": 22
+    },
+    {
+      "period": 18,
+      "structural_score_unrounded": 18.58449422690763,
+      "score_displayed_rounded": 18.6,
+      "sar_return": -0.12764753083130598,
+      "sar_trades": 22
+    },
+    {
+      "period": 24,
+      "structural_score_unrounded": 18.330771000669344,
+      "score_displayed_rounded": 18.3,
+      "sar_return": -0.16635266038933183,
+      "sar_trades": 22
+    },
+    {
+      "period": 15,
+      "structural_score_unrounded": 17.355620398259706,
+      "score_displayed_rounded": 17.4,
+      "sar_return": -0.1689421529409948,
+      "sar_trades": 24
+    }
+  ],
+  "current_finalists": [
+    15,
+    18,
+    24
+  ],
+  "current_final": 18,
+  "structural_best_period": 27,
+  "structural_best_score": 23.372866465863453,
+  "observed_best_sar": -0.12764753083130598,
+  "structural_score_advantage": 4.788372238955823,
+  "sar_gap": 0.05754912223758224,
+  "C1": true,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 18
+}

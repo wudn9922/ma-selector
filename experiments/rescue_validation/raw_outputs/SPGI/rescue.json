@@ -1,0 +1,54 @@
+{
+  "requested_primary_ticker": "SPGI",
+  "actual_ticker": "SPGI",
+  "primary_rank": 81,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 31,
+      "structural_score_unrounded": 41.008251757028106,
+      "score_displayed_rounded": 41.0,
+      "sar_return": -0.2683456180111671,
+      "sar_trades": 30
+    },
+    {
+      "period": 28,
+      "structural_score_unrounded": 35.831346218206164,
+      "score_displayed_rounded": 35.8,
+      "sar_return": -0.22125448989637264,
+      "sar_trades": 32
+    },
+    {
+      "period": 17,
+      "structural_score_unrounded": 33.41020331325301,
+      "score_displayed_rounded": 33.4,
+      "sar_return": -0.0798811488504172,
+      "sar_trades": 32
+    },
+    {
+      "period": 25,
+      "structural_score_unrounded": 32.884245314591695,
+      "score_displayed_rounded": 32.9,
+      "sar_return": -0.17281777842897195,
+      "sar_trades": 29
+    }
+  ],
+  "current_finalists": [
+    17
+  ],
+  "current_final": 17,
+  "structural_best_period": 31,
+  "structural_best_score": 41.008251757028106,
+  "observed_best_sar": -0.0798811488504172,
+  "structural_score_advantage": 7.598048443775099,
+  "sar_gap": 0.18846446916074988,
+  "C1": true,
+  "C2": false,
+  "C3": false,
+  "trigger": false,
+  "rescue_final": 17
+}

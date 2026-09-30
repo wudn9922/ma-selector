@@ -1,0 +1,49 @@
+{
+  "requested_primary_ticker": "SYK",
+  "actual_ticker": "SYK",
+  "primary_rank": 107,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 15,
+      "structural_score_unrounded": 46.18479124832664,
+      "score_displayed_rounded": 46.2,
+      "sar_return": -0.3022164522706092,
+      "sar_trades": 39
+    },
+    {
+      "period": 32,
+      "structural_score_unrounded": 37.38783258032128,
+      "score_displayed_rounded": 37.4,
+      "sar_return": -0.2708537833708834,
+      "sar_trades": 29
+    },
+    {
+      "period": 18,
+      "structural_score_unrounded": 35.138261378848725,
+      "score_displayed_rounded": 35.1,
+      "sar_return": -0.2965676192822204,
+      "sar_trades": 39
+    }
+  ],
+  "current_finalists": [
+    15,
+    18,
+    32
+  ],
+  "current_final": 15,
+  "structural_best_period": 15,
+  "structural_best_score": 46.18479124832664,
+  "observed_best_sar": -0.2708537833708834,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.03136266889972583,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 15
+}

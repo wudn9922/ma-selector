@@ -1,0 +1,49 @@
+{
+  "requested_primary_ticker": "GIS",
+  "actual_ticker": "GIS",
+  "primary_rank": 68,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 32,
+      "structural_score_unrounded": 69.12190428380188,
+      "score_displayed_rounded": 69.1,
+      "sar_return": 0.20205705863138856,
+      "sar_trades": 16
+    },
+    {
+      "period": 29,
+      "structural_score_unrounded": 64.58511127844713,
+      "score_displayed_rounded": 64.6,
+      "sar_return": 0.16709007952184396,
+      "sar_trades": 18
+    },
+    {
+      "period": 26,
+      "structural_score_unrounded": 56.615576890896925,
+      "score_displayed_rounded": 56.6,
+      "sar_return": 0.18181731529525869,
+      "sar_trades": 18
+    }
+  ],
+  "current_finalists": [
+    26,
+    29,
+    32
+  ],
+  "current_final": 32,
+  "structural_best_period": 32,
+  "structural_best_score": 69.12190428380188,
+  "observed_best_sar": 0.20205705863138856,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 32
+}

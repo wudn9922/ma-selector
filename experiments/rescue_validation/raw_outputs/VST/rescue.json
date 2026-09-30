@@ -1,0 +1,61 @@
+{
+  "requested_primary_ticker": "VST",
+  "actual_ticker": "VST",
+  "primary_rank": 101,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 27,
+      "structural_score_unrounded": 59.70710968875502,
+      "score_displayed_rounded": 59.7,
+      "sar_return": -0.6580939977116369,
+      "sar_trades": 55
+    },
+    {
+      "period": 30,
+      "structural_score_unrounded": 54.97369687081658,
+      "score_displayed_rounded": 55.0,
+      "sar_return": -0.720495068128854,
+      "sar_trades": 60
+    },
+    {
+      "period": 24,
+      "structural_score_unrounded": 53.1431454986613,
+      "score_displayed_rounded": 53.1,
+      "sar_return": -0.7847031959163863,
+      "sar_trades": 65
+    },
+    {
+      "period": 21,
+      "structural_score_unrounded": 51.04035935408299,
+      "score_displayed_rounded": 51.0,
+      "sar_return": -0.7697031996980152,
+      "sar_trades": 62
+    },
+    {
+      "period": 15,
+      "structural_score_unrounded": 49.94347180388219,
+      "score_displayed_rounded": 49.9,
+      "sar_return": -0.7762006231623763,
+      "sar_trades": 64
+    }
+  ],
+  "current_finalists": [
+    27
+  ],
+  "current_final": 27,
+  "structural_best_period": 27,
+  "structural_best_score": 59.70710968875502,
+  "observed_best_sar": -0.6580939977116369,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 27
+}

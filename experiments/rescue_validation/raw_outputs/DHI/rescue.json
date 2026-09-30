@@ -1,0 +1,54 @@
+{
+  "requested_primary_ticker": "DHI",
+  "actual_ticker": "DHI",
+  "primary_rank": 50,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 23,
+      "structural_score_unrounded": 51.838238370147245,
+      "score_displayed_rounded": 51.8,
+      "sar_return": -0.1381495803736209,
+      "sar_trades": 29
+    },
+    {
+      "period": 15,
+      "structural_score_unrounded": 45.27228706492637,
+      "score_displayed_rounded": 45.3,
+      "sar_return": 0.03176309998328497,
+      "sar_trades": 30
+    },
+    {
+      "period": 32,
+      "structural_score_unrounded": 43.247887382864796,
+      "score_displayed_rounded": 43.2,
+      "sar_return": -0.3006454118508889,
+      "sar_trades": 31
+    },
+    {
+      "period": 26,
+      "structural_score_unrounded": 42.463499832663985,
+      "score_displayed_rounded": 42.5,
+      "sar_return": -0.3154630643409675,
+      "sar_trades": 33
+    }
+  ],
+  "current_finalists": [
+    15
+  ],
+  "current_final": 15,
+  "structural_best_period": 23,
+  "structural_best_score": 51.838238370147245,
+  "observed_best_sar": 0.03176309998328497,
+  "structural_score_advantage": 6.565951305220878,
+  "sar_gap": 0.16991268035690588,
+  "C1": true,
+  "C2": false,
+  "C3": false,
+  "trigger": false,
+  "rescue_final": 15
+}

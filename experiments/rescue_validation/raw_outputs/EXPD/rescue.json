@@ -1,0 +1,48 @@
+{
+  "requested_primary_ticker": "EXPD",
+  "actual_ticker": "EXPD",
+  "primary_rank": 39,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 32,
+      "structural_score_unrounded": 67.14932647255688,
+      "score_displayed_rounded": 67.1,
+      "sar_return": 0.42795179591269483,
+      "sar_trades": 11
+    },
+    {
+      "period": 29,
+      "structural_score_unrounded": 65.92719837684069,
+      "score_displayed_rounded": 65.9,
+      "sar_return": 0.45461415275046124,
+      "sar_trades": 11
+    },
+    {
+      "period": 23,
+      "structural_score_unrounded": 53.60012968540829,
+      "score_displayed_rounded": 53.6,
+      "sar_return": 0.26616254956872565,
+      "sar_trades": 17
+    }
+  ],
+  "current_finalists": [
+    29,
+    32
+  ],
+  "current_final": 32,
+  "structural_best_period": 32,
+  "structural_best_score": 67.14932647255688,
+  "observed_best_sar": 0.45461415275046124,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.02666235683776641,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 32
+}

@@ -1,0 +1,41 @@
+{
+  "requested_primary_ticker": "FAST",
+  "actual_ticker": "FAST",
+  "primary_rank": 47,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 23,
+      "structural_score_unrounded": 65.75175702811245,
+      "score_displayed_rounded": 65.8,
+      "sar_return": -0.057811463817532105,
+      "sar_trades": 23
+    },
+    {
+      "period": 26,
+      "structural_score_unrounded": 62.83697289156626,
+      "score_displayed_rounded": 62.8,
+      "sar_return": -0.10323652276404327,
+      "sar_trades": 23
+    }
+  ],
+  "current_finalists": [
+    23,
+    26
+  ],
+  "current_final": 23,
+  "structural_best_period": 23,
+  "structural_best_score": 65.75175702811245,
+  "observed_best_sar": -0.057811463817532105,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 23
+}
