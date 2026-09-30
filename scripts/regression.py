@@ -103,13 +103,14 @@ def compare_exact(led, layer, tk, period, field, old, new, note=''):
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument('--asof', default='2026-09-24'); ap.add_argument('--out', default='regression'); ap.add_argument('--work')
-    ap.add_argument('--synthetic', action='store_true'); ap.add_argument('--inject-bug', action='store_true', help='僅供自我測試：故意讓新實作偏離，驗證 regression 會判 FAIL'); a = ap.parse_args()
-    out = Path(a.out); (out / 'charts').mkdir(parents=True, exist_ok=True); wd = Path(a.work or tempfile.mkdtemp(prefix='regwork_')); (wd / 'data_v').mkdir(parents=True, exist_ok=True)
+    ap.add_argument('--only', help='僅供 harness 測試：只跑這些股票（逗號分隔）'); ap.add_argument('--synthetic', action='store_true'); ap.add_argument('--inject-bug', action='store_true', help='僅供自我測試：故意讓新實作偏離，驗證 regression 會判 FAIL'); a = ap.parse_args()
+    out = Path(a.out).resolve(); (out / 'charts').mkdir(parents=True, exist_ok=True); wd = Path(a.work or tempfile.mkdtemp(prefix='regwork_')).resolve(); (wd / 'data_v').mkdir(parents=True, exist_ok=True)
+    TK = [t for t in TICKERS if not a.only or t in a.only.split(',')]
     os.environ['ASOF'] = a.asof; t0 = time.time(); fetch_fail = []
     with ProcessPoolExecutor(4) as ex:
-        for tk, err in ex.map(fetch_one, [(tk, str(wd), a.asof, a.synthetic) for tk in TICKERS]):
+        for tk, err in ex.map(fetch_one, [(tk, str(wd), a.asof, a.synthetic) for tk in TK]):
             if err: fetch_fail.append((tk, err)); print('DATA_FETCH_FAILURE', tk, err, flush=True)
-    tks = [t for t in TICKERS if (wd / 'data_v' / f'{t}.csv').exists()]; print(f'資料 {len(tks)}/{len(TICKERS)} 檔 {time.time()-t0:.0f}s', flush=True)
+    tks = [t for t in TK if (wd / 'data_v' / f'{t}.csv').exists()]; print(f'資料 {len(tks)}/{len(TK)} 檔 {time.time()-t0:.0f}s', flush=True)
     os.chdir(wd)
     # ── 舊（frozen）流程：原檔照跑 ──
     import ma_select_v18 as ms
@@ -227,7 +228,7 @@ def main():
     L_ = []; P = L_.append
     P(f'MATCH/PASS: {int(tot_c["MATCH"])}\nNUMERICAL_TOLERANCE: {int(tot_c["NUMERICAL_TOLERANCE"])}\nFAIL: {nfail}（IMPLEMENTATION_BUG {int(tot_c["IMPLEMENTATION_BUG"])}、RULE_CONFLICT {int(tot_c["RULE_CONFLICT"])}、DATA_DIFFERENCE {int(tot_c["DATA_DIFFERENCE"])}）\n'
       f'NEEDS_HUMAN_REVIEW: {nhr}\nDATA_FETCH_FAILURE: {len(fetch_fail)}\n\nOVERALL_REGRESSION_STATUS: {status}\n')
-    P(f'# Regression 報告（frozen 舊實作 vs core 新實作，asof={a.asof}，{len(tks)}/{len(TICKERS)} 檔{"，SYNTHETIC 資料" if a.synthetic else ""}{"，INJECT-BUG 自我測試" if a.inject_bug else ""}）\n')
+    P(f'# Regression 報告（frozen 舊實作 vs core 新實作，asof={a.asof}，{len(tks)}/{len(TK)} 檔{"，SYNTHETIC 資料" if a.synthetic else ""}{"，INJECT-BUG 自我測試" if a.inject_bug else ""}）\n')
     P('計數單位＝逐格比較（ticker × 均線 × 欄位）；圖與人工判定案例各算 1。基準＝這批股票自己（同 composite4）。使用者人工答案：' + f'{len(USER)} 檔有標記，短期分母 {DEN_SHORT}、長期分母 {DEN_LONG}。\n')
     P('## 分層結果\n\n| 層 | 比較數 | MATCH | NUMERICAL_TOLERANCE | DATA_DIFFERENCE | IMPLEMENTATION_BUG | RULE_CONFLICT | NEEDS_HUMAN_REVIEW |\n|---|---|---|---|---|---|---|---|')
     for layer, g in SM.groupby('layer', sort=False): P(f'| {layer} | {int(g.n_compared.sum())} | ' + ' | '.join(str(int(g[k].sum())) for k in CLASSES) + ' |')
