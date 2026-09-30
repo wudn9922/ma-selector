@@ -1,0 +1,9 @@
+experiment,tolerance,candidate_hit,final_hit,denominator
+A_legacy,0,20,6,61
+A_legacy,1,43,13,61
+A_legacy,2,47,18,61
+A_legacy,3,54,28,61
+B_sar_only,0,20,6,61
+B_sar_only,1,43,13,61
+B_sar_only,2,47,21,61
+B_sar_only,3,54,34,61
