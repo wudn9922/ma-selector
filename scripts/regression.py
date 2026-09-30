@@ -23,7 +23,7 @@ PAIRS = [('GS', 39, 18, 0), ('JNJ', 34, 26, 0), ('LMT', 18, 33, 0), ('AVGO', 38,
 HUMAN_PAIRS = {'LMT', 'ACN', 'DIS'}                       # 已知需要人工判定
 CHARTS = [('LULU', 18), ('SMCI', 24), ('GE', 40)]
 HANDOVER = dict(pairs=9, short_cand=46, short_final=17, long_cand=16)   # 交接文件第 5 節（只作為「舊實作在今天資料上能否重現」的資訊）
-CLASSES = ['MATCH', 'NUMERICAL_TOLERANCE', 'DATA_DIFFERENCE', 'IMPLEMENTATION_BUG', 'RULE_CONFLICT', 'NEEDS_HUMAN_REVIEW']
+CLASSES = ['MATCH', 'NUMERICAL_TOLERANCE', 'DATA_DIFFERENCE', 'IMPLEMENTATION_BUG', 'RULE_CONFLICT', 'NEEDS_HUMAN_REVIEW', 'HISTORICAL_PROVENANCE_WARNING']
 TOL = 1e-9
 RAW_FIELDS = [f'{k}@{w}' for w in ('252', '504') for k in ('A_raw_n', 'A_raw', 'A_d2_n', 'A_d2', 'A_rt_n', 'A_rt', 'A_wick')] +              [f'{k}_{y}' for k in ('tg4', 'qday', 'quickfail') for y in ('1y', '2y', '3y')]
 HIST_FIELDS = {f'{k}_{y}' for k in ('tg4', 'qday', 'quickfail') for y in ('1y', '2y', '3y')}   # core 對歷史不足的股票把視窗起點夾在 0，frozen 用 N-W（負索引）
@@ -226,17 +226,25 @@ def main():
             ('short_final（歷史定義 ±2）', tot2['short_final'][0], HANDOVER['short_final'], DEN_SHORT, True), ('long_cand（±5）', tot['long_cand'][0], HANDOVER['long_cand'], DEN_LONG, True),
             ('pairs（未平滑，診斷用）', ok_raw, HANDOVER['pairs'], 12, False), ('short_cand（完全相等，診斷用）', tot['short_cand'][0], HANDOVER['short_cand'], DEN_SHORT, False),
             ('short_final（完全相等，診斷用）', tot['short_final'][0], HANDOVER['short_final'], DEN_SHORT, False)]
+    # HISTORICAL_PROVENANCE_WARNING 只用於「歷史交接文件數字」與「重建舊實作＋今天資料」之間無法完全重現的差異；
+    # 前提：current old-vs-new 沒有 IMPLEMENTATION_BUG／RULE_CONFLICT／DATA_DIFFERENCE、沒有資料抓取失敗、人工判定（HUMAN_PAIRS／圖）都已完成。前提不成立時維持 NEEDS_HUMAN_REVIEW，不掩蓋。
+    unres_pairs = [r for r in pw if r['classification'] == 'NEEDS_HUMAN_REVIEW']; unres_charts = [r for r in chart_rows if r['classification'] == 'NEEDS_HUMAN_REVIEW']
+    nfail0 = sum(c_.get(k_, 0) for c_ in led.cnt.values() for k_ in ('IMPLEMENTATION_BUG', 'RULE_CONFLICT', 'DATA_DIFFERENCE'))
+    warn_ok = nfail0 == 0 and not fetch_fail and not unres_pairs and not unres_charts
+    mism = [b_ for b_ in base if b_[4] and b_[1] != b_[2]]
+    for b_ in mism: led.add('historical_provenance', b_[0], 'HISTORICAL_PROVENANCE_WARNING' if warn_ok else 'NEEDS_HUMAN_REVIEW')
     # ── 輸出 ──
     pd.DataFrame(sel_rows).to_csv(out / 'select_results.csv', index=False); pd.DataFrame(led.diffs, columns=['ticker', 'period', 'layer', 'field', 'old', 'new', 'abs_diff', 'rel_diff', 'classification', 'note']).to_csv(out / 'regression_diffs.csv', index=False)
     rows = []
     for (layer, f), c in sorted(led.cnt.items()):
         rows.append(dict(layer=layer, field=f, n_compared=sum(c.values()), **{k: c.get(k, 0) for k in CLASSES}, max_abs_diff=led.maxabs.get((layer, f), 0.), max_rel_diff=led.maxrel.get((layer, f), 0.)))
     SM = pd.DataFrame(rows); SM.to_csv(out / 'regression_summary.csv', index=False)
-    tot_c = SM[CLASSES].sum(); nfail = int(tot_c['IMPLEMENTATION_BUG'] + tot_c['RULE_CONFLICT'] + tot_c['DATA_DIFFERENCE']); nhr = int(tot_c['NEEDS_HUMAN_REVIEW']) + sum(1 for b in base if b[4] and b[1] != b[2])
-    status = 'FAIL' if (nfail or fetch_fail) else ('NEEDS_HUMAN_REVIEW' if nhr else 'PASS')
+    tot_c = SM[CLASSES].sum(); nfail = int(tot_c['IMPLEMENTATION_BUG'] + tot_c['RULE_CONFLICT'] + tot_c['DATA_DIFFERENCE']); nhr = int(tot_c['NEEDS_HUMAN_REVIEW']); nwarn = int(tot_c['HISTORICAL_PROVENANCE_WARNING'])
+    correctness = 'FAIL' if (nfail or fetch_fail) else 'PASS'; human_status = 'INCOMPLETE' if nhr else 'COMPLETE'
     L_ = []; P = L_.append
+    P(f'REGRESSION_CORRECTNESS: {correctness}\nHUMAN_REVIEW_STATUS: {human_status}\nHISTORICAL_PROVENANCE_WARNINGS: {nwarn}\n')
     P(f'MATCH/PASS: {int(tot_c["MATCH"])}\nNUMERICAL_TOLERANCE: {int(tot_c["NUMERICAL_TOLERANCE"])}\nFAIL: {nfail}（IMPLEMENTATION_BUG {int(tot_c["IMPLEMENTATION_BUG"])}、RULE_CONFLICT {int(tot_c["RULE_CONFLICT"])}、DATA_DIFFERENCE {int(tot_c["DATA_DIFFERENCE"])}）\n'
-      f'NEEDS_HUMAN_REVIEW: {nhr}\nDATA_FETCH_FAILURE: {len(fetch_fail)}\n\nOVERALL_REGRESSION_STATUS: {status}\n')
+      f'NEEDS_HUMAN_REVIEW: {nhr}\nHISTORICAL_PROVENANCE_WARNING: {nwarn}\nDATA_FETCH_FAILURE: {len(fetch_fail)}\n')
     P(f'# Regression 報告（frozen 舊實作 vs core 新實作，asof={a.asof}，{len(tks)}/{len(TK)} 檔{"，SYNTHETIC 資料" if a.synthetic else ""}{"，INJECT-BUG 自我測試" if a.inject_bug else ""}）\n')
     P('計數單位＝逐格比較（ticker × 均線 × 欄位）；圖與人工判定案例各算 1。基準＝這批股票自己（同 composite4）。使用者人工答案：' + f'{len(USER)} 檔有標記，短期分母 {DEN_SHORT}、長期分母 {DEN_LONG}。\n')
     P('## 分層結果\n\n| 層 | 比較數 | MATCH | NUMERICAL_TOLERANCE | DATA_DIFFERENCE | IMPLEMENTATION_BUG | RULE_CONFLICT | NEEDS_HUMAN_REVIEW |\n|---|---|---|---|---|---|---|---|')
@@ -264,7 +272,7 @@ def main():
     P('\n## 候選命中率（old vs new；不以「較高」作為 PASS 理由）\n\n| 項目 | old | new | 分母 | 交接文件數字 | 分類 |\n|---|---|---|---|---|---|')
     for k, (o_, n_) in tot.items(): P(f"| {k}（{'±5' if k.startswith('long') else '完全相等'}） | {o_} | {n_} | {dens[k]} | {HANDOVER.get(k, 'n/a') if k.startswith('long') else '（見 ±2 列）'} | {'MATCH' if o_ == n_ else 'IMPLEMENTATION_BUG'} |")
     for k, (o_, n_) in tot2.items(): P(f"| {k}（歷史定義 ±2） | {o_} | {n_} | {dens[k]} | {HANDOVER[k]} | {'MATCH' if o_ == n_ else 'IMPLEMENTATION_BUG'} |")
-    P('\n## 舊實作＋今天資料能否重現交接文件數字（資訊；主列不一致者計入 NEEDS_HUMAN_REVIEW，診斷列不計）\n\n歷史短期命中定義已由原始 snapshot 確認為 ±2；短期差異來源見 regression/snapshot/snapshot_regression_report.md（ACN 為主要未解差異）。\n\n| 項目 | 舊實作今天結果 | 交接文件 | 是否一致 | 計入 |\n|---|---|---|---|---|')
+    P('\n## 舊實作＋今天資料能否重現交接文件數字（資訊；主列不一致者計為 HISTORICAL_PROVENANCE_WARNING，診斷列不計）\n\n歷史短期命中定義已由原始 snapshot 確認為 ±2；短期差異來源見 regression/snapshot/snapshot_regression_report.md（ACN 為主要未解差異）。\n\n| 項目 | 舊實作今天結果 | 交接文件 | 是否一致 | 計入 |\n|---|---|---|---|---|')
     for nm_, v, b, d_, cnt in base: P(f'| {nm_} | {v}/{d_} | {b}/{d_} | {"一致" if v == b else "**不一致**"} | {"是" if cnt else "否（診斷）"} |')
     P('\n## 人工判定狀態\n')
     unres_pairs = [r for r in pw if r['classification'] == 'NEEDS_HUMAN_REVIEW']; unres_charts = [r for r in chart_rows if r['classification'] == 'NEEDS_HUMAN_REVIEW']
@@ -274,11 +282,18 @@ def main():
     for tk in HUMAN_PAIRS & set(tks):
         for nm in ('短期', '長期'): P(f"  - {tk} {nm} old 候選：{fmtc(old_sel[tk][nm][1])} → 選 {old_sel[tk][nm][0]}；new 候選：{fmtc(new_sel[tk][nm]['cands'])} → 選 {new_sel[tk][nm]['final']}")
     for r in chart_rows: P(f"- 圖 charts/{r['ticker']}_{r['period']}.png：{r['classification']}（{r['note']}；事件／糾結資料 old=new：{r.get('events_and_tangle_data_identical')}）")
-    WHY = {'pairs': '交接文件 9/12 的評分口徑不明（未平滑與平滑都不是 9/12）；LMT、ACN 兩組分差極薄，單一事件即可翻轉（見 diagnostics/diagnose_report.md）',
-           'short_cand': '歷史定義 ±2 已確認；與交接文件的差來自 ACN（見 regression/snapshot/snapshot_regression_report.md），該差異的資料或事件來源尚未查清',
+    P('\n### NEEDS_HUMAN_REVIEW 項目\n' + ('\n'.join([f"- 兩兩比較 {r['ticker']}：尚未在 human_review.json 標記" for r in unres_pairs] + [f"- 圖 {r['ticker']}_{r['period']}：尚未在 human_review.json 標記" for r in unres_charts] + [f'- 交接文件數字重現（{b_[0]}）：{b_[1]}/{b_[3]} vs {b_[2]}/{b_[3]}（因 correctness 或人工判定未完成，不能標為 warning）' for b_ in mism if not warn_ok]) if nhr else '- 無（HUMAN_PAIRS 與 chart_visual 皆已人工確認）'))
+    SRC = {'pairs': '評分口徑不明：未平滑 11/12、平滑 8/12 都不是 9/12；LMT、ACN 兩組平滑分差極薄（−1.27、+1.19），單一事件結果不同即可翻轉（見 diagnostics/diagnose_report.md）',
+           'short_cand': '已知主要差異來源＝ACN 的歷史 snapshot drift：原始 snapshot 的 ACN 候選 {16,19}、final 16；今天候選 {16,29,19,33}、final 33。資料截止日變體與單一事件都無法重現（見 regression/snapshot/snapshot_regression_report.md）',
            'short_final': '同上（ACN：原始 snapshot final 16，今天 33）', 'long_cand': '見 snapshot 報告'}
-    still = [f'{b[0]}：{b[1]}/{b[3]} vs 交接文件 {b[2]}/{b[3]} — 來源：{WHY[b[0].split("（")[0]]}' for b in base if b[4] and b[1] != b[2]]
-    P('\n### 仍為 NEEDS_HUMAN_REVIEW 的來源（逐項列出，不自動 PASS）\n' + ('\n'.join('- 交接文件數字重現：' + x for x in still) if still else '- 無'))
+    P('\n## Historical provenance warnings\n')
+    P('HISTORICAL_PROVENANCE_WARNING 只用於「歷史交接文件／歷史 snapshot」與「重建的舊實作＋今天資料」之間無法完全重現的差異。它不用於 implementation bug、rule conflict、資料抓取失敗、current old-vs-new mismatch 或尚未完成的人工判定，也不影響 production correctness；前提不成立時，這些項目會維持 NEEDS_HUMAN_REVIEW。\n')
+    if mism and warn_ok:
+        P('| metric | current reconstructed value | handover value | known source / evidence | why this does not imply current implementation failure | resolution status |\n|---|---|---|---|---|---|')
+        why = f'frozen research 與 core 的逐層比較（raw_metrics → final_selection）IMPLEMENTATION_BUG {int(tot_c["IMPLEMENTATION_BUG"])}、RULE_CONFLICT {int(tot_c["RULE_CONFLICT"])}、DATA_DIFFERENCE {int(tot_c["DATA_DIFFERENCE"])}；此差異存在於「重建的舊實作＋今天資料」與「歷史數字」之間，不是 old-vs-new 差異；人工判定項目皆已完成'
+        for b_ in mism: P(f"| {b_[0]} | {b_[1]}/{b_[3]} | {b_[2]}/{b_[3]} | {SRC[b_[0].split('（')[0]]} | {why} | UNRESOLVED HISTORICAL PROVENANCE |")
+        P(f'\n本報告不聲稱已找到真正的歷史原因；{len(mism)} 項都維持 UNRESOLVED HISTORICAL PROVENANCE，原始數字未修改。')
+    else: P('- ' + ('無（所有歷史數字都可重現）' if not mism else '有不一致，但 correctness 或人工判定未完成，因此不能標為 warning（見上方 NEEDS_HUMAN_REVIEW 項目）'))
     P('\n人工確認方式：在 regression/human_review.json 寫入 `"chart_LULU_18": "PASS"`、`"pair_LMT": "PASS"`（人工確認指定方向成立）或 `"pair_ACN": "TIE"`（人工確認近似平手，不解讀為任一方向勝出）後重跑 workflow。')
     if fetch_fail: P('\n## DATA_FETCH_FAILURE\n' + '\n'.join(f'- {t}: {e}' for t, e in fetch_fail))
     P('\n## 差異列表\n\n非 MATCH 的逐列差異（ticker、period、field、old、new、abs_diff、rel_diff、classification）見 regression_diffs.csv（前 5 筆非容差差異如下）：\n')
