@@ -1,0 +1,4 @@
+rule,exact,pm1,pm2,pm3,n,mean_distance,median_distance,frac_le2,frac_gt5,improved_vs_A,same_vs_A,worsened_vs_A,final_changed_vs_A
+A_CURRENT,6,13,21,34,61,4.869,3.0,0.344,0.344,0,61,0,0
+B_STRUCTURAL_TIEBREAK,5,15,23,34,61,4.656,3.0,0.377,0.328,7,47,7,15
+C_STRUCTURAL_FIRST,5,16,19,28,61,5.557,4.0,0.311,0.41,13,27,21,35

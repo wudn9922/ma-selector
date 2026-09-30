@@ -1,0 +1,7 @@
+rule,scope,n,shorter,same,longer,mean_shift,median_shift,sign_test_p
+A_CURRENT,61 labelled,61,30,22,9,-3.07,0.0,0.0011
+A_CURRENT,all,83,40,32,11,-3.13,0.0,0.0001
+B_STRUCTURAL_TIEBREAK,61 labelled,61,17,35,9,-1.41,0.0,0.1686
+B_STRUCTURAL_TIEBREAK,all,83,22,49,12,-1.08,0.0,0.1214
+C_STRUCTURAL_FIRST,61 labelled,61,3,56,2,0.0,0.0,1.0
+C_STRUCTURAL_FIRST,all,83,5,74,4,0.22,0.0,1.0

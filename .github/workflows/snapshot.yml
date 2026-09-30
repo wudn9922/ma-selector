@@ -1,0 +1,30 @@
+name: snapshot-regression
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths: ['scripts/snapshot_regression.py', 'core/**', 'regression/baselines/**', '.github/workflows/snapshot.yml']
+permissions:
+  contents: write
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install pandas numpy matplotlib pyarrow
+      - name: fixture 雜湊驗證（immutable）
+        run: cd regression/baselines && sha256sum -c SHA256SUMS
+      - name: snapshot regression（B；只讀；asof 2026-09-24）
+        run: python scripts/snapshot_regression.py --asof 2026-09-24 --out regression/snapshot
+      - if: always()
+        run: test -f regression/snapshot/snapshot_regression_report.md && cat regression/snapshot/snapshot_regression_report.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: commit report
+        if: always()
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add regression/snapshot
+          git diff --cached --quiet || (git commit -m "Snapshot regression report (original v22 vs current)" && git pull --rebase -q origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}")
