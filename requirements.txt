@@ -1,0 +1,5 @@
+streamlit>=1.51
+pandas>=2.0
+numpy
+matplotlib
+pyarrow

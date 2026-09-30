@@ -21,7 +21,7 @@ def _side(C, ma, atr, t):
     d = C[t] - ma[t]; s = SV * atr[t]
     return 1 if d > s else (-1 if d < -s else 0)
 def run(O, H, L, C, V, ma, atr, lo=0, x=.01, c=.015, cost=.001, mode='simple', longonly=True, retest=True,
-        tp=.03, surge_pct=.05, surge_atr=1.5, ex_close=True, ex_day2=True, ex_vol=False):
+        tp=.03, surge_pct=.05, surge_atr=1.5, ex_close=True, ex_day2=True, ex_vol=False, return_eq=False):
     N = len(C); mp = np.r_[np.nan, ma[:-1]]; U = mp * (1 + x); Lb = mp * (1 - c)
     eq = np.ones(N); cap = 1.; trades = []; last = 0; since = 0; dep = False; rt = None; kind = 'B'
     pos = 0; size = 0.; e = 0.; tin = 0; realized = 0.; tp_done = False; be = False; half_low = None
@@ -113,6 +113,6 @@ def run(O, H, L, C, V, ma, atr, lo=0, x=.01, c=.015, cost=.001, mode='simple', l
     peak = np.maximum.accumulate(seg); mdd = float((seg / peak - 1).min())
     r = np.array([tr['ret'] for tr in trades]) if trades else np.array([])
     w = r[r > 0]; l = r[r <= 0]
-    return dict(總報酬=float(cap - 1), 最大回撤=mdd, 勝率=float((r > 0).mean()) if len(r) else np.nan,
+    return (dict(總報酬=float(cap - 1), 最大回撤=mdd, 勝率=float((r > 0).mean()) if len(r) else np.nan,
                 筆數=len(r), 獲利因子=float(w.sum() / -l.sum()) if l.sum() < 0 else np.inf,
-                平均賺=float(w.mean()) if len(w) else 0., 平均賠=float(l.mean()) if len(l) else 0.), trades
+                平均賺=float(w.mean()) if len(w) else 0., 平均賠=float(l.mean()) if len(l) else 0.), trades) + ((eq,) if return_eq else ())

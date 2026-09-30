@@ -1,0 +1,21 @@
+name: build-reference
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 1 * *'   # 每月 1 號
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install pandas numpy pyarrow
+      - run: python scripts/build_reference.py
+      - name: commit
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add data/reference.parquet data/reference.json
+          git diff --cached --quiet || (git commit -m "Update reference distribution" && git push)
