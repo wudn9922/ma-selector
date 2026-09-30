@@ -119,8 +119,8 @@ def main():
     for t in range(4):
         sc, sf, n = hr(snap, t); cc, cf, _ = hr(cur_new, t); P(f'| ±{t} | {sc}/{n} | {sf}/{n} | {cc}/{n} | {cf}/{n} |')
     P('\n交接文件 46/61、17/61 ＝ snapshot 的 ±2；目前輸出 ±2 為 47/61、18/61。\n')
-    prod = cur_from({tk: sel.select(dfs[tk], score.score_table(newM[tk], ref)) for tk in tks})   # 目前 production 設定（gap=sel.GAP、多空回測）
-    P(f'### 目前 production 設定（候選門檻 {sel.GAP} 分、選參數用多空回測）的短期命中率（資訊用；上表為 LEGACY＝研究版設定 gap=15、只做多）\n\n| tolerance | candidate | final |\n|---|---|---|')
+    prod = cur_from({tk: sel.select(dfs[tk], score.score_table(newM[tk], ref)) for tk in tks})   # 目前 production 設定（gap=sel.GAP、多空反手回測）
+    P(f'### 目前 production 設定（候選門檻 {sel.GAP} 分、選參數用多空反手回測）的短期命中率（資訊用；上表為 LEGACY＝研究版設定 gap=15、只做多）\n\n| tolerance | candidate | final |\n|---|---|---|')
     for t in range(4):
         cc, cf, n = hr(prod, t); P(f'| ±{t} | {cc}/{n} | {cf}/{n} |')
     pr = []

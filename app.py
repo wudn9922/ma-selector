@@ -16,7 +16,7 @@ def load_ref():
     if not REF.exists(): return None, None
     meta = REF.with_suffix('.json'); return pd.read_parquet(REF), (json.loads(meta.read_text()) if meta.exists() else {})
 @st.cache_data(show_spinner="候選均線回測中…")
-def calc_select(tk, last, n, ws_key, gap, _df, _S): return sel.select(_df, _S, gap=gap)   # 選參數用多空都做的回測
+def calc_select(tk, last, n, ws_key, gap, _df, _S): return sel.select(_df, _S, gap=gap)   # 選參數用多空反手（events_v22）的回測
 @st.cache_data(show_spinner="畫圖中…")
 def render(tk, last, n, p, title, _df): return charts.chart_png(_df, p, title)
 
@@ -60,8 +60,8 @@ c3.metric("短期最後選擇", f"SMA{R['短期']['final']}"); c4.metric("長期
 pct = lambda x: f"{x*100:+.1f}%"
 tab1, tab2, tab3 = st.tabs(["候選與選擇", "判定圖", "回測"])
 with tab1:
-    st.caption(f"分數＝各項指標在 83 檔基準中的百分位加權；候選＝與最高分差 ≤{gap}、彼此差 ≥3、最多 5 條；回測平均＝簡單與複雜策略報酬平均（**多空都做**，選參數專用；「回測」分頁是只做多）；"
-               "與最好的差 ≤5 個百分點者取最小均線（★）。")
+    st.caption(f"分數＝各項指標在 83 檔基準中的百分位加權；候選＝與最高分差 ≤{gap}、彼此差 ≥3、最多 5 條；選參數依據＝**多空反手**模擬（events_v22：一直有持倉，碰到反向邊界就反手，扣成本 0.1%）的報酬；"
+               "與最好的差 ≤5 個百分點者取最小均線（★）。只做多的簡單／複雜報酬僅供參考（「回測」分頁也是只做多）。")
     for nm, lo, hi, W in sel.RANGES:
         r = R[nm]; st.markdown(f"**{nm}（SMA{lo}–{hi}，回測看近 {W//252} 年）**　最後選擇：SMA{r['final']}")
         rows = []
@@ -71,8 +71,8 @@ with tab1:
                          '突破': g['p突破'], '二日': g['p二日'], '回測': g['p回測'], '雜訊': g['p雜訊'],
                          '穿插(短/中/長)': f"{g['p穿插_1y']:.0f}/{g['p穿插_2y']:.0f}/{g['p穿插_3y']:.0f}",
                          '快敗(中/長)': f"{g['p快敗_2y']:.0f}/{g['p快敗_3y']:.0f}",
-                         '簡單報酬(多空)': pct(c['簡單報酬']), '複雜報酬(多空)': pct(c['複雜報酬']), '回測平均(多空)': pct(c['回測平均']),
-                         '簡單回撤(多空)': pct(c['簡單回撤']), '複雜回撤(多空)': pct(c['複雜回撤'])})
+                         '反手報酬(選參數)': pct(c['反手報酬']), '反手回撤': pct(c['反手回撤']), '反手勝率': f"{c['反手勝率']*100:.0f}%" if c['反手勝率'] == c['反手勝率'] else '—', '反手筆數': c['反手筆數'],
+                         '只做多簡單(參考)': pct(c['簡單報酬']), '只做多複雜(參考)': pct(c['複雜報酬'])})
         st.dataframe(pd.DataFrame(rows).style.format({k: '{:.0f}' for k in ('突破', '二日', '回測', '雜訊')}), hide_index=True, width='stretch')
     with st.expander("全部均線的分數"):
         st.dataframe(S.round(1), hide_index=True, width='stretch')
@@ -88,8 +88,8 @@ with tab2:
     st.caption("近兩年 4 段（每段半年）由舊到新。雜訊區固定為 v22 規則（前日MA +1%／−1.5%）；回測分頁可以調整回測用的雜訊區。")
     def bt_line(nm, W):
         arr = [df[k].to_numpy(float) for k in ('open', 'high', 'low', 'close', 'volume')]; ma_ = df.close.rolling(p).mean().to_numpy(); atr_ = data.wilder_atr(df)
-        r = {(m, lo_): bt.run(*arr, ma_, atr_, lo=N - W, mode=m, longonly=lo_)[0]['總報酬'] for m in ('simple', 'complex') for lo_ in (False, True)}
-        return f"{nm} 多空 簡{pct(r['simple', False])}/複{pct(r['complex', False])}　只做多 簡{pct(r['simple', True])}/複{pct(r['complex', True])}"
+        sar = sel.sar_stats(*arr[:4], atr_, ma_, N - W)['報酬']; lo_ = {m: bt.run(*arr, ma_, atr_, lo=N - W, mode=m)[0]['總報酬'] for m in ('simple', 'complex')}
+        return f"{nm} 反手 {pct(sar)}　只做多 簡{pct(lo_['simple'])}/複{pct(lo_['complex'])}"
     title = (f"{tk} SMA{p}｜分數 短{g['分數_短']:.0f} 中{g['分數_中']:.0f} 長{g['分數_長']:.0f}｜"
              f"突破{g['p突破']:.0f} 二日{g['p二日']:.0f} 回測{g['p回測']:.0f} 雜訊{g['p雜訊']:.0f} 穿插1y/2y/3y {g['p穿插_1y']:.0f}/{g['p穿插_2y']:.0f}/{g['p穿插_3y']:.0f} 快敗2y/3y {g['p快敗_2y']:.0f}/{g['p快敗_3y']:.0f}\n"
              f"{bt_line('近1年', 252)}｜{bt_line('近2年', 504)}")
