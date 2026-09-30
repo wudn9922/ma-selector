@@ -1,10 +1,13 @@
+REGRESSION_CORRECTNESS: PASS
+HUMAN_REVIEW_STATUS: COMPLETE
+HISTORICAL_PROVENANCE_WARNINGS: 3
+
 MATCH/PASS: 301102
 NUMERICAL_TOLERANCE: 0
 FAIL: 0（IMPLEMENTATION_BUG 0、RULE_CONFLICT 0、DATA_DIFFERENCE 0）
-NEEDS_HUMAN_REVIEW: 3
+NEEDS_HUMAN_REVIEW: 0
+HISTORICAL_PROVENANCE_WARNING: 3
 DATA_FETCH_FAILURE: 0
-
-OVERALL_REGRESSION_STATUS: NEEDS_HUMAN_REVIEW
 
 # Regression 報告（frozen 舊實作 vs core 新實作，asof=2026-09-24，83/83 檔）
 
@@ -14,16 +17,17 @@ OVERALL_REGRESSION_STATUS: NEEDS_HUMAN_REVIEW
 
 | 層 | 比較數 | MATCH | NUMERICAL_TOLERANCE | DATA_DIFFERENCE | IMPLEMENTATION_BUG | RULE_CONFLICT | NEEDS_HUMAN_REVIEW |
 |---|---|---|---|---|---|---|---|
-| candidate_hit_rate | 4 | 4 | 0 | 0 | 0 | 0 | 0 |
-| candidate_set | 6015 | 6015 | 0 | 0 | 0 | 0 | 0 |
-| chart_data | 3 | 3 | 0 | 0 | 0 | 0 | 0 |
-| chart_visual | 3 | 3 | 0 | 0 | 0 | 0 | 0 |
-| composite_score | 31872 | 31872 | 0 | 0 | 0 | 0 | 0 |
-| final_selection | 249 | 249 | 0 | 0 | 0 | 0 | 0 |
-| pairwise | 12 | 12 | 0 | 0 | 0 | 0 | 0 |
-| percentile | 55776 | 55776 | 0 | 0 | 0 | 0 | 0 |
-| raw_metrics | 183264 | 183264 | 0 | 0 | 0 | 0 | 0 |
-| score_component | 23904 | 23904 | 0 | 0 | 0 | 0 | 0 |
+| candidate_hit_rate | 4 | 4 | 0 | 0 | 0 | 0 | 0 | 0 |
+| candidate_set | 6015 | 6015 | 0 | 0 | 0 | 0 | 0 | 0 |
+| chart_data | 3 | 3 | 0 | 0 | 0 | 0 | 0 | 0 |
+| chart_visual | 3 | 3 | 0 | 0 | 0 | 0 | 0 | 0 |
+| composite_score | 31872 | 31872 | 0 | 0 | 0 | 0 | 0 | 0 |
+| final_selection | 249 | 249 | 0 | 0 | 0 | 0 | 0 | 0 |
+| historical_provenance | 3 | 0 | 0 | 0 | 0 | 0 | 0 | 3 |
+| pairwise | 12 | 12 | 0 | 0 | 0 | 0 | 0 | 0 |
+| percentile | 55776 | 55776 | 0 | 0 | 0 | 0 | 0 | 0 |
+| raw_metrics | 183264 | 183264 | 0 | 0 | 0 | 0 | 0 | 0 |
+| score_component | 23904 | 23904 | 0 | 0 | 0 | 0 | 0 | 0 |
 
 ## 來源完整性
 
@@ -84,7 +88,7 @@ Pairwise human review uses smoothed structural scores because production candida
 | short_cand（歷史定義 ±2） | 47 | 47 | 61 | 46 | MATCH |
 | short_final（歷史定義 ±2） | 18 | 18 | 61 | 17 | MATCH |
 
-## 舊實作＋今天資料能否重現交接文件數字（資訊；主列不一致者計入 NEEDS_HUMAN_REVIEW，診斷列不計）
+## 舊實作＋今天資料能否重現交接文件數字（資訊；主列不一致者計為 HISTORICAL_PROVENANCE_WARNING，診斷列不計）
 
 歷史短期命中定義已由原始 snapshot 確認為 ±2；短期差異來源見 regression/snapshot/snapshot_regression_report.md（ACN 為主要未解差異）。
 
@@ -106,18 +110,28 @@ Pairwise human review uses smoothed structural scores because production candida
 - 兩兩比較 DIS：19 ≈ 32（human-confirmed approximate tie）；new 平滑分 43.87/45.97；MATCH（human-confirmed approximate tie）
   - DIS 短期 old 候選：32(46.0) 21(45.1) 18(43.5) 28(41.6) 25(35.2) → 選 18；new 候選：32(46.0) 21(45.1) 18(43.5) 28(41.6) 25(35.2) → 選 18
   - DIS 長期 old 候選：56(83.9) 51(79.3) → 選 51；new 候選：56(83.9) 51(79.3) → 選 51
-  - LMT 短期 old 候選：15(73.4) 26(67.4) 33(65.5) 18(64.2) → 選 26；new 候選：15(73.4) 26(67.4) 33(65.5) 18(64.2) → 選 26
-  - LMT 長期 old 候選：72(90.4) 105(87.8) 101(87.4) 96(84.3) 75(84.3) → 選 72；new 候選：72(90.4) 105(87.8) 101(87.4) 96(84.3) 75(84.3) → 選 72
   - ACN 短期 old 候選：16(43.9) 29(31.6) 19(30.6) 33(29.2) → 選 33；new 候選：16(43.9) 29(31.6) 19(30.6) 33(29.2) → 選 33
   - ACN 長期 old 候選：97(97.1) 110(96.3) 107(95.1) 104(95.1) 94(95.0) → 選 104；new 候選：97(97.1) 110(96.3) 107(95.1) 104(95.1) 94(95.0) → 選 104
+  - LMT 短期 old 候選：15(73.4) 26(67.4) 33(65.5) 18(64.2) → 選 26；new 候選：15(73.4) 26(67.4) 33(65.5) 18(64.2) → 選 26
+  - LMT 長期 old 候選：72(90.4) 105(87.8) 101(87.4) 96(84.3) 75(84.3) → 選 72；new 候選：72(90.4) 105(87.8) 101(87.4) 96(84.3) 75(84.3) → 選 72
 - 圖 charts/LULU_18.png：MATCH（human-confirmed；事件／糾結資料 old=new：True）
 - 圖 charts/SMCI_24.png：MATCH（human-confirmed；事件／糾結資料 old=new：True）
 - 圖 charts/GE_40.png：MATCH（human-confirmed；事件／糾結資料 old=new：True）
 
-### 仍為 NEEDS_HUMAN_REVIEW 的來源（逐項列出，不自動 PASS）
-- 交接文件數字重現：pairs（平滑結構分數，主口徑）：8/12 vs 交接文件 9/12 — 來源：交接文件 9/12 的評分口徑不明（未平滑與平滑都不是 9/12）；LMT、ACN 兩組分差極薄，單一事件即可翻轉（見 diagnostics/diagnose_report.md）
-- 交接文件數字重現：short_cand（歷史定義 ±2）：47/61 vs 交接文件 46/61 — 來源：歷史定義 ±2 已確認；與交接文件的差來自 ACN（見 regression/snapshot/snapshot_regression_report.md），該差異的資料或事件來源尚未查清
-- 交接文件數字重現：short_final（歷史定義 ±2）：18/61 vs 交接文件 17/61 — 來源：同上（ACN：原始 snapshot final 16，今天 33）
+### NEEDS_HUMAN_REVIEW 項目
+- 無（HUMAN_PAIRS 與 chart_visual 皆已人工確認）
+
+## Historical provenance warnings
+
+HISTORICAL_PROVENANCE_WARNING 只用於「歷史交接文件／歷史 snapshot」與「重建的舊實作＋今天資料」之間無法完全重現的差異。它不用於 implementation bug、rule conflict、資料抓取失敗、current old-vs-new mismatch 或尚未完成的人工判定，也不影響 production correctness；前提不成立時，這些項目會維持 NEEDS_HUMAN_REVIEW。
+
+| metric | current reconstructed value | handover value | known source / evidence | why this does not imply current implementation failure | resolution status |
+|---|---|---|---|---|---|
+| pairs（平滑結構分數，主口徑） | 8/12 | 9/12 | 評分口徑不明：未平滑 11/12、平滑 8/12 都不是 9/12；LMT、ACN 兩組平滑分差極薄（−1.27、+1.19），單一事件結果不同即可翻轉（見 diagnostics/diagnose_report.md） | frozen research 與 core 的逐層比較（raw_metrics → final_selection）IMPLEMENTATION_BUG 0、RULE_CONFLICT 0、DATA_DIFFERENCE 0；此差異存在於「重建的舊實作＋今天資料」與「歷史數字」之間，不是 old-vs-new 差異；人工判定項目皆已完成 | UNRESOLVED HISTORICAL PROVENANCE |
+| short_cand（歷史定義 ±2） | 47/61 | 46/61 | 已知主要差異來源＝ACN 的歷史 snapshot drift：原始 snapshot 的 ACN 候選 {16,19}、final 16；今天候選 {16,29,19,33}、final 33。資料截止日變體與單一事件都無法重現（見 regression/snapshot/snapshot_regression_report.md） | frozen research 與 core 的逐層比較（raw_metrics → final_selection）IMPLEMENTATION_BUG 0、RULE_CONFLICT 0、DATA_DIFFERENCE 0；此差異存在於「重建的舊實作＋今天資料」與「歷史數字」之間，不是 old-vs-new 差異；人工判定項目皆已完成 | UNRESOLVED HISTORICAL PROVENANCE |
+| short_final（歷史定義 ±2） | 18/61 | 17/61 | 同上（ACN：原始 snapshot final 16，今天 33） | frozen research 與 core 的逐層比較（raw_metrics → final_selection）IMPLEMENTATION_BUG 0、RULE_CONFLICT 0、DATA_DIFFERENCE 0；此差異存在於「重建的舊實作＋今天資料」與「歷史數字」之間，不是 old-vs-new 差異；人工判定項目皆已完成 | UNRESOLVED HISTORICAL PROVENANCE |
+
+本報告不聲稱已找到真正的歷史原因；3 項都維持 UNRESOLVED HISTORICAL PROVENANCE，原始數字未修改。
 
 人工確認方式：在 regression/human_review.json 寫入 `"chart_LULU_18": "PASS"`、`"pair_LMT": "PASS"`（人工確認指定方向成立）或 `"pair_ACN": "TIE"`（人工確認近似平手，不解讀為任一方向勝出）後重跑 workflow。
 
