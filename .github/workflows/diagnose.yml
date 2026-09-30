@@ -1,0 +1,28 @@
+name: diagnose-baseline
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths: ['scripts/diagnose_baseline.py', '.github/workflows/diagnose.yml']
+permissions:
+  contents: write
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install pandas numpy matplotlib pyarrow
+      - name: diagnose（只讀；asof 固定 2026-09-24）
+        run: python scripts/diagnose_baseline.py --asof 2026-09-24 --out diagnostics
+      - if: always()
+        run: test -f diagnostics/diagnose_report.md && cat diagnostics/diagnose_report.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: commit diagnostics
+        if: always()
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add diagnostics
+          git diff --cached --quiet || (git commit -m "Baseline diagnostics (read-only)" && git pull --rebase -q origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}")
