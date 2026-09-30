@@ -1,28 +1,33 @@
 """選均線流程（final_select）：讀分數表，不讀 pkl
-1) 每個區間分數前後各一條平均（平滑）  2) 候選＝與最高分差 ≤15、彼此差 ≥3、最多 5 條
+1) 每個區間分數前後各一條平均（平滑）  2) 候選＝與最高分差 ≤ gap（預設 10，網頁可調）、彼此差 ≥3、最多 5 條
 3) 候選跑簡單＋複雜回測（短期近1年、中期近2年、長期近3年），取平均  4) 與最好的差 ≤5 個百分點者取最小均線
+回測方向：選參數預設用「多空都做」（longonly=False），避免長期下跌的股票回測失真；網頁的回測分頁仍是只做多。
+舊版（研究版 v22）＝ gap=15、longonly=True，regression 用 LEGACY 參數與 frozen 研究版比對。
 """
 import numpy as np, pandas as pd
 from . import backtest as bt
 from .data import wilder_atr
 RANGES = (('短期', 15, 33, 252), ('中期', 34, 45, 504), ('長期', 46, 110, 756))
+GAP = 10                                   # 候選：與最高分差距上限
+LEGACY = dict(gap=15, longonly=True)       # 研究版 v22 的設定（只供 regression 使用）
 
 def smooth(s): return np.convolve(np.r_[s[0], s, s[-1]], np.ones(3) / 3, 'valid')
 
 def smoothed_scores(S):
     S = S.sort_values('period'); return S['period'].to_numpy(), smooth(S['分數'].to_numpy())
 
-def select(df, S):
+def select(df, S, gap=GAP, longonly=False):
     O, H, L, C, V = (df[k].to_numpy(float) for k in ('open', 'high', 'low', 'close', 'volume')); atr = wilder_atr(df); N = len(C)
     P, Ss = smoothed_scores(S); out = {}
     for nm, lo, hi, W in RANGES:
         m = (P >= lo) & (P <= hi); pm, sm = P[m], Ss[m]
         order = np.argsort(-sm); best = sm[order[0]]; cands = []
         for i in order:
-            if sm[i] < best - 15: break
+            if sm[i] < best - gap: break
             if all(abs(pm[i] - c['均線']) > 2 for c in cands):
                 ma = df.close.rolling(int(pm[i])).mean().to_numpy()
-                s1, _ = bt.run(O, H, L, C, V, ma, atr, lo=max(N - W, 0), mode='simple'); s2, _ = bt.run(O, H, L, C, V, ma, atr, lo=max(N - W, 0), mode='complex')
+                s1, _ = bt.run(O, H, L, C, V, ma, atr, lo=max(N - W, 0), mode='simple', longonly=longonly)
+                s2, _ = bt.run(O, H, L, C, V, ma, atr, lo=max(N - W, 0), mode='complex', longonly=longonly)
                 cands.append({'均線': int(pm[i]), '分數': round(float(sm[i]), 1), '簡單報酬': s1['總報酬'], '簡單回撤': s1['最大回撤'],
                               '複雜報酬': s2['總報酬'], '複雜回撤': s2['最大回撤']})
             if len(cands) == 5: break

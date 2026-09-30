@@ -11,3 +11,9 @@
 
 ## 結構
 `app.py` 介面｜`core/` data、events、tangle、metrics、score（對固定基準算百分位）、select、backtest、charts｜`scripts/build_reference.py`
+
+## 選參數規則（與研究版 v22 的差異）
+- 候選門檻：與區間最高分相差 ≤ **10** 分（研究版為 15）；網頁側邊欄可調 3–30。
+- 最後選擇用的回測：**多空都做**（`bt_engine_v1` 的 `longonly=False`，簡單＋複雜平均），避免長期下跌的股票回測失真。
+- 網頁「回測」分頁仍是**只做多**，沒有改。
+- regression A／B 用 `core.select.LEGACY`（gap=15、只做多）與研究版比對；snapshot 報告另列 production 設定的命中率。

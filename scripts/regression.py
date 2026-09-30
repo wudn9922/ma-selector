@@ -128,7 +128,7 @@ def main():
     ref = pd.concat([score.make_features(M).assign(ticker=tk) for tk, M in newM.items()], ignore_index=True)
     S = {tk: score.score_table(M, ref) for tk, M in newM.items()}; new_sel = {}
     dfs = {tk: data.normalize(pd.read_csv(f'data_v/{tk}.csv'), a.asof) for tk in tks}
-    for tk in tks: new_sel[tk] = sel.select(dfs[tk], S[tk])
+    for tk in tks: new_sel[tk] = sel.select(dfs[tk], S[tk], **sel.LEGACY)
     print(f'新流程完成 {time.time()-t0:.0f}s', flush=True)
     # ── 比較 ──
     ctx = dict(data_mismatch=set(), short_hist={tk for tk in tks if len(dfs[tk]) < 756})

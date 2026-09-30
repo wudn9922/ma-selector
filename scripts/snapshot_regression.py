@@ -100,7 +100,7 @@ def main():
     # 新（core/）流程
     with ProcessPoolExecutor(4) as ex: newM = dict(ex.map(R.new_ticker, tks))
     ref = pd.concat([score.make_features(M).assign(ticker=tk) for tk, M in newM.items()], ignore_index=True); dfs = {tk: data.normalize(pd.read_csv(f'data_v/{tk}.csv'), a.asof) for tk in tks}
-    new_sel = {tk: sel.select(dfs[tk], score.score_table(newM[tk], ref)) for tk in tks}; print('新流程完成', flush=True)
+    new_sel = {tk: sel.select(dfs[tk], score.score_table(newM[tk], ref), **sel.LEGACY) for tk in tks}; print('新流程完成', flush=True)
     cur_old, cur_new = cur_from(old_sel), cur_from(new_sel)
     L = []; P = lambda *x: L.append(' '.join(str(i) for i in x))
     P(f'# Snapshot regression（B）：原始 選均線_v22.csv vs 目前輸出（asof={a.asof}，{len(tks)} 檔）\n')
@@ -119,6 +119,17 @@ def main():
     for t in range(4):
         sc, sf, n = hr(snap, t); cc, cf, _ = hr(cur_new, t); P(f'| ±{t} | {sc}/{n} | {sf}/{n} | {cc}/{n} | {cf}/{n} |')
     P('\n交接文件 46/61、17/61 ＝ snapshot 的 ±2；目前輸出 ±2 為 47/61、18/61。\n')
+    prod = cur_from({tk: sel.select(dfs[tk], score.score_table(newM[tk], ref)) for tk in tks})   # 目前 production 設定（gap=sel.GAP、多空回測）
+    P(f'### 目前 production 設定（候選門檻 {sel.GAP} 分、選參數用多空回測）的短期命中率（資訊用；上表為 LEGACY＝研究版設定 gap=15、只做多）\n\n| tolerance | candidate | final |\n|---|---|---|')
+    for t in range(4):
+        cc, cf, n = hr(prod, t); P(f'| ±{t} | {cc}/{n} | {cf}/{n} |')
+    pr = []
+    for tk in tks:
+        for nm in RANGES:
+            a_, b_ = cur_new[(tk, nm)], prod[(tk, nm)]
+            pr.append(dict(ticker=tk, range=nm, legacy_final=a_['final'], prod_final=b_['final'], legacy_candidates=' '.join(str(x[0]) for x in a_['cands']), prod_candidates=' '.join(str(x[0]) for x in b_['cands'])))
+    PR = pd.DataFrame(pr); PR.to_csv(out / 'production_vs_legacy.csv', index=False)
+    P('\nLEGACY → production，final 改變的檔數：' + '、'.join(f"{nm} {int((PR[PR['range'] == nm].legacy_final != PR[PR['range'] == nm].prod_final).sum())}" for nm in RANGES) + '（逐檔見 production_vs_legacy.csv）\n')
     # ── 2) 逐 ticker×range 比較 ──
     rows, diffs = [], []
     for tk in tks:
