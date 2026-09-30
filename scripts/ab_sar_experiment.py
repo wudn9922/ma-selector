@@ -56,7 +56,7 @@ def main():
     for tk in tks:
         Sx = score.score_table(newM[tk], ref)
         A_sel[tk] = sel.select(dfs[tk], Sx, gap=GAP, method='bt', longonly=True)['短期']          # A：Legacy
-        B_sel[tk] = sel.select(dfs[tk], Sx, gap=GAP, method='sar')['短期']                      # B：只換最後選擇的回測
+        B_sel[tk] = sel.select(dfs[tk], Sx, gap=GAP, method='sar', final_rule='min_period')['短期']                      # B：只換最後選擇的回測
     print('選擇完成', flush=True)
     # 候選必須相同
     mism = [tk for tk in tks if [c['均線'] for c in A_sel[tk]['cands']] != [c['均線'] for c in B_sel[tk]['cands']]]

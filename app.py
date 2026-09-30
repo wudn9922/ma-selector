@@ -35,7 +35,7 @@ with st.sidebar:
         st.caption("長期（看近 3 年）")
         ws_l = {k: st.slider(k, 0, 100, int(v * 100), key='l' + k) for k, v in score.WS['長'].items()}
         st.caption("中期＝短、長兩組權重平均（看近 2 年）")
-    gap = st.slider("候選門檻：與最高分差距 ≤（分）", 3, 30, sel.GAP, 1, help="分數與該區間最高分相差在此範圍內的均線才列為候選（彼此至少差 3、最多 5 條）")
+    gap = st.slider("候選門檻：與最高分差距 ≤（分）", 3, 30, sel.GAP, 1, help="分數與該區間最高分相差在此範圍內的均線才列為候選（彼此至少差 3、最多 5 條）；預設 15")
     st.caption(f"基準：{len((meta or {}).get('tickers', []))} 檔，資料到 {(meta or {}).get('asof', '?')}")
 if sum(ws_s.values()) == 0 or sum(ws_l.values()) == 0: st.warning("權重不能全為 0"); st.stop()
 ws = {'短': {k: v / 100 for k, v in ws_s.items()}, '長': {k: v / 100 for k, v in ws_l.items()}}
@@ -61,7 +61,7 @@ pct = lambda x: f"{x*100:+.1f}%"
 tab1, tab2, tab3 = st.tabs(["候選與選擇", "判定圖", "回測"])
 with tab1:
     st.caption(f"分數＝各項指標在 83 檔基準中的百分位加權；候選＝與最高分差 ≤{gap}、彼此差 ≥3、最多 5 條；選參數依據＝**多空反手**模擬（events_v22：一直有持倉，碰到反向邊界就反手，扣成本 0.1%）的報酬；"
-               "與最好的差 ≤5 個百分點者取最小均線（★）。只做多的簡單／複雜報酬僅供參考（「回測」分頁也是只做多）。")
+               "最後選擇（★）：反手報酬距最佳 ≤5 個百分點者為 finalists，取結構分數（未四捨五入）最高者；完全相同才取較短的均線。只做多的簡單／複雜報酬僅供參考（「回測」分頁也是只做多）。")
     for nm, lo, hi, W in sel.RANGES:
         r = R[nm]; st.markdown(f"**{nm}（SMA{lo}–{hi}，回測看近 {W//252} 年）**　最後選擇：SMA{r['final']}")
         rows = []

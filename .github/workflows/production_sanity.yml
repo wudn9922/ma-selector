@@ -1,0 +1,28 @@
+name: production-sanity
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths: ['scripts/production_sanity.py', 'core/**', '.github/workflows/production_sanity.yml']
+permissions:
+  contents: write
+jobs:
+  ab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install pandas numpy matplotlib pyarrow
+      - name: production sanity check（asof 2026-09-24）
+        run: python scripts/production_sanity.py --asof 2026-09-24 --out experiments/production_sanity
+      - if: always()
+        run: test -f experiments/production_sanity/sanity_report.md && cat experiments/production_sanity/sanity_report.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: commit report
+        if: always()
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add experiments
+          git diff --cached --quiet || (git commit -m "Production sanity check" && git pull --rebase -q origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}")

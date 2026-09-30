@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: ['claude/**']
-    paths: ['scripts/snapshot_regression.py', 'regression/baselines/**', '.github/workflows/snapshot.yml']
+    paths: ['scripts/snapshot_regression.py', 'core/**', 'regression/baselines/**', '.github/workflows/snapshot.yml']
 permissions:
   contents: write
 jobs:
