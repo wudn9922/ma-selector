@@ -4,7 +4,7 @@
 兩邊讀同一批 CSV（同一份 Yahoo 資料、asof 固定 2026-09-24），基準＝這 83 檔自己（同 composite4）。
 用法：python scripts/regression.py [--asof 2026-09-24] [--out regression] [--synthetic] [--inject-bug]
 分類：MATCH / NUMERICAL_TOLERANCE / DATA_DIFFERENCE / IMPLEMENTATION_BUG / RULE_CONFLICT / NEEDS_HUMAN_REVIEW
-不做任何「比研究版高就 PASS」的判定；圖與 LMT／ACN／DIS 一律 NEEDS_HUMAN_REVIEW，除非 regression/human_review.json 有人工確認。"""
+不做任何「比研究版高就 PASS」的判定；圖與 LMT／ACN／DIS 一律 NEEDS_HUMAN_REVIEW，除非 regression/human_review.json 有人工確認（PASS＝方向成立；TIE＝近似平手，不解讀為方向）。"""
 import argparse, hashlib, json, os, re, runpy, subprocess, sys, tempfile, time
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
@@ -168,17 +168,25 @@ def main():
         worst = max(cs, key=CLASSES.index); same = res['old'] == res['new'] and res['old_s'] == res['new_s']
         cls = worst if same or worst != 'MATCH' else 'IMPLEMENTATION_BUG'
         if not same: cls = 'IMPLEMENTATION_BUG'
-        note = ''
+        note = ''; basis_ok = same and worst in ('MATCH', 'NUMERICAL_TOLERANCE'); hv = human.get(f'pair_{tk}') if tk in HUMAN_PAIRS else None; hj = 'directional'
+        rel_txt = '≥' if ge else '>'; gt_txt = f'{p1} {rel_txt} {p2}'
         if tk in HUMAN_PAIRS:
-            if human.get(f'pair_{tk}') == 'PASS': cls, note = 'MATCH', 'human-confirmed'
-            else: cls, note = 'NEEDS_HUMAN_REVIEW', ('已知需人工判定案例' + ('' if same and worst in ('MATCH', 'NUMERICAL_TOLERANCE') else '；且 old/new 分數不一致（見 composite_score 層）'))
+            if hv == 'TIE': hj = 'approx_tie'; gt_txt = f'{p1} ≈ {p2}（human-confirmed approximate tie）'
+            elif hv == 'PASS': gt_txt = f'{p1} {rel_txt} {p2}（human-confirmed）'
+            else: gt_txt = f'{p1} ? {p2}（待人工）'
+            if not basis_ok: note = '人工已標記，但 old/new 分數不一致（見 composite_score 層）'
+            elif hv == 'PASS': cls, note = 'MATCH', 'human-confirmed directional relation'
+            elif hv == 'TIE': cls, note = 'MATCH', 'human-confirmed approximate tie'
+            else: cls, note = 'NEEDS_HUMAN_REVIEW', '已知需人工判定案例（regression/human_review.json 未標記）'
         led.add('pairwise', tk, cls)
-        pw.append(dict(ticker=tk, period_a=p1, period_b=p2, relation='>=' if ge else '>', old_score_a=og[p1], old_score_b=og[p2], new_score_a=ng[p1], new_score_b=ng[p2],
-                       old_smooth_a=osm[p1], old_smooth_b=osm[p2], new_smooth_a=nsm[p1], new_smooth_b=nsm[p2], old_user_order_holds=res['old'], new_user_order_holds=res['new'],
-                       old_smooth_holds=res['old_s'], new_smooth_holds=res['new_s'], classification=cls, note=note))
+        pw.append(dict(ticker=tk, period_a=p1, period_b=p2, relation='>=' if ge else '>', human_judgment=hj, human_ground_truth=gt_txt, primary_score_basis='smoothed_structural_score',
+                       old_smooth_a=osm[p1], old_smooth_b=osm[p2], new_smooth_a=nsm[p1], new_smooth_b=nsm[p2], old_smooth_margin=osm[p1] - osm[p2], new_smooth_margin=nsm[p1] - nsm[p2],
+                       old_smooth_holds=res['old_s'], new_smooth_holds=res['new_s'], classification=cls, note=note,
+                       raw_unsmoothed_old_a=og[p1], raw_unsmoothed_old_b=og[p2], raw_unsmoothed_new_a=ng[p1], raw_unsmoothed_new_b=ng[p2], raw_old_holds=res['old'], raw_new_holds=res['new'],
+                       raw_note='未平滑，診斷用'))
     pd.DataFrame(pw).to_csv(out / 'pairwise_comparison.csv', index=False)
     # 2c) 候選命中率（分母固定 61 / 33）
-    hit = []; tot = {k: [0, 0] for k in ('short_cand', 'short_final', 'long_cand', 'long_final')}
+    hit = []; tot = {k: [0, 0] for k in ('short_cand', 'short_final', 'long_cand', 'long_final')}; tot2 = {'short_cand': [0, 0], 'short_final': [0, 0]}   # tot2＝歷史定義 ±2
     for tk, up_ in USER.items():
         if tk not in tks: continue
         us = [p for p in up_ if p <= 33]; ul = [p for p in up_ if p > 45]
@@ -186,6 +194,8 @@ def main():
             if not ups: continue
             oc = [c['均線'] for c in old_sel[tk][nm][1]]; nc = [c['均線'] for c in new_sel[tk][nm]['cands']]; of = old_sel[tk][nm][0]; nf = new_sel[tk][nm]['final']
             H = lambda cs: any(abs(p - c) <= near for p in ups for c in cs)
+            if kind == 'short':
+                H2 = lambda cs: any(abs(p - c) <= 2 for p in ups for c in cs); tot2['short_cand'][0] += H2(oc); tot2['short_cand'][1] += H2(nc); tot2['short_final'][0] += H2([of]); tot2['short_final'][1] += H2([nf])
             oh, nh, ofh, nfh = H(oc), H(nc), H([of]), H([nf]); tot[kind + '_cand'][0] += oh; tot[kind + '_cand'][1] += nh; tot[kind + '_final'][0] += ofh; tot[kind + '_final'][1] += nfh
             hit.append(dict(ticker=tk, range=nm, user_periods=' '.join(map(str, ups)), old_candidates=' '.join(map(str, oc)), new_candidates=' '.join(map(str, nc)),
                             old_cand_hit=oh, new_cand_hit=nh, old_final=of, new_final=nf, old_final_hit=ofh, new_final_hit=nfh, classification='MATCH' if (oh, ofh) == (nh, nfh) and oc == nc and of == nf else 'IMPLEMENTATION_BUG'))
@@ -211,19 +221,18 @@ def main():
         conf = human.get(f'chart_{tk}_{p}') == 'PASS'; cls = 'MATCH' if conf else 'NEEDS_HUMAN_REVIEW'; led.add('chart_visual', f'{tk}_{p}', cls)
         chart_rows.append(dict(ticker=tk, period=p, classification=cls, events_and_tangle_data_identical=same, note='human-confirmed' if conf else '圖需人工目視判定（程式不自行宣告 PASS）', title=title))
     # 2e) 交接文件數字能否由「舊實作 + 今天資料」重現（資訊用，不計入 FAIL）
-    wrong_old = []; ok_old = 0
-    for r in pw:
-        if 'old_user_order_holds' in r:
-            ok_old += bool(r['old_user_order_holds']); (wrong_old.append(r['ticker']) if not r['old_user_order_holds'] else None)
-    base = [('pairs(unsmoothed 分數)', ok_old, HANDOVER['pairs'], 12), ('short_cand', tot['short_cand'][0], HANDOVER['short_cand'], DEN_SHORT),
-            ('short_final', tot['short_final'][0], HANDOVER['short_final'], DEN_SHORT), ('long_cand(±5)', tot['long_cand'][0], HANDOVER['long_cand'], DEN_LONG)]
+    ok_raw = sum(bool(r['raw_old_holds']) for r in pw if 'raw_old_holds' in r); ok_sm = sum(bool(r['old_smooth_holds']) for r in pw if 'old_smooth_holds' in r)
+    base = [('pairs（平滑結構分數，主口徑）', ok_sm, HANDOVER['pairs'], 12, True), ('short_cand（歷史定義 ±2）', tot2['short_cand'][0], HANDOVER['short_cand'], DEN_SHORT, True),
+            ('short_final（歷史定義 ±2）', tot2['short_final'][0], HANDOVER['short_final'], DEN_SHORT, True), ('long_cand（±5）', tot['long_cand'][0], HANDOVER['long_cand'], DEN_LONG, True),
+            ('pairs（未平滑，診斷用）', ok_raw, HANDOVER['pairs'], 12, False), ('short_cand（完全相等，診斷用）', tot['short_cand'][0], HANDOVER['short_cand'], DEN_SHORT, False),
+            ('short_final（完全相等，診斷用）', tot['short_final'][0], HANDOVER['short_final'], DEN_SHORT, False)]
     # ── 輸出 ──
     pd.DataFrame(sel_rows).to_csv(out / 'select_results.csv', index=False); pd.DataFrame(led.diffs, columns=['ticker', 'period', 'layer', 'field', 'old', 'new', 'abs_diff', 'rel_diff', 'classification', 'note']).to_csv(out / 'regression_diffs.csv', index=False)
     rows = []
     for (layer, f), c in sorted(led.cnt.items()):
         rows.append(dict(layer=layer, field=f, n_compared=sum(c.values()), **{k: c.get(k, 0) for k in CLASSES}, max_abs_diff=led.maxabs.get((layer, f), 0.), max_rel_diff=led.maxrel.get((layer, f), 0.)))
     SM = pd.DataFrame(rows); SM.to_csv(out / 'regression_summary.csv', index=False)
-    tot_c = SM[CLASSES].sum(); nfail = int(tot_c['IMPLEMENTATION_BUG'] + tot_c['RULE_CONFLICT'] + tot_c['DATA_DIFFERENCE']); nhr = int(tot_c['NEEDS_HUMAN_REVIEW']) + sum(1 for b in base if b[1] != b[2])
+    tot_c = SM[CLASSES].sum(); nfail = int(tot_c['IMPLEMENTATION_BUG'] + tot_c['RULE_CONFLICT'] + tot_c['DATA_DIFFERENCE']); nhr = int(tot_c['NEEDS_HUMAN_REVIEW']) + sum(1 for b in base if b[4] and b[1] != b[2])
     status = 'FAIL' if (nfail or fetch_fail) else ('NEEDS_HUMAN_REVIEW' if nhr else 'PASS')
     L_ = []; P = L_.append
     P(f'MATCH/PASS: {int(tot_c["MATCH"])}\nNUMERICAL_TOLERANCE: {int(tot_c["NUMERICAL_TOLERANCE"])}\nFAIL: {nfail}（IMPLEMENTATION_BUG {int(tot_c["IMPLEMENTATION_BUG"])}、RULE_CONFLICT {int(tot_c["RULE_CONFLICT"])}、DATA_DIFFERENCE {int(tot_c["DATA_DIFFERENCE"])}）\n'
@@ -241,20 +250,36 @@ def main():
     P('- research/metrics_v22.py 不在 Drive，依交接 7-2 重建（tg4 依文字說明）；research/ma_select_v18.py 為 7-1 逐字 shim；research/bt_engine.py 為 final_select 所需別名。extra_metrics 的 cross_* 欄位 core 未實作（不參與分數），未比較。')
     if ctx['data_mismatch']: P(f'- **DATA_DIFFERENCE：新舊載入的資料不同的股票**：{sorted(ctx["data_mismatch"])}')
     if ctx['short_hist']: P(f'- 資料 <756 根的股票（tg4／qday／quickfail 視窗規則 RULE_CONFLICT 適用）：{sorted(ctx["short_hist"])}')
-    P('\n## 兩兩比較（old＝frozen composite4，new＝core；未平滑分數；平滑分數見 CSV）\n\n| 股票 | 比較 | old A vs B | new A vs B | old 符合使用者順序 | new 符合使用者順序 | 分類 |\n|---|---|---|---|---|---|---|')
+    P('\n## 兩兩比較（old＝frozen composite4，new＝core；主口徑＝平滑結構分數）\n')
+    P('Pairwise human review uses smoothed structural scores because production candidate selection and Rule B use smoothed structural scores. Raw scores are retained only for diagnostics.\n')
+    P('| 股票 | human ground truth | old smooth A/B | new smooth A/B | 平滑分差 A−B（new） | 平滑方向與人工一致？（資訊） | classification |\n|---|---|---|---|---|---|---|')
     for r in pw:
-        if 'old_score_a' in r: P(f"| {r['ticker']} | {r['period_a']}{r['relation']}{r['period_b']} | {r['old_score_a']:.2f} vs {r['old_score_b']:.2f} | {r['new_score_a']:.2f} vs {r['new_score_b']:.2f} | {r['old_user_order_holds']} | {r['new_user_order_holds']} | {r['classification']} |")
+        if 'old_smooth_a' not in r: continue
+        agree = '—（人工判定為近似平手）' if r['human_judgment'] == 'approx_tie' else ('是' if r['new_smooth_holds'] else '否')
+        P(f"| {r['ticker']} | {r['human_ground_truth']} | {r['old_smooth_a']:.2f} / {r['old_smooth_b']:.2f} | {r['new_smooth_a']:.2f} / {r['new_smooth_b']:.2f} | {r['new_smooth_margin']:+.2f} | {agree} | {r['classification']}{'（' + r['note'] + '）' if r['note'] and r['ticker'] in HUMAN_PAIRS else ''} |")
+    P('\n「平滑方向與人工一致？」只是資訊：regression 檢查的是 old 與 new 是否相同；人工判定不是由程式分數決定，也不因程式分數而改寫。')
+    P('\n### 診斷：未平滑分數（raw，診斷用，不作為 production 口徑）\n\n| 股票 | 比較 | old A/B（未平滑，診斷用） | new A/B（未平滑，診斷用） |\n|---|---|---|---|')
+    for r in pw:
+        if 'raw_unsmoothed_old_a' in r: P(f"| {r['ticker']} | {r['period_a']}{r['relation']}{r['period_b']} | {r['raw_unsmoothed_old_a']:.2f} / {r['raw_unsmoothed_old_b']:.2f} | {r['raw_unsmoothed_new_a']:.2f} / {r['raw_unsmoothed_new_b']:.2f} |")
     P('\n## 候選命中率（old vs new；不以「較高」作為 PASS 理由）\n\n| 項目 | old | new | 分母 | 交接文件數字 | 分類 |\n|---|---|---|---|---|---|')
-    for k, (o_, n_) in tot.items(): P(f"| {k} | {o_} | {n_} | {dens[k]} | {HANDOVER.get(k, 'n/a')} | {'MATCH' if o_ == n_ else 'IMPLEMENTATION_BUG'} |")
-    P('\n## 舊實作＋今天資料能否重現交接文件數字（資訊，不計入 FAIL）\n\n| 項目 | 舊實作今天結果 | 交接文件 | 是否一致 |\n|---|---|---|---|')
-    for nm_, v, b, d_ in base: P(f'| {nm_} | {v}/{d_} | {b}/{d_} | {"一致" if v == b else "**不一致 → NEEDS_HUMAN_REVIEW**（可能原因：Yahoo 歷史資料已更新／命中率定義／重建檔差異；需區分）"} |')
-    P('\n## 需人工判定\n')
+    for k, (o_, n_) in tot.items(): P(f"| {k}（{'±5' if k.startswith('long') else '完全相等'}） | {o_} | {n_} | {dens[k]} | {HANDOVER.get(k, 'n/a') if k.startswith('long') else '（見 ±2 列）'} | {'MATCH' if o_ == n_ else 'IMPLEMENTATION_BUG'} |")
+    for k, (o_, n_) in tot2.items(): P(f"| {k}（歷史定義 ±2） | {o_} | {n_} | {dens[k]} | {HANDOVER[k]} | {'MATCH' if o_ == n_ else 'IMPLEMENTATION_BUG'} |")
+    P('\n## 舊實作＋今天資料能否重現交接文件數字（資訊；主列不一致者計入 NEEDS_HUMAN_REVIEW，診斷列不計）\n\n歷史短期命中定義已由原始 snapshot 確認為 ±2；短期差異來源見 regression/snapshot/snapshot_regression_report.md（ACN 為主要未解差異）。\n\n| 項目 | 舊實作今天結果 | 交接文件 | 是否一致 | 計入 |\n|---|---|---|---|---|')
+    for nm_, v, b, d_, cnt in base: P(f'| {nm_} | {v}/{d_} | {b}/{d_} | {"一致" if v == b else "**不一致**"} | {"是" if cnt else "否（診斷）"} |')
+    P('\n## 人工判定狀態\n')
+    unres_pairs = [r for r in pw if r['classification'] == 'NEEDS_HUMAN_REVIEW']; unres_charts = [r for r in chart_rows if r['classification'] == 'NEEDS_HUMAN_REVIEW']
+    P(f'- HUMAN_PAIRS unresolved：{len(unres_pairs)}；chart_visual unresolved：{len(unres_charts)}')
     for r in pw:
-        if r['classification'] == 'NEEDS_HUMAN_REVIEW': P(f"- 兩兩比較 {r['ticker']} {r['period_a']}{r['relation']}{r['period_b']}：old {r['old_score_a']:.2f}/{r['old_score_b']:.2f}、new {r['new_score_a']:.2f}/{r['new_score_b']:.2f}（{r['note']}）")
+        if r['ticker'] in HUMAN_PAIRS and 'human_ground_truth' in r: P(f"- 兩兩比較 {r['ticker']}：{r['human_ground_truth']}；new 平滑分 {r['new_smooth_a']:.2f}/{r['new_smooth_b']:.2f}；{r['classification']}（{r['note']}）")
     for tk in HUMAN_PAIRS & set(tks):
         for nm in ('短期', '長期'): P(f"  - {tk} {nm} old 候選：{fmtc(old_sel[tk][nm][1])} → 選 {old_sel[tk][nm][0]}；new 候選：{fmtc(new_sel[tk][nm]['cands'])} → 選 {new_sel[tk][nm]['final']}")
-    for r in chart_rows: P(f"- 圖 charts/{r['ticker']}_{r['period']}.png：{r['classification']}（事件／糾結資料 old=new：{r.get('events_and_tangle_data_identical')}）{r.get('title', '')}")
-    P('\n人工確認方式：在 regression/human_review.json 寫入 {"chart_LULU_18": "PASS", "pair_LMT": "PASS"} 這類項目後重跑 workflow。')
+    for r in chart_rows: P(f"- 圖 charts/{r['ticker']}_{r['period']}.png：{r['classification']}（{r['note']}；事件／糾結資料 old=new：{r.get('events_and_tangle_data_identical')}）")
+    WHY = {'pairs': '交接文件 9/12 的評分口徑不明（未平滑與平滑都不是 9/12）；LMT、ACN 兩組分差極薄，單一事件即可翻轉（見 diagnostics/diagnose_report.md）',
+           'short_cand': '歷史定義 ±2 已確認；與交接文件的差來自 ACN（見 regression/snapshot/snapshot_regression_report.md），該差異的資料或事件來源尚未查清',
+           'short_final': '同上（ACN：原始 snapshot final 16，今天 33）', 'long_cand': '見 snapshot 報告'}
+    still = [f'{b[0]}：{b[1]}/{b[3]} vs 交接文件 {b[2]}/{b[3]} — 來源：{WHY[b[0].split("（")[0]]}' for b in base if b[4] and b[1] != b[2]]
+    P('\n### 仍為 NEEDS_HUMAN_REVIEW 的來源（逐項列出，不自動 PASS）\n' + ('\n'.join('- 交接文件數字重現：' + x for x in still) if still else '- 無'))
+    P('\n人工確認方式：在 regression/human_review.json 寫入 `"chart_LULU_18": "PASS"`、`"pair_LMT": "PASS"`（人工確認指定方向成立）或 `"pair_ACN": "TIE"`（人工確認近似平手，不解讀為任一方向勝出）後重跑 workflow。')
     if fetch_fail: P('\n## DATA_FETCH_FAILURE\n' + '\n'.join(f'- {t}: {e}' for t, e in fetch_fail))
     P('\n## 差異列表\n\n非 MATCH 的逐列差異（ticker、period、field、old、new、abs_diff、rel_diff、classification）見 regression_diffs.csv（前 5 筆非容差差異如下）：\n')
     bad = [d for d in led.diffs if d['classification'] != 'NUMERICAL_TOLERANCE'][:5]
