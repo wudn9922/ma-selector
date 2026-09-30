@@ -1,0 +1,28 @@
+name: ab-sar-experiment
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths: ['scripts/ab_sar_experiment.py', '.github/workflows/ab_sar.yml']
+permissions:
+  contents: write
+jobs:
+  ab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install pandas numpy matplotlib pyarrow
+      - name: A/B 診斷（只讀；gap 固定 15；asof 2026-09-24）
+        run: python scripts/ab_sar_experiment.py --asof 2026-09-24 --out experiments/ab_sar
+      - if: always()
+        run: test -f experiments/ab_sar/ab_report.md && cat experiments/ab_sar/ab_report.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: commit report
+        if: always()
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add experiments
+          git diff --cached --quiet || (git commit -m "A/B diagnostic: legacy vs SAR-only final selection (gap=15)" && git pull --rebase -q origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}")
