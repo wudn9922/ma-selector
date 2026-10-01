@@ -40,6 +40,17 @@
 
 候選表另附只做多的簡單／複雜報酬當參考；網頁「回測」分頁仍是**只做多**，沒有改。
 
+## 糾結／穿插、BOX、回測進場價、原始統計（網頁新增功能；production selector 完全沒改）
+- **糾結／穿插已經參與均線選擇**：`core/tangle.py` 的糾結次數（`tg4_*`）與穿插日（`qday_*`）由 `core/metrics.py` 計算，`core/score.py` 轉成 percentile（`p穿插_*`）後依權重進分數（短期：突破、二日、回測、雜訊、糾結/穿插；長期：快敗 50%＋糾結/穿插 50%；中期取短、長平均）。本次權重、公式、percentile 都沒動。候選表的欄位改名為「糾結/穿插百分位(1y/2y/3y)」——它是相對於 83 檔基準池的 percentile score，**不是發生機率**。
+- **BOX（箱型）尚未整合**：Current repository contains active tangle detection but no executable BOX-boundary implementation. Therefore this change does not implement BOX selection or breakout. BOX integration skipped because current repo has no authoritative executable BOX implementation（沒有新增任何 placeholder 評分，也沒有把交接文件提到、但 repo 裡不存在的程式搬回來）。
+- **回測進場價（網頁「回測」分頁，`core/backtest.py::run(entry_mode=...)`）**：
+  - `gap_open`＝「跳空用開盤價（現行，預設）」：多單成交價 `max(開盤, 上緣)`、空單 `min(開盤, 下緣)`。與改動前逐位元組相同（測試對照改動前的 `core/backtest.py`）。
+  - `fixed_band`＝「固定均線門檻價」：多單固定用上緣 `前日MA×(1+上緣%)`、空單固定用下緣，不因開盤跳空改成開盤價；突破進場與回測進場兩條路徑都一致。只改成交價——訊號、偵測、停損、停利、早退、糾結、選均線都不變（停利目標與損益兩平停損仍以實際成交價為基準，與原本一致）。
+  - 「雜訊區上緣 %」仍可設 0–5%。要測「只在均線上方 1.0～1.5% 進場」：選「固定均線門檻價」並把上緣設為 1.0、1.1、…、1.5。
+  - **這個選項只影響網頁回測分頁**。production selector（`core/select.py`：SAR 反手報酬、規則 B、5pp gate、STRUCTURAL_RESCUE_10PT_10PP、候選產生）完全沒改；若要讓固定門檻價影響選均線，需要另外的 validation。
+- **原始機率／比率／頻率**（`core/rawstats.py`，只讀 `metrics.py` 已有欄位）：候選表每個區段下方有「原始機率／比率／頻率」展開表，「判定圖」分頁也列出所選均線的摘要。內容：突破／二日／回測成功率（附 n）、假突破比例（假突破次數／(假突破＋已判定突破)，正向呈現）、糾結次數/年與穿插日/年（**年化頻率，不是機率**）、快敗率（附明顯穿越次數）。分母為 0 或 NaN 一律顯示「— (n=0)」，不顯示 0%。percentile 分數全部保留，與原始統計並列。
+- 測試：`tests/test_backtest_entry_modes.py`、`tests/test_rawstats.py`、`tests/test_app_smoke.py`（擴充，只新增檢查）。
+
 ## Regression
 - A（`scripts/regression.py`）：重建的 research 舊實作 vs core，使用 `core.select.LEGACY`（gap=15、只做多簡單＋複雜取平均、最小均線）——不隨 production 規則改動。
 - B（`scripts/snapshot_regression.py`）：原始 `regression/baselines/選均線_v22.csv`（immutable，SHA-256 見 `SHA256SUMS`）vs LEGACY 輸出；另附 production 設定的命中率供參考。

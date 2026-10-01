@@ -14,14 +14,21 @@ v1 變更：只做多（預設 longonly=True）；加入回測進場（多方，
 　出場：碰到反向雜訊邊界 → 出清現有部位一半；之後價格再創新低（跌破那天最低點）→ 全部出清
 其他時候持倉期間不開新倉
 輸出：總報酬（複利、每筆全額）、最大回撤、勝率、交易筆數（區間內出場的交易，含區間前進場者）、獲利因子、平均賺賠、每筆明細
+進場價模式 entry_mode（只改「成交價」；訊號、偵測、停損、停利、早退、回測流程都不變）：
+  'gap_open'（預設＝現行）：突破／回測多單 max(開盤, 上緣)、空單 min(開盤, 下緣)——跳空越過邊界用開盤價成交
+  'fixed_band'：多單固定用上緣 U＝前日MA×(1+x)、空單固定用下緣 Lb＝前日MA×(1−c)，不因開盤跳空而改成開盤價（突破與回測進場都一致）
+  停利目標與損益兩平停損仍以實際成交價 e 為基準（與原本一致）。
 """
 import numpy as np
 SV = 0.10
+ENTRY_MODES = ('gap_open', 'fixed_band')
 def _side(C, ma, atr, t):
     d = C[t] - ma[t]; s = SV * atr[t]
     return 1 if d > s else (-1 if d < -s else 0)
 def run(O, H, L, C, V, ma, atr, lo=0, x=.01, c=.015, cost=.001, mode='simple', longonly=True, retest=True,
-        tp=.03, surge_pct=.05, surge_atr=1.5, ex_close=True, ex_day2=True, ex_vol=False, return_eq=False):
+        tp=.03, surge_pct=.05, surge_atr=1.5, ex_close=True, ex_day2=True, ex_vol=False, return_eq=False, entry_mode='gap_open'):
+    if entry_mode not in ENTRY_MODES: raise ValueError(f'entry_mode 必須是 {ENTRY_MODES}，收到 {entry_mode!r}')
+    fixed = entry_mode == 'fixed_band'
     N = len(C); mp = np.r_[np.nan, ma[:-1]]; U = mp * (1 + x); Lb = mp * (1 - c)
     eq = np.ones(N); cap = 1.; trades = []; last = 0; since = 0; dep = False; rt = None; kind = 'B'
     pos = 0; size = 0.; e = 0.; tin = 0; realized = 0.; tp_done = False; be = False; half_low = None
@@ -77,7 +84,7 @@ def run(O, H, L, C, V, ma, atr, lo=0, x=.01, c=.015, cost=.001, mode='simple', l
             elif not bounced:
                 if C[t] > O[t] and C[t] > C[t - 1]: rt = (st, True)
             elif H[t] >= U[t]:
-                pos = 1; size = 1.; e = max(O[t], U[t]); tin = t; kind = 'R'
+                pos = 1; size = 1.; e = U[t] if fixed else max(O[t], U[t]); tin = t; kind = 'R'
                 realized = 0.; tp_done = False; be = False; half_low = None; rt = None
                 if mode == 'complex' and H[t] >= e * (1 + tp): close_part(0.5, e * (1 + tp)); tp_done = True; be = True
         # 進場
@@ -86,7 +93,7 @@ def run(O, H, L, C, V, ma, atr, lo=0, x=.01, c=.015, cost=.001, mode='simple', l
                 if longonly and sg == -1: continue
                 band = U[t] if sg == 1 else Lb[t]
                 if last == -sg and ((H[t] >= band) if sg == 1 else (L[t] <= band)):
-                    pos = sg; size = 1.; e = max(O[t], band) if sg == 1 else min(O[t], band); tin = t; kind = 'B'; rt = None
+                    pos = sg; size = 1.; e = band if fixed else (max(O[t], band) if sg == 1 else min(O[t], band)); tin = t; kind = 'B'; rt = None
                     realized = 0.; tp_done = False; be = False; half_low = None
                     wick = not ((C[t] > ma[t] + SV * atr[t]) if sg == 1 else (C[t] < ma[t] - SV * atr[t]))
                     volok = V[t - 1] > 0 and V[t] >= 1.1 * V[t - 1]

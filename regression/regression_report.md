@@ -33,7 +33,7 @@ DATA_FETCH_FAILURE: 0
 
 - research/events_v22.py（85635cb25b7b）vs core/events.py（85635cb25b7b）：位元組相同
 - research/tangle_v4.py（ae26c08c2e1a）vs core/tangle.py（ae26c08c2e1a）：位元組相同
-- research/bt_engine_v1.py（a72854765579）vs core/backtest.py（e1783679baba）：不同（backtest 只多 return_eq 選用參數，見 git diff）
+- research/bt_engine_v1.py（a72854765579）vs core/backtest.py（45505ceb94dc）：不同（backtest 只多 return_eq 選用參數，見 git diff）
 - research/events_v22.py 與首次上傳 commit 4728067 的原檔：相同
 - research/tangle_v4.py 與首次上傳 commit 4728067 的原檔：相同
 - research/bt_engine_v1.py 與首次上傳 commit 4728067 的原檔：相同
@@ -110,10 +110,10 @@ Pairwise human review uses smoothed structural scores because production candida
 - 兩兩比較 DIS：19 ≈ 32（human-confirmed approximate tie）；new 平滑分 43.87/45.97；MATCH（human-confirmed approximate tie）
   - DIS 短期 old 候選：32(46.0) 21(45.1) 18(43.5) 28(41.6) 25(35.2) → 選 18；new 候選：32(46.0) 21(45.1) 18(43.5) 28(41.6) 25(35.2) → 選 18
   - DIS 長期 old 候選：56(83.9) 51(79.3) → 選 51；new 候選：56(83.9) 51(79.3) → 選 51
-  - ACN 短期 old 候選：16(43.9) 29(31.6) 19(30.6) 33(29.2) → 選 33；new 候選：16(43.9) 29(31.6) 19(30.6) 33(29.2) → 選 33
-  - ACN 長期 old 候選：97(97.1) 110(96.3) 107(95.1) 104(95.1) 94(95.0) → 選 104；new 候選：97(97.1) 110(96.3) 107(95.1) 104(95.1) 94(95.0) → 選 104
   - LMT 短期 old 候選：15(73.4) 26(67.4) 33(65.5) 18(64.2) → 選 26；new 候選：15(73.4) 26(67.4) 33(65.5) 18(64.2) → 選 26
   - LMT 長期 old 候選：72(90.4) 105(87.8) 101(87.4) 96(84.3) 75(84.3) → 選 72；new 候選：72(90.4) 105(87.8) 101(87.4) 96(84.3) 75(84.3) → 選 72
+  - ACN 短期 old 候選：16(43.9) 29(31.6) 19(30.6) 33(29.2) → 選 33；new 候選：16(43.9) 29(31.6) 19(30.6) 33(29.2) → 選 33
+  - ACN 長期 old 候選：97(97.1) 110(96.3) 107(95.1) 104(95.1) 94(95.0) → 選 104；new 候選：97(97.1) 110(96.3) 107(95.1) 104(95.1) 94(95.0) → 選 104
 - 圖 charts/LULU_18.png：MATCH（human-confirmed；事件／糾結資料 old=new：True）
 - 圖 charts/SMCI_24.png：MATCH（human-confirmed；事件／糾結資料 old=new：True）
 - 圖 charts/GE_40.png：MATCH（human-confirmed；事件／糾結資料 old=new：True）
