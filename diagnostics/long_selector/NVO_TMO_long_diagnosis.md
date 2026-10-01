@@ -1,5 +1,27 @@
 # NVO／TMO 長期 selector 診斷（純診斷；PRODUCTION CHANGED = NO）
 
+## 答案（純描述；不提任何修法。數字來自下方表格與 NVO／TMO_long_curve.csv）
+
+### NVO
+1. **SMA64**：raw 分數_長 49.54；smoothed 52.82；score_rank 45／65。
+2. **是否低於 best−15**：是。best 85.06、cutoff 70.06；SMA64 低於 cutoff 17.24 分（距 best 32.24 分）。
+3. **spacing 還是 top5 cap**：都不是。SMA64 在第一個篩選步驟（gap）就被淘汰（`BELOW_GAP15`），沒有被拜訪，所以 spacing 與 top5 cap 都沒有機會作用。SMA46–78 全部低於 cutoff。
+4. **候選為什麼集中在 82–99**：只有 SMA79–91、95–101、104–105 共 22 條在 best−15 以內。依分數由高到低拜訪：85（選）→86、84、83（距 85 ≤2，SPACING_BLOCKED）→90（選）→87（blocked）→96（選）→82（選）→…→99（第 5 條，之後 top5 封頂）。SMA46–78 低的原因是 p快敗_3y 低（SMA46–70 平均 24.7，SMA75 只有 1.0），即使 p穿插_3y 已經高（SMA64＝80.2、SMA46–70 平均 75.9）；p快敗_3y 在 SMA79 起升到 45–78，分數才進入 cutoff 以上。SMA64：p穿插 80.2、p快敗 18.9。
+
+### TMO
+1. **SMA85**：raw 98.95；smoothed 98.87；score_rank 23／65。
+2. **是否低於 best−15**：否。best 99.33、cutoff 84.33；SMA85 高於 cutoff 14.54 分（只比 best 低 0.46）。
+3. **spacing 還是 top5 cap**：**top5 cap**（`TOP5_CAP_REACHED`）。5 個名額被 rank 1、3、9、10、12（110、102、105、99、96）佔滿時，還沒輪到 rank 23 的 SMA85；它與最近的已選候選（96）距離 11 > 2，所以並非 spacing 擋掉。第一次失去資格的步驟是「最多 5 條」。
+4. **SMA96–110 是否形成 plateau**：是。SMA85–110 的 smoothed 全部在 98.87–99.33 之間（距 best ≤ 0.46）；以「距 best ≤ 1.0 分」為描述窗，SMA84–110 全部在內（27 條），分數差距小於 0.5 分。
+5. **plateau 來源**：**兩者都高**。plateau 視窗內 p穿插_3y 98.3–98.8（平均 98.6）、p快敗_3y 99.3–100.0（平均 99.6），兩個成分同時貼近基準分佈上緣（SMA90–110 平均 p穿插 98.7、p快敗 99.7）。SMA46–70 兩者平均只有約 75–76；SMA80–83 起兩者一起升到 ≥98 後持平。
+
+### 共通：是否已有 evidence 支持「long scoring 隨 period 變長而系統性偏高」
+- **描述性證據：有「分數隨 period 上升」的趨勢**。83 檔橫斷面：平均 raw 分數_長 從 SMA46 的 46.4 升到 SMA110 的 64.7；SMA46–60／61–75／76–90／91–110 的平均依序 48.9／51.9／59.2／62.3；period 與逐 period 平均分數的 Spearman 相關 0.96（p穿插 0.99、p快敗 0.78）。最佳平滑分數落在 SMA91–110 的有 46/83 檔（55%），而 SMA91–110 只佔 65 個 period 中的 20 個（31%）。上升主要來自 p穿插_3y（SMA46 的 44.0 → SMA110 的 71.5），p快敗_3y 較小（48.7 → 57.8）。NVO（period 與 smoothed 的 Spearman 0.64）與 TMO（0.81）各自也呈上升，TMO 在 SMA83 之後飽和在約 99。
+- **限制**：這只描述「分數隨 period 上升」，沒有檢驗這是 scoring 偏誤，還是較長均線的真實特性；基準分佈是各 period 池化，本輪也沒有拿人工答案做比較。NVO／TMO 兩檔不足以單獨證明「系統性」。
+- 本輪不提出任何權重、period penalty、candidate cap 或其他修法。
+
+---
+
 - asof 2026-09-24｜83 檔資料｜基準＝這 83 檔自己的特徵分佈（同 production_sanity）｜現行 main 的 core｜真實資料
 - 候選產生（讀 core/select.py 現行值）：SMA46–110、與 best 差 ≤ 15、與已選距離 > 2、最多 5 條。診斷重播與 `core.select.select()` 的長期候選（含順序）及 final：83/83 檔相同
 - smoothed score 是 `core.select.smoothed_scores`（對 S[分數] 做 3 點平均、頭尾 edge-pad）。注意 SMA46 的左鄰居是 SMA45 的「中期分數」（S[分數] 在 ≤33 用短期、34–45 用中期、≥46 用長期）。
