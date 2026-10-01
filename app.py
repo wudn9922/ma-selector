@@ -2,7 +2,7 @@
 import datetime as dt, json
 from pathlib import Path
 import numpy as np, pandas as pd, streamlit as st
-from core import data, metrics, score, select as sel, backtest as bt, charts
+from core import data, metrics, score, select as sel, backtest as bt, charts, rawstats
 
 st.set_page_config(page_title="均線選參數", layout="wide")
 ROOT = Path(__file__).parent; REF = ROOT / 'data' / 'reference.parquet'
@@ -58,10 +58,17 @@ c1.metric("股票適合度（短期最高分）", f"{suit_s:.0f} / 100"); c2.met
 c3.metric("短期最後選擇", f"SMA{R['短期']['final']}"); c4.metric("長期最後選擇", f"SMA{R['長期']['final']}")
 
 pct = lambda x: f"{x*100:+.1f}%"
+Mi = M.set_index('period'); _C = df.close.to_numpy(float); _ATR = data.wilder_atr(df)
+def cc_arrays(p): return _C, df.close.rolling(int(p)).mean().to_numpy(), _ATR                     # 快敗率分母（明顯穿越次數）用
+RAW_NOTE = ("成功率＝成功次數／已判定次數（括號內 n＝已判定次數；n=0 顯示「— (n=0)」不顯示 0%）。突破／二日／回測／假突破使用與評分相同的近 1 年（252 根）視窗；假突破比例＝假突破次數／(假突破＋已判定突破)。"
+            "糾結次數/年、穿插日/年是**年化頻率（次/年）**，不是機率；快敗率＝明顯穿越均線後 5 天內又穿回的比例（括號內 n＝明顯穿越次數）。1y／2y／3y＝近 1／2／3 年視窗。")
+ENTRY_LABELS = ["跳空用開盤價（現行）", "固定均線門檻價"]; ENTRY_MODE = {ENTRY_LABELS[0]: 'gap_open', ENTRY_LABELS[1]: 'fixed_band'}
 tab1, tab2, tab3 = st.tabs(["候選與選擇", "判定圖", "回測"])
 with tab1:
     st.caption(f"分數＝各項指標在 83 檔基準中的百分位加權；候選＝與最高分差 ≤{gap}、彼此差 ≥3、最多 5 條；選參數依據＝**多空反手**模擬（events_v22：一直有持倉，碰到反向邊界就反手，扣成本 0.1%）的報酬；"
                "最後選擇（★）：反手報酬距最佳 ≤5 個百分點者為 finalists，取結構分數（未四捨五入）最高者；完全相同才取較短的均線。短期另有固定的低頻 safeguard：結構分第一若被 5pp 排除、但結構分比上述選擇高 ≥10 分且反手報酬距最佳 ≤10 個百分點，改選它。只做多的簡單／複雜報酬僅供參考（「回測」分頁也是只做多）。")
+    st.caption("**百分位欄位**（突破、二日、回測、雜訊、糾結/穿插百分位、快敗百分位）是「相對於 83 檔基準池（reference pool）的 percentile score」，**不是發生機率**；"
+               "糾結（tangle.py 的糾結次數與穿插日）已經是均線評分的一部分。實際的成功率／比率／年化頻率在每個區段下方的「原始機率／比率」展開表。BOX（箱型）尚未整合：目前 repo 沒有可執行的正式 BOX 實作。")
     for nm, lo, hi, W in sel.RANGES:
         r = R[nm]; st.markdown(f"**{nm}（SMA{lo}–{hi}，回測看近 {W//252} 年）**　最後選擇：SMA{r['final']}")
         rows = []
@@ -69,11 +76,15 @@ with tab1:
             g = S[S.period == c['均線']].iloc[0]
             rows.append({'': '★' if c['均線'] == r['final'] else '', '均線': c['均線'], '分數(平滑)': c['分數'],
                          '突破': g['p突破'], '二日': g['p二日'], '回測': g['p回測'], '雜訊': g['p雜訊'],
-                         '穿插(短/中/長)': f"{g['p穿插_1y']:.0f}/{g['p穿插_2y']:.0f}/{g['p穿插_3y']:.0f}",
-                         '快敗(中/長)': f"{g['p快敗_2y']:.0f}/{g['p快敗_3y']:.0f}",
+                         '糾結/穿插百分位(1y/2y/3y)': f"{g['p穿插_1y']:.0f}/{g['p穿插_2y']:.0f}/{g['p穿插_3y']:.0f}",
+                         '快敗百分位(2y/3y)': f"{g['p快敗_2y']:.0f}/{g['p快敗_3y']:.0f}",
                          '反手報酬(選參數)': pct(c['反手報酬']), '反手回撤': pct(c['反手回撤']), '反手勝率': f"{c['反手勝率']*100:.0f}%" if c['反手勝率'] == c['反手勝率'] else '—', '反手筆數': c['反手筆數'],
                          '只做多簡單(參考)': pct(c['簡單報酬']), '只做多複雜(參考)': pct(c['複雜報酬'])})
         st.dataframe(pd.DataFrame(rows).style.format({k: '{:.0f}' for k in ('突破', '二日', '回測', '雜訊')}), hide_index=True, width='stretch')
+        with st.expander(f"原始機率／比率／頻率（{nm}候選；實際統計，不是 percentile）"):
+            raw_rows = [{'均線': c['均線'], **rawstats.raw_row(Mi.loc[c['均線']], rawstats.cross_counts(*cc_arrays(c['均線'])))} for c in r['cands']]
+            st.dataframe(pd.DataFrame(raw_rows), hide_index=True, width='stretch')
+            st.caption(RAW_NOTE)
     with st.expander("全部均線的分數"):
         st.dataframe(S.round(1), hide_index=True, width='stretch')
 
@@ -93,6 +104,9 @@ with tab2:
     title = (f"{tk} SMA{p}｜分數 短{g['分數_短']:.0f} 中{g['分數_中']:.0f} 長{g['分數_長']:.0f}｜"
              f"突破{g['p突破']:.0f} 二日{g['p二日']:.0f} 回測{g['p回測']:.0f} 雜訊{g['p雜訊']:.0f} 穿插1y/2y/3y {g['p穿插_1y']:.0f}/{g['p穿插_2y']:.0f}/{g['p穿插_3y']:.0f} 快敗2y/3y {g['p快敗_2y']:.0f}/{g['p快敗_3y']:.0f}\n"
              f"{bt_line('近1年', 252)}｜{bt_line('近2年', 504)}")
+    rr = rawstats.raw_row(Mi.loc[p], rawstats.cross_counts(*cc_arrays(p)))
+    st.markdown(f"**SMA{p} 原始統計（實際機率／比率／頻率；不是 percentile）**　突破成功率 {rr['突破成功率']}｜二日成功率 {rr['二日成功率']}｜回測成功率 {rr['回測成功率']}｜假突破比例 {rr['假突破比例']}｜"
+                f"糾結次數/年(1y/2y/3y) {rr['糾結次數/年(1y/2y/3y)']}｜穿插日/年(1y/2y/3y) {rr['穿插日/年(1y/2y/3y)']}｜快敗率(1y/2y/3y) {rr['快敗率(1y/2y/3y)']}")
     st.image(render(tk, last, N, p, title, df), width='stretch')
     if not charts.setup_font(): st.info("找不到中文字型，圖上的中文可能顯示成方框（請確認 packages.txt 的 fonts-noto-cjk）。")
     st.markdown("**圖例**"); st.text(charts.LEG)
@@ -100,6 +114,7 @@ with tab2:
 with tab3:
     a1, a2, a3 = st.columns(3)
     mode = a1.radio("策略", ["簡單", "複雜"], horizontal=True); yrs = a1.radio("期間", ["近 1 年", "近 2 年"], horizontal=True)
+    entry_lbl = a1.radio("進場價", ENTRY_LABELS, horizontal=True, help="只改「成交價」，訊號、停損、停利、早退都不變。跳空用開盤價（現行）：開盤已跳過上緣時，以開盤價成交；固定均線門檻價：一律以前日均線×(1＋上緣%)成交（空單：前日均線×(1－下緣%)），不因跳空改成開盤價。")
     x = a2.number_input("雜訊區上緣 %", 0.0, 5.0, 1.0, 0.1); c = a2.number_input("雜訊區下緣 %", 0.0, 5.0, 1.5, 0.1)
     cost = a3.number_input("單邊成本 %", 0.0, 1.0, 0.1, 0.05); tp = a3.number_input("停利門檻 %（複雜）", 1.0, 10.0, 3.0, 0.5)
     kw = {}
@@ -110,7 +125,8 @@ with tab3:
     W = 252 if yrs == "近 1 年" else 504
     O, H, L, C, V = (df[k].to_numpy(float) for k in ('open', 'high', 'low', 'close', 'volume'))
     s, trades, eq = bt.run(O, H, L, C, V, df.close.rolling(p).mean().to_numpy(), data.wilder_atr(df), lo=N - W, x=x / 100, c=c / 100,
-                           cost=cost / 100, tp=tp / 100, mode='simple' if mode == "簡單" else 'complex', return_eq=True, **kw)
+                           cost=cost / 100, tp=tp / 100, mode='simple' if mode == "簡單" else 'complex', return_eq=True, entry_mode=ENTRY_MODE[entry_lbl], **kw)
+    st.caption("若要測試「只在均線上方 1.0%～1.5% 進場」的版本：進場價選「固定均線門檻價」，並把「雜訊區上緣 %」設為 1.0～1.5（可逐一試 1.0、1.1、1.2、1.3、1.4、1.5）。上緣仍可設 0–5% 的任何值；預設「跳空用開盤價（現行）」與原本網頁結果完全相同。")
     m = st.columns(6)
     m[0].metric("總報酬（複利）", pct(s['總報酬'])); m[1].metric("最大回撤", pct(s['最大回撤'])); m[2].metric("勝率", '—' if np.isnan(s['勝率']) else f"{s['勝率']*100:.0f}%")
     m[3].metric("筆數", s['筆數']); m[4].metric("獲利因子", '∞' if np.isinf(s['獲利因子']) else f"{s['獲利因子']:.2f}"); m[5].metric("平均賺／賠", f"{s['平均賺']*100:+.1f}% / {s['平均賠']*100:+.1f}%")
