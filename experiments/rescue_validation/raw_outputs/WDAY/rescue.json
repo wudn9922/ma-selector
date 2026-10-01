@@ -1,0 +1,47 @@
+{
+  "requested_primary_ticker": "WDAY",
+  "actual_ticker": "WDAY",
+  "primary_rank": 42,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 30,
+      "structural_score_unrounded": 57.8323188587684,
+      "score_displayed_rounded": 57.8,
+      "sar_return": -0.16997957484348225,
+      "sar_trades": 33
+    },
+    {
+      "period": 20,
+      "structural_score_unrounded": 48.758262215528774,
+      "score_displayed_rounded": 48.8,
+      "sar_return": -0.4589793434095243,
+      "sar_trades": 43
+    },
+    {
+      "period": 33,
+      "structural_score_unrounded": 48.10050096218205,
+      "score_displayed_rounded": 48.1,
+      "sar_return": -0.08152208201063738,
+      "sar_trades": 30
+    }
+  ],
+  "current_finalists": [
+    33
+  ],
+  "current_final": 33,
+  "structural_best_period": 30,
+  "structural_best_score": 57.8323188587684,
+  "observed_best_sar": -0.08152208201063738,
+  "structural_score_advantage": 9.73181789658635,
+  "sar_gap": 0.08845749283284488,
+  "C1": true,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 33
+}

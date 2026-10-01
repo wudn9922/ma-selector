@@ -1,0 +1,33 @@
+name: production-rescue-checks
+# STRUCTURAL_RESCUE_10PT_10PP：單元測試、封存批次測試（在加入 rescue 前的 worktree）、fresh 100 replay（只用 commit A 封存的 bars；不抓 Yahoo）。
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths: ['core/**', 'tests/**', 'scripts/fresh_rescue_replay.py', '.github/workflows/production_rescue.yml']
+permissions:
+  contents: write
+jobs:
+  rescue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install pandas numpy matplotlib pyarrow
+      - name: rescue 單元測試
+        run: python tests/test_select_rescue.py
+      - name: 封存批次測試（加入 rescue 前的 worktree）＋凍結檔案未變
+        run: python tests/run_archived_batch_tests.py
+      - name: fresh 100 replay（commit A 封存的 bars）
+        run: python scripts/fresh_rescue_replay.py --out experiments/production_rescue
+      - if: always()
+        run: test -f experiments/production_rescue/fresh100_replay.md && cat experiments/production_rescue/fresh100_replay.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: commit replay report
+        if: always()
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add experiments/production_rescue
+          git diff --cached --quiet || (git commit -m "Fresh 100 rescue replay report" && git pull --rebase -q origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}")

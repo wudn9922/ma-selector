@@ -1,0 +1,66 @@
+{
+  "AIZ": {
+    "bars.csv": "39b9d6a0856f36314daafd0a61cdc4c79f8c16b1c2c502bfa7eeddea8accf8f7",
+    "meta.json": "201542670f4301a0ec566e3f542ce5cf1ee9758759950d938a888f6b13e47405",
+    "metrics.csv": "ff6936dbb48de34c829ae71a8e283022966ac4234a1136a51b380308ccdff543",
+    "scores.csv": "7d3fed9002921fdef183da94ae4ffc11149066344646468809720e19082f63ad",
+    "selection.json": "88f063424ef5892a1a234508b638b6675185b88d090c14dd5915be833c3dc5fe",
+    "smoothed_structural_scores.csv": "29db39b915c929d50bbb36602fe0c3ee72f4497cc2ff9b53acdce1bbb8df9563"
+  },
+  "ALL": {
+    "bars.csv": "46690ffabccfa1fd6183e8470a805765791e8613ba6b8d393101a302f486307c",
+    "meta.json": "eb3dc4c5ade155d64ac21ee336c72f06206214129ea7db12fa31c54f2bab2fe8",
+    "metrics.csv": "8c282bfb910a2c5c70fbd44eabcb6c05a09b71a47171f0d2cc89b0c8bcd9b06c",
+    "scores.csv": "2eb4d4dc2190783b3f93e0f287424041140b4b963020065ef5e4e540c1cd7ff4",
+    "selection.json": "5c679dce89a30d578f2f6cef9b7926c881cc029f88de5346138151599490ca97",
+    "smoothed_structural_scores.csv": "0494cc182a6c843873d3ff9ca3041435851c6b536d472e7e0878233954f25487"
+  },
+  "BRO": {
+    "bars.csv": "1a8fc2ff63adb7497c685441f90b1e571a1bfcb255bedb993adbc93398e0ed2b",
+    "meta.json": "5829a2eab20c396828a4a9cf59dd3cea6168e54bcc1784cc607116ccb70e001d",
+    "metrics.csv": "0810d05d4317927968179cac90ce1e365c1fa31cad1cb3aad167a3ead8b254ae",
+    "scores.csv": "81747820a837a69af874f8e41ff5fed9b08ced8fe0b7963a14dce2d37e14b419",
+    "selection.json": "5eb530c165b6061f203e9c31f8542864bfd9428b9348a9c5413de4a378d12e21",
+    "smoothed_structural_scores.csv": "af9ed973aa0548edcf3978f0857dc8a593707d12d62cc1c1bdea694421151f14"
+  },
+  "CIEN": {
+    "bars.csv": "bea73fab5c0f8c9d0e9a9dea2bb920389e6d191e18b986eb4c32abf82f17f932",
+    "meta.json": "cb1e7daf20c0a4793f8631792db634db3ff1a46176f0d767dd9f9203ff5af09c",
+    "metrics.csv": "a57e4bc5af4bf87480c11ca32448f24e51149a9ffbdd2400073d74aefb876185",
+    "scores.csv": "ee8fdf5ef5a72ebd9bffb5b10b3577ef61fa9e869baf780a98d75850ba53be4d",
+    "selection.json": "89f0d1612b990303f9a58e264072e00ba88d7fe9a1d235ba7828660805198e57",
+    "smoothed_structural_scores.csv": "a606db5d03623e89ddbe8e7fd2f24c2d0e14953e873a535b50ef023908033187"
+  },
+  "ELV": {
+    "bars.csv": "bf9979dbca5d51267fe06a7e0211cc1ed600328fc46758d812b7655e14ba45e3",
+    "meta.json": "7d49ba5b7fe7920e2899c2750923ed5f8669ecfad1e9499465b56ac7b274e94b",
+    "metrics.csv": "75c35a082ec67d6f75a012eab66d157c4751706b55de876449270202dc649d15",
+    "scores.csv": "df5fc6e4390acbc15828364e23b9e4af3edd44f0d8cc9fc0e48ad7cfdfc99ced",
+    "selection.json": "226e382e9625eee66798415dfa1b2321005f644f493ceb185b7f9a1c5674f61c",
+    "smoothed_structural_scores.csv": "fb0235854afff07352b59b471168fc5109dc061f60833a2c9d3f63a955494c4c"
+  },
+  "MTD": {
+    "bars.csv": "82944ad268d85424dd5522687b9d10e0a8315c5256bb48255a2a2ca287d3cc3d",
+    "meta.json": "8fe79a7e9752fae87d5374cd81ba06051b3afb1b8209c3077969093dd821a1a8",
+    "metrics.csv": "b0734a557c1a44ac7678303c4cd0b21d874e21335d70dce2729064be1504f628",
+    "scores.csv": "4469e8f4f2de71776f0ace119515ae110e2e8cd9329c6a4a2da403816548dbfa",
+    "selection.json": "ed9776b2f078df5d9254842d2aa64940e98c571b844826905f28a8e1e8072382",
+    "smoothed_structural_scores.csv": "703c934e2d0744f1ba561dc0db4a064eb28849c16b3290cfca7ac853e7807d33"
+  },
+  "NOC": {
+    "bars.csv": "a2837bc5abd2fe56ebbfdb88df9ada72f08e8ae94180b337542e668fd8416d95",
+    "meta.json": "fce8a591f07f6ae83e7e2908c4c769fb1f2a8c75389709d349e61e51ae2c5481",
+    "metrics.csv": "d852383c4518f06692ccf36886b7a3913a475950e9d1fdc8f8b6d8ad9f171c5a",
+    "scores.csv": "253c7410cc5d5c6a246d7d6d5adf119104495254d7524fa89b4ee378b33b678c",
+    "selection.json": "46ade53bd5f98706e17826d6c535fad0d7ec45c5a8cf7df959af1536c2d7e056",
+    "smoothed_structural_scores.csv": "3b9cc1c8943015ad923a7c21a8e4d3b87eb5e6944b9a7808b5aef17645de9933"
+  },
+  "WBD": {
+    "bars.csv": "5788be9019c8cbfd72c50de8935bbe87a71b8ba457fc34317998374282b2f733",
+    "meta.json": "209bd3a3959335ddfc48e49f4c604b98afe561fed9b90da8c9d895cac6c850f9",
+    "metrics.csv": "a91c1a7321ae9c4f16a8492470e9c273cf988fc7b4aa183c92a7bebbd774814c",
+    "scores.csv": "22a2d0291e3cac9473c54e5327e7f150366d3ec3529de7ad2e5bfd749084a072",
+    "selection.json": "1335724e4c17b82323881e3569d73e9d4079d68c524bac8d4ba1955ee2a79652",
+    "smoothed_structural_scores.csv": "d1a21ccfe84ceaaddd0b8441fa57641625c59cde4ef2fa1b5b4209136c2943f8"
+  }
+}

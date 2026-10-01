@@ -1,0 +1,10 @@
+{
+  "ticker": "ICE",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "5ae79ee5846ec9e7b3e0acbf5dc74a50a8152d08ba92d702452704e0bc369b9c",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}

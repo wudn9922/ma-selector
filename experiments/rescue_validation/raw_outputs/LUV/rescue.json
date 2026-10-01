@@ -1,0 +1,47 @@
+{
+  "requested_primary_ticker": "LUV",
+  "actual_ticker": "LUV",
+  "primary_rank": 64,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 17,
+      "structural_score_unrounded": 56.21302920013386,
+      "score_displayed_rounded": 56.2,
+      "sar_return": 0.22950026697290604,
+      "sar_trades": 30
+    },
+    {
+      "period": 30,
+      "structural_score_unrounded": 44.89891859103079,
+      "score_displayed_rounded": 44.9,
+      "sar_return": -0.1117434571845024,
+      "sar_trades": 35
+    },
+    {
+      "period": 27,
+      "structural_score_unrounded": 41.343289825970544,
+      "score_displayed_rounded": 41.3,
+      "sar_return": -0.09517279299260017,
+      "sar_trades": 36
+    }
+  ],
+  "current_finalists": [
+    17
+  ],
+  "current_final": 17,
+  "structural_best_period": 17,
+  "structural_best_score": 56.21302920013386,
+  "observed_best_sar": 0.22950026697290604,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 17
+}

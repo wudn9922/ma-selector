@@ -1,0 +1,10 @@
+{
+  "ticker": "FLEX",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "821388195678f671e1ed2f0685abf5c2935e930f74ad5600cdca0cbd9a8edd01",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}

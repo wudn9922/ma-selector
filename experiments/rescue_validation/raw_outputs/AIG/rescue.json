@@ -1,0 +1,62 @@
+{
+  "requested_primary_ticker": "AIG",
+  "actual_ticker": "AIG",
+  "primary_rank": 37,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 32,
+      "structural_score_unrounded": 58.09749414323962,
+      "score_displayed_rounded": 58.1,
+      "sar_return": -0.2788416730721819,
+      "sar_trades": 22
+    },
+    {
+      "period": 26,
+      "structural_score_unrounded": 50.72195030120482,
+      "score_displayed_rounded": 50.7,
+      "sar_return": -0.2523575113418287,
+      "sar_trades": 24
+    },
+    {
+      "period": 21,
+      "structural_score_unrounded": 50.5834797523427,
+      "score_displayed_rounded": 50.6,
+      "sar_return": -0.1813866179214716,
+      "sar_trades": 24
+    },
+    {
+      "period": 29,
+      "structural_score_unrounded": 48.160297439759034,
+      "score_displayed_rounded": 48.2,
+      "sar_return": -0.2769850349852051,
+      "sar_trades": 23
+    },
+    {
+      "period": 18,
+      "structural_score_unrounded": 46.09150142235609,
+      "score_displayed_rounded": 46.1,
+      "sar_return": -0.1412136757332636,
+      "sar_trades": 26
+    }
+  ],
+  "current_finalists": [
+    18,
+    21
+  ],
+  "current_final": 21,
+  "structural_best_period": 32,
+  "structural_best_score": 58.09749414323962,
+  "observed_best_sar": -0.1412136757332636,
+  "structural_score_advantage": 7.514014390896925,
+  "sar_gap": 0.13762799733891828,
+  "C1": true,
+  "C2": false,
+  "C3": false,
+  "trigger": false,
+  "rescue_final": 21
+}

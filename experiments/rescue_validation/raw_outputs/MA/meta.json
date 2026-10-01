@@ -1,0 +1,10 @@
+{
+  "ticker": "MA",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "3c1b7585751588d4672e93fddbd236c17299a80f6d390bda31bff4753b1907a4",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}

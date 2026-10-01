@@ -1,0 +1,63 @@
+{
+  "requested_primary_ticker": "NVR",
+  "actual_ticker": "NVR",
+  "primary_rank": 90,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 30,
+      "structural_score_unrounded": 53.814110609103075,
+      "score_displayed_rounded": 53.8,
+      "sar_return": -0.13347385114613441,
+      "sar_trades": 18
+    },
+    {
+      "period": 27,
+      "structural_score_unrounded": 50.696431559571614,
+      "score_displayed_rounded": 50.7,
+      "sar_return": -0.14926029030125942,
+      "sar_trades": 20
+    },
+    {
+      "period": 20,
+      "structural_score_unrounded": 48.82305262717536,
+      "score_displayed_rounded": 48.8,
+      "sar_return": -0.09667378242045166,
+      "sar_trades": 24
+    },
+    {
+      "period": 15,
+      "structural_score_unrounded": 46.81439298862115,
+      "score_displayed_rounded": 46.8,
+      "sar_return": -0.08758534374466931,
+      "sar_trades": 29
+    },
+    {
+      "period": 33,
+      "structural_score_unrounded": 45.14435345548862,
+      "score_displayed_rounded": 45.1,
+      "sar_return": -0.3056227971952292,
+      "sar_trades": 25
+    }
+  ],
+  "current_finalists": [
+    15,
+    20,
+    30
+  ],
+  "current_final": 30,
+  "structural_best_period": 30,
+  "structural_best_score": 53.814110609103075,
+  "observed_best_sar": -0.08758534374466931,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.045888507401465106,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 30
+}

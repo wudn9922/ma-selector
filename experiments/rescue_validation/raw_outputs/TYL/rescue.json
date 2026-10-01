@@ -1,0 +1,47 @@
+{
+  "requested_primary_ticker": "TYL",
+  "actual_ticker": "TYL",
+  "primary_rank": 66,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 26,
+      "structural_score_unrounded": 60.61736529451137,
+      "score_displayed_rounded": 60.6,
+      "sar_return": -0.1243283450659678,
+      "sar_trades": 30
+    },
+    {
+      "period": 21,
+      "structural_score_unrounded": 52.49639181726907,
+      "score_displayed_rounded": 52.5,
+      "sar_return": -0.036062262159753944,
+      "sar_trades": 33
+    },
+    {
+      "period": 29,
+      "structural_score_unrounded": 50.57155706157965,
+      "score_displayed_rounded": 50.6,
+      "sar_return": -0.15481791923012356,
+      "sar_trades": 28
+    }
+  ],
+  "current_finalists": [
+    21
+  ],
+  "current_final": 21,
+  "structural_best_period": 26,
+  "structural_best_score": 60.61736529451137,
+  "observed_best_sar": -0.036062262159753944,
+  "structural_score_advantage": 8.120973477242302,
+  "sar_gap": 0.08826608290621385,
+  "C1": true,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 21
+}

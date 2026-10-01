@@ -1,0 +1,40 @@
+{
+  "requested_primary_ticker": "VRSK",
+  "actual_ticker": "VRSK",
+  "primary_rank": 72,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 22,
+      "structural_score_unrounded": 53.86096469210174,
+      "score_displayed_rounded": 53.9,
+      "sar_return": -0.0588823539433706,
+      "sar_trades": 25
+    },
+    {
+      "period": 19,
+      "structural_score_unrounded": 41.0419281291834,
+      "score_displayed_rounded": 41.0,
+      "sar_return": 0.09718072361182806,
+      "sar_trades": 25
+    }
+  ],
+  "current_finalists": [
+    19
+  ],
+  "current_final": 19,
+  "structural_best_period": 22,
+  "structural_best_score": 53.86096469210174,
+  "observed_best_sar": 0.09718072361182806,
+  "structural_score_advantage": 12.819036562918342,
+  "sar_gap": 0.15606307755519866,
+  "C1": true,
+  "C2": true,
+  "C3": false,
+  "trigger": false,
+  "rescue_final": 19
+}

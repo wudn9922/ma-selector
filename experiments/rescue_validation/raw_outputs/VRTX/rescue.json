@@ -1,0 +1,63 @@
+{
+  "requested_primary_ticker": "VRTX",
+  "actual_ticker": "VRTX",
+  "primary_rank": 71,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 23,
+      "structural_score_unrounded": 58.11679007697455,
+      "score_displayed_rounded": 58.1,
+      "sar_return": -0.13567771306325982,
+      "sar_trades": 26
+    },
+    {
+      "period": 29,
+      "structural_score_unrounded": 53.64907546854083,
+      "score_displayed_rounded": 53.6,
+      "sar_return": -0.2252692611489565,
+      "sar_trades": 26
+    },
+    {
+      "period": 20,
+      "structural_score_unrounded": 53.41140604082998,
+      "score_displayed_rounded": 53.4,
+      "sar_return": -0.13490187291906253,
+      "sar_trades": 28
+    },
+    {
+      "period": 26,
+      "structural_score_unrounded": 49.235117553547525,
+      "score_displayed_rounded": 49.2,
+      "sar_return": -0.18965125446161857,
+      "sar_trades": 25
+    },
+    {
+      "period": 17,
+      "structural_score_unrounded": 47.553442938420346,
+      "score_displayed_rounded": 47.6,
+      "sar_return": -0.16844394515879335,
+      "sar_trades": 32
+    }
+  ],
+  "current_finalists": [
+    17,
+    20,
+    23
+  ],
+  "current_final": 23,
+  "structural_best_period": 23,
+  "structural_best_score": 58.11679007697455,
+  "observed_best_sar": -0.13490187291906253,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0007758401441972929,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 23
+}

@@ -1,0 +1,48 @@
+{
+  "requested_primary_ticker": "NSC",
+  "actual_ticker": "NSC",
+  "primary_rank": 70,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 23,
+      "structural_score_unrounded": 65.281281375502,
+      "score_displayed_rounded": 65.3,
+      "sar_return": 0.13575050773957176,
+      "sar_trades": 18
+    },
+    {
+      "period": 31,
+      "structural_score_unrounded": 59.185910307898254,
+      "score_displayed_rounded": 59.2,
+      "sar_return": 0.0694099480307484,
+      "sar_trades": 14
+    },
+    {
+      "period": 26,
+      "structural_score_unrounded": 55.097839273761714,
+      "score_displayed_rounded": 55.1,
+      "sar_return": 0.13313831675762766,
+      "sar_trades": 16
+    }
+  ],
+  "current_finalists": [
+    23,
+    26
+  ],
+  "current_final": 23,
+  "structural_best_period": 23,
+  "structural_best_score": 65.281281375502,
+  "observed_best_sar": 0.13575050773957176,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 23
+}

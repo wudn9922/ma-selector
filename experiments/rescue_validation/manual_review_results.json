@@ -1,0 +1,72 @@
+{
+  "validation_batch": "STRUCTURAL_RESCUE_FRESH_VALIDATION_100",
+  "rule_under_test": "STRUCTURAL_RESCUE_10PT_10PP",
+  "status": "MANUAL_REVIEW_COMPLETE",
+  "commits": {
+    "raw_output_commit_A": "07023d68ffb56588e978f2bc65af063966d10067",
+    "trigger_summary_commit_B": "12347d468a1c7273559bd5c00c4e7fed7645e9a6",
+    "review_bundle_commit": "ff708c5aabe9174bdffab69f7b6913f6aa220178"
+  },
+  "freeze_manifest_sha256": {
+    "freeze_manifest.json": "fd5ebf1d360abce10cffcd7f4ccb9fa0d84e897df3c9bec2cf5e054402052097",
+    "freeze_manifest.md": "6c3212ac72b7654b25601dfc9ea65a28eebe8f8bcb8ce74fc7ec9b2359df44a9"
+  },
+  "reviews": [
+    {
+      "ticker": "PG",
+      "current": "SMA22",
+      "rescue": "SMA25",
+      "current_final": 22,
+      "rescue_final": 25,
+      "structural_score_advantage": 10.1594921352075,
+      "sar_gap": 0.0613109374490034,
+      "user_quote": "PG 差不多，2年前22好，但最近25反而比較好",
+      "overall_judgement": "TIE",
+      "historical_earlier_segment": "CURRENT_BETTER",
+      "recent_segment": "RESCUE_BETTER",
+      "rescue_worse": false,
+      "note": "依使用者原話記錄；不得改判為 RESCUE_BETTER。"
+    },
+    {
+      "ticker": "FDX",
+      "current": "SMA18",
+      "rescue": "SMA21",
+      "current_final": 18,
+      "rescue_final": 21,
+      "structural_score_advantage": 14.897820448460507,
+      "sar_gap": 0.06802873612453442,
+      "user_quote": "FDX 21較好",
+      "overall_judgement": "RESCUE_BETTER",
+      "rescue_worse": false
+    }
+  ],
+  "aggregate": {
+    "trigger_count": 2,
+    "validation_n": 100,
+    "trigger_rate": "2/100",
+    "rescue_better": 1,
+    "tie": 1,
+    "current_better_or_rescue_worse": 0,
+    "all_trigger_cases_reviewed": true,
+    "current_to_rescue": [
+      "PG 22→25",
+      "FDX 18→21"
+    ],
+    "development_83_finals_previously_changed": "0/83"
+  },
+  "formal_validation_criterion": {
+    "status": "NOT DEFINED IN FREEZE MANIFEST",
+    "detail": "freeze manifest 只預先凍結：trigger=0 → INSUFFICIENT_VALIDATION；trigger≥1 → 全部 trigger case 人工 review；10.0／10pp 不得調整。沒有預先定義「1 rescue win + 1 tie + 0 losses」是否等於 validation PASS。",
+    "formal_pass_fail": "NONE ASSIGNED",
+    "added_pass_fail_threshold": false,
+    "freeze_manifest_modified": false
+  },
+  "descriptive_evidence": "fresh evidence is favorable to rescue: 1 better, 1 tie, 0 worse（描述性結果，非預先凍結的正式 validation criterion；n=2 trigger cases）",
+  "dispositions": {
+    "CA95_CA90": "已淘汰，不再考慮",
+    "threshold_10pt_10pp": "未修改；permanently fixed",
+    "production_changed": false,
+    "rule_changed": false
+  },
+  "data_policy": "本收尾階段沒有取得任何價格、沒有重跑 selector、沒有重新開啟 raw data；只整理使用者的人工判斷與既有 trigger summary。"
+}

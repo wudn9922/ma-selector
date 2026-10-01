@@ -1,0 +1,10 @@
+{
+  "ticker": "MMM",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "ddb35f80734bca9bf6c72c652d9506a2adb9733719beaf48ec65a987488c25de",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}

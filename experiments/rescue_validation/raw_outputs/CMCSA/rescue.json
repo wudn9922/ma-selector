@@ -1,0 +1,49 @@
+{
+  "requested_primary_ticker": "CMCSA",
+  "actual_ticker": "CMCSA",
+  "primary_rank": 92,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 31,
+      "structural_score_unrounded": 70.40458709839356,
+      "score_displayed_rounded": 70.4,
+      "sar_return": 0.07290768378635648,
+      "sar_trades": 19
+    },
+    {
+      "period": 26,
+      "structural_score_unrounded": 63.918329568273094,
+      "score_displayed_rounded": 63.9,
+      "sar_return": 0.09214136635022707,
+      "sar_trades": 20
+    },
+    {
+      "period": 22,
+      "structural_score_unrounded": 57.78196117804551,
+      "score_displayed_rounded": 57.8,
+      "sar_return": 0.06041169651317824,
+      "sar_trades": 23
+    }
+  ],
+  "current_finalists": [
+    22,
+    26,
+    31
+  ],
+  "current_final": 31,
+  "structural_best_period": 31,
+  "structural_best_score": 70.40458709839356,
+  "observed_best_sar": 0.09214136635022707,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.01923368256387059,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 31
+}

@@ -1,0 +1,10 @@
+{
+  "ticker": "FAST",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "e2dbc402cee38d63fe040ea5d76d8c2a4d7ef66bad868a7ff52eec2a47ef637d",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}

@@ -1,0 +1,10 @@
+{
+  "ticker": "NCLH",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "d334ce4b3d1cf87f687a4f1ad9b6f8b32a7493e004cd6722b2b5bb99a84c4a58",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}

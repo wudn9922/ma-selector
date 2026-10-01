@@ -1,0 +1,47 @@
+{
+  "requested_primary_ticker": "TXN",
+  "actual_ticker": "TXN",
+  "primary_rank": 59,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 29,
+      "structural_score_unrounded": 72.5835111278447,
+      "score_displayed_rounded": 72.6,
+      "sar_return": 0.5005690754271992,
+      "sar_trades": 18
+    },
+    {
+      "period": 26,
+      "structural_score_unrounded": 61.03580990629183,
+      "score_displayed_rounded": 61.0,
+      "sar_return": 0.296548905447942,
+      "sar_trades": 21
+    },
+    {
+      "period": 32,
+      "structural_score_unrounded": 59.74444653614458,
+      "score_displayed_rounded": 59.7,
+      "sar_return": 0.4272752877321768,
+      "sar_trades": 21
+    }
+  ],
+  "current_finalists": [
+    29
+  ],
+  "current_final": 29,
+  "structural_best_period": 29,
+  "structural_best_score": 72.5835111278447,
+  "observed_best_sar": 0.5005690754271992,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 29
+}

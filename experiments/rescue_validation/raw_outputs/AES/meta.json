@@ -1,0 +1,10 @@
+{
+  "ticker": "AES",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "ac357583c285cc325bb075a120598495ae9d325e772a4ed5b11f8c1199ed1bde",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}

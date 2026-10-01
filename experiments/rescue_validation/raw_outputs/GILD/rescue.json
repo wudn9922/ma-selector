@@ -1,0 +1,40 @@
+{
+  "requested_primary_ticker": "GILD",
+  "actual_ticker": "GILD",
+  "primary_rank": 120,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 27,
+      "structural_score_unrounded": 48.463227911646584,
+      "score_displayed_rounded": 48.5,
+      "sar_return": -0.0792625251898812,
+      "sar_trades": 24
+    },
+    {
+      "period": 32,
+      "structural_score_unrounded": 45.47999288821954,
+      "score_displayed_rounded": 45.5,
+      "sar_return": -0.0006371448381586875,
+      "sar_trades": 22
+    }
+  ],
+  "current_finalists": [
+    32
+  ],
+  "current_final": 32,
+  "structural_best_period": 27,
+  "structural_best_score": 48.463227911646584,
+  "observed_best_sar": -0.0006371448381586875,
+  "structural_score_advantage": 2.983235023427042,
+  "sar_gap": 0.07862538035172251,
+  "C1": true,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 32
+}

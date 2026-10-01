@@ -1,0 +1,62 @@
+{
+  "requested_primary_ticker": "ADSK",
+  "actual_ticker": "ADSK",
+  "primary_rank": 82,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 19,
+      "structural_score_unrounded": 53.73290035140562,
+      "score_displayed_rounded": 53.7,
+      "sar_return": -0.03205942366234393,
+      "sar_trades": 36
+    },
+    {
+      "period": 33,
+      "structural_score_unrounded": 50.743050326305216,
+      "score_displayed_rounded": 50.7,
+      "sar_return": -0.2190043643121845,
+      "sar_trades": 27
+    },
+    {
+      "period": 16,
+      "structural_score_unrounded": 47.2775999832664,
+      "score_displayed_rounded": 47.3,
+      "sar_return": -0.012573200081788305,
+      "sar_trades": 38
+    },
+    {
+      "period": 22,
+      "structural_score_unrounded": 46.06425702811245,
+      "score_displayed_rounded": 46.1,
+      "sar_return": -0.12648245982173123,
+      "sar_trades": 32
+    },
+    {
+      "period": 30,
+      "structural_score_unrounded": 43.55630856760374,
+      "score_displayed_rounded": 43.6,
+      "sar_return": -0.22849016457365434,
+      "sar_trades": 29
+    }
+  ],
+  "current_finalists": [
+    16,
+    19
+  ],
+  "current_final": 19,
+  "structural_best_period": 19,
+  "structural_best_score": 53.73290035140562,
+  "observed_best_sar": -0.012573200081788305,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.01948622358055563,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 19
+}

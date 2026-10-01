@@ -1,0 +1,188 @@
+{
+  "batch": "CURRENT_V22_FRESH_HOLDOUT_1",
+  "status": "RAW_OUTPUTS_COMMITTED_BEFORE_REVIEW",
+  "raw_output_commit_sha": "bc3d73d2248682f72328013ab0941cb3526e25d6",
+  "production": {
+    "commit": "d4a604295c02d704eded90832a90b9c5c49ac265",
+    "tree": "282e3b4e0bfb237e95d9a450c6003b308d5ccad3",
+    "hashes_verified": true,
+    "tree_verified": true,
+    "file_sha256_verified": {
+      "data/reference.parquet": "1d247c2b0e957d2656b46565151b1fc56370d924c3c3c05af14d1464c144956d",
+      "core/select.py": "d8951ed8d072ae441ac36ef93ce0666771ec8ffc41aa42a54d8286e437f9a7e6",
+      "core/events.py": "85635cb25b7bd345b91267653dde648b251b0516ed6b981beeb3ea8790dab128",
+      "core/score.py": "4c064c6e24cc9f5fdf1fdfa7d7bb3012418ed04f49f14fd03232db63e549b053",
+      "core/metrics.py": "51ac87ee1a1c7b717ba6d47b9733c34da7d9ed2705342a7161cc99ba7edc7f21",
+      "core/universe.py": "38ff2d1bf24f6b66ec75b979fca73c444ccced831e9cea1a29b9068a17cb627a"
+    }
+  },
+  "reference_sha256": "1d247c2b0e957d2656b46565151b1fc56370d924c3c3c05af14d1464c144956d",
+  "asof": "2026-09-29",
+  "price_data_accessed": true,
+  "holdout_results_generated": true,
+  "freeze_manifest": {
+    "freeze_commit": "f2893eed9a6ac21d7e9cf94a4d06f275bc920ff6",
+    "unchanged_since_freeze_commit": true,
+    "sha256": {
+      "experiments/holdout_v22/freeze_manifest.json": "9664218bb25695491d2781c83df52e02d6a2c57d571119509c9c38ac778311cf",
+      "experiments/holdout_v22/freeze_manifest.md": "59f4f23c5392e08c32619a5d821f1e918957693f9fcf281a0f4f0e6cba506b3f"
+    }
+  },
+  "primary_requested": [
+    "NOC",
+    "WBD",
+    "AIZ",
+    "MTD",
+    "ELV",
+    "ALL",
+    "CIEN",
+    "BRO"
+  ],
+  "fallback_order_frozen": [
+    "PRU",
+    "LH",
+    "CTSH",
+    "GWW",
+    "ADP",
+    "ACGL",
+    "SJM",
+    "T",
+    "RSG",
+    "NDAQ",
+    "AXP",
+    "O",
+    "AMCR",
+    "BDX",
+    "ALLE",
+    "CCI",
+    "TROW",
+    "GL",
+    "STE",
+    "HII",
+    "CB",
+    "COR"
+  ],
+  "data_sufficiency": [
+    {
+      "ticker": "NOC",
+      "role": "PRIMARY",
+      "fetched_rows_total": 1254,
+      "bars_after_asof_dropped": 0,
+      "n_bars": 1254,
+      "first_date": "2021-09-30",
+      "last_date": "2026-09-29",
+      "sufficient": true
+    },
+    {
+      "ticker": "WBD",
+      "role": "PRIMARY",
+      "fetched_rows_total": 1254,
+      "bars_after_asof_dropped": 0,
+      "n_bars": 1254,
+      "first_date": "2021-09-30",
+      "last_date": "2026-09-29",
+      "sufficient": true
+    },
+    {
+      "ticker": "AIZ",
+      "role": "PRIMARY",
+      "fetched_rows_total": 1254,
+      "bars_after_asof_dropped": 0,
+      "n_bars": 1254,
+      "first_date": "2021-09-30",
+      "last_date": "2026-09-29",
+      "sufficient": true
+    },
+    {
+      "ticker": "MTD",
+      "role": "PRIMARY",
+      "fetched_rows_total": 1254,
+      "bars_after_asof_dropped": 0,
+      "n_bars": 1254,
+      "first_date": "2021-09-30",
+      "last_date": "2026-09-29",
+      "sufficient": true
+    },
+    {
+      "ticker": "ELV",
+      "role": "PRIMARY",
+      "fetched_rows_total": 1254,
+      "bars_after_asof_dropped": 0,
+      "n_bars": 1254,
+      "first_date": "2021-09-30",
+      "last_date": "2026-09-29",
+      "sufficient": true
+    },
+    {
+      "ticker": "ALL",
+      "role": "PRIMARY",
+      "fetched_rows_total": 1254,
+      "bars_after_asof_dropped": 0,
+      "n_bars": 1254,
+      "first_date": "2021-09-30",
+      "last_date": "2026-09-29",
+      "sufficient": true
+    },
+    {
+      "ticker": "CIEN",
+      "role": "PRIMARY",
+      "fetched_rows_total": 1254,
+      "bars_after_asof_dropped": 0,
+      "n_bars": 1254,
+      "first_date": "2021-09-30",
+      "last_date": "2026-09-29",
+      "sufficient": true
+    },
+    {
+      "ticker": "BRO",
+      "role": "PRIMARY",
+      "fetched_rows_total": 1254,
+      "bars_after_asof_dropped": 0,
+      "n_bars": 1254,
+      "first_date": "2021-09-30",
+      "last_date": "2026-09-29",
+      "sufficient": true
+    }
+  ],
+  "replacements": [],
+  "actual_holdout_8": [
+    "NOC",
+    "WBD",
+    "AIZ",
+    "MTD",
+    "ELV",
+    "ALL",
+    "CIEN",
+    "BRO"
+  ],
+  "min_bars_required": 900,
+  "pre_commit_checks": {
+    "exactly_8_completed_stocks": true,
+    "each_stock_ge_900_bars": true,
+    "last_date_le_asof": true,
+    "production_hashes_still_match_freeze_manifest": true,
+    "reference_sha_still_matches": true,
+    "short_mid_long_all_completed": true,
+    "raw_outputs_all_serialized": true,
+    "no_manual_review_fields": true,
+    "no_holdout_accuracy_metrics_computed": true,
+    "no_production_or_manifest_change_in_worktree": true
+  },
+  "raw_output_dir": "experiments/holdout_v22/raw_outputs",
+  "raw_outputs_index_sha256": "86a1b0ca591acc05eec7e1ef58959bcb17be3d33b48e19c310e9402141956570",
+  "audit_notes": [
+    "bars.csv／metrics.csv／scores.csv 以 Python repr 寫出（可逐位元還原）；重讀時請用 pd.read_csv(..., float_precision=\"round_trip\")，pandas 預設讀取器最後一位小數可能不同。",
+    "selection.json 是 core.select.select(df, score_table(compute_metrics(df), reference)) 的原樣輸出（NaN→null）；用 bars.csv 重算應完全相同。",
+    "bars.csv 是 core.data.fetch_yahoo 取得後以 ASOF 截斷的已完成日線（欄位 time,open,high,low,close,volume）。"
+  ],
+  "no_review_no_ground_truth_note": "原始輸出在使用者審閱之前產生並先 commit；本檔沒有任何 candidate／final／分數／報酬，也沒有人工判斷或 holdout 命中率。",
+  "environment": {
+    "python": "3.11.16",
+    "pandas": "3.0.6",
+    "numpy": "2.4.6",
+    "github_run_id": "36714451044",
+    "github_sha": "c258b3852c43c247245dc986b695e7a163cd9d3c"
+  },
+  "started_utc": "2026-09-30T12:24:12+00:00",
+  "finished_utc": "2026-09-30T12:24:29+00:00"
+}

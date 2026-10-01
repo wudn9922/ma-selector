@@ -1,0 +1,62 @@
+{
+  "requested_primary_ticker": "JKHY",
+  "actual_ticker": "JKHY",
+  "primary_rank": 119,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 15,
+      "structural_score_unrounded": 62.34181517737616,
+      "score_displayed_rounded": 62.3,
+      "sar_return": 0.48583422291440614,
+      "sar_trades": 23
+    },
+    {
+      "period": 18,
+      "structural_score_unrounded": 58.96581116131191,
+      "score_displayed_rounded": 59.0,
+      "sar_return": 0.3711007452490003,
+      "sar_trades": 21
+    },
+    {
+      "period": 24,
+      "structural_score_unrounded": 54.343206157965184,
+      "score_displayed_rounded": 54.3,
+      "sar_return": 0.47812396515907407,
+      "sar_trades": 18
+    },
+    {
+      "period": 28,
+      "structural_score_unrounded": 54.01512299196787,
+      "score_displayed_rounded": 54.0,
+      "sar_return": 0.4186820723250133,
+      "sar_trades": 16
+    },
+    {
+      "period": 21,
+      "structural_score_unrounded": 53.71930430053547,
+      "score_displayed_rounded": 53.7,
+      "sar_return": 0.3970364952017029,
+      "sar_trades": 21
+    }
+  ],
+  "current_finalists": [
+    15,
+    24
+  ],
+  "current_final": 15,
+  "structural_best_period": 15,
+  "structural_best_score": 62.34181517737616,
+  "observed_best_sar": 0.48583422291440614,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 15
+}

@@ -1,0 +1,62 @@
+{
+  "requested_primary_ticker": "ERIE",
+  "actual_ticker": "ERIE",
+  "primary_rank": 51,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 22,
+      "structural_score_unrounded": 44.453229585006696,
+      "score_displayed_rounded": 44.5,
+      "sar_return": -0.33799873685723014,
+      "sar_trades": 44
+    },
+    {
+      "period": 25,
+      "structural_score_unrounded": 38.91524431057563,
+      "score_displayed_rounded": 38.9,
+      "sar_return": -0.2869838280054754,
+      "sar_trades": 42
+    },
+    {
+      "period": 33,
+      "structural_score_unrounded": 38.16351342871485,
+      "score_displayed_rounded": 38.2,
+      "sar_return": -0.22414724501555328,
+      "sar_trades": 31
+    },
+    {
+      "period": 29,
+      "structural_score_unrounded": 36.64982848058902,
+      "score_displayed_rounded": 36.6,
+      "sar_return": -0.279464555966616,
+      "sar_trades": 39
+    },
+    {
+      "period": 15,
+      "structural_score_unrounded": 33.406595130522085,
+      "score_displayed_rounded": 33.4,
+      "sar_return": -0.2495803064708927,
+      "sar_trades": 48
+    }
+  ],
+  "current_finalists": [
+    15,
+    33
+  ],
+  "current_final": 33,
+  "structural_best_period": 22,
+  "structural_best_score": 44.453229585006696,
+  "observed_best_sar": -0.22414724501555328,
+  "structural_score_advantage": 6.2897161562918456,
+  "sar_gap": 0.11385149184167687,
+  "C1": true,
+  "C2": false,
+  "C3": false,
+  "trigger": false,
+  "rescue_final": 33
+}

@@ -1,0 +1,49 @@
+{
+  "requested_primary_ticker": "EFX",
+  "actual_ticker": "EFX",
+  "primary_rank": 110,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 29,
+      "structural_score_unrounded": 71.44170431726909,
+      "score_displayed_rounded": 71.4,
+      "sar_return": -0.21964106429734376,
+      "sar_trades": 24
+    },
+    {
+      "period": 25,
+      "structural_score_unrounded": 70.04423945783132,
+      "score_displayed_rounded": 70.0,
+      "sar_return": -0.22908163867912168,
+      "sar_trades": 25
+    },
+    {
+      "period": 32,
+      "structural_score_unrounded": 64.3108893908969,
+      "score_displayed_rounded": 64.3,
+      "sar_return": -0.24525469452938542,
+      "sar_trades": 26
+    }
+  ],
+  "current_finalists": [
+    25,
+    29,
+    32
+  ],
+  "current_final": 29,
+  "structural_best_period": 29,
+  "structural_best_score": 71.44170431726909,
+  "observed_best_sar": -0.21964106429734376,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 29
+}

@@ -1,0 +1,61 @@
+{
+  "requested_primary_ticker": "VICI",
+  "actual_ticker": "VICI",
+  "primary_rank": 84,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 22,
+      "structural_score_unrounded": 34.14815512048193,
+      "score_displayed_rounded": 34.1,
+      "sar_return": 0.05557278482181971,
+      "sar_trades": 17
+    },
+    {
+      "period": 26,
+      "structural_score_unrounded": 33.05335927041499,
+      "score_displayed_rounded": 33.1,
+      "sar_return": -0.0101953898964664,
+      "sar_trades": 18
+    },
+    {
+      "period": 17,
+      "structural_score_unrounded": 32.76412943440428,
+      "score_displayed_rounded": 32.8,
+      "sar_return": -0.1265684198263144,
+      "sar_trades": 26
+    },
+    {
+      "period": 29,
+      "structural_score_unrounded": 30.073261797188753,
+      "score_displayed_rounded": 30.1,
+      "sar_return": -0.007908891449679767,
+      "sar_trades": 17
+    },
+    {
+      "period": 33,
+      "structural_score_unrounded": 26.877039407630527,
+      "score_displayed_rounded": 26.9,
+      "sar_return": -0.05940660542742948,
+      "sar_trades": 20
+    }
+  ],
+  "current_finalists": [
+    22
+  ],
+  "current_final": 22,
+  "structural_best_period": 22,
+  "structural_best_score": 34.14815512048193,
+  "observed_best_sar": 0.05557278482181971,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 22
+}

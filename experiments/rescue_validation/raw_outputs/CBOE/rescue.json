@@ -1,0 +1,61 @@
+{
+  "requested_primary_ticker": "CBOE",
+  "actual_ticker": "CBOE",
+  "primary_rank": 33,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 28,
+      "structural_score_unrounded": 42.702476572958496,
+      "score_displayed_rounded": 42.7,
+      "sar_return": 0.14975728491922302,
+      "sar_trades": 20
+    },
+    {
+      "period": 33,
+      "structural_score_unrounded": 41.11150330488621,
+      "score_displayed_rounded": 41.1,
+      "sar_return": -0.035843409030058004,
+      "sar_trades": 22
+    },
+    {
+      "period": 25,
+      "structural_score_unrounded": 40.94032379518072,
+      "score_displayed_rounded": 40.9,
+      "sar_return": 0.07828069724683173,
+      "sar_trades": 25
+    },
+    {
+      "period": 22,
+      "structural_score_unrounded": 36.98240880187416,
+      "score_displayed_rounded": 37.0,
+      "sar_return": 0.20726961245066255,
+      "sar_trades": 26
+    },
+    {
+      "period": 15,
+      "structural_score_unrounded": 32.31540746318608,
+      "score_displayed_rounded": 32.3,
+      "sar_return": 0.2701651164939949,
+      "sar_trades": 29
+    }
+  ],
+  "current_finalists": [
+    15
+  ],
+  "current_final": 15,
+  "structural_best_period": 28,
+  "structural_best_score": 42.702476572958496,
+  "observed_best_sar": 0.2701651164939949,
+  "structural_score_advantage": 10.387069109772419,
+  "sar_gap": 0.12040783157477186,
+  "C1": true,
+  "C2": true,
+  "C3": false,
+  "trigger": false,
+  "rescue_final": 15
+}

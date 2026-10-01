@@ -1,0 +1,48 @@
+{
+  "requested_primary_ticker": "FE",
+  "actual_ticker": "FE",
+  "primary_rank": 102,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 19,
+      "structural_score_unrounded": 64.47158425368139,
+      "score_displayed_rounded": 64.5,
+      "sar_return": 0.3386003797864854,
+      "sar_trades": 14
+    },
+    {
+      "period": 15,
+      "structural_score_unrounded": 59.60947958500669,
+      "score_displayed_rounded": 59.6,
+      "sar_return": 0.2615820802938347,
+      "sar_trades": 15
+    },
+    {
+      "period": 22,
+      "structural_score_unrounded": 50.2000188253012,
+      "score_displayed_rounded": 50.2,
+      "sar_return": 0.318897405275832,
+      "sar_trades": 12
+    }
+  ],
+  "current_finalists": [
+    19,
+    22
+  ],
+  "current_final": 19,
+  "structural_best_period": 19,
+  "structural_best_score": 64.47158425368139,
+  "observed_best_sar": 0.3386003797864854,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 19
+}

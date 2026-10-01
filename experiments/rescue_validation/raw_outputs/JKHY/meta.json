@@ -1,0 +1,10 @@
+{
+  "ticker": "JKHY",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "f7d4879f7c4f725160e17f0ba53accb3a3233499289686055c8a5747b94763ca",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}

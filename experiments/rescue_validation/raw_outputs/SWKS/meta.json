@@ -1,0 +1,10 @@
+{
+  "ticker": "SWKS",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "2723bcbfd237abd8e2717ce740c55a4623716035e15310436c37fe019eac62d1",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}

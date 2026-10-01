@@ -1,0 +1,61 @@
+{
+  "requested_primary_ticker": "VRT",
+  "actual_ticker": "VRT",
+  "primary_rank": 121,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 20,
+      "structural_score_unrounded": 59.98807730923694,
+      "score_displayed_rounded": 60.0,
+      "sar_return": -0.3246754422105387,
+      "sar_trades": 51
+    },
+    {
+      "period": 17,
+      "structural_score_unrounded": 56.94784345716198,
+      "score_displayed_rounded": 56.9,
+      "sar_return": -0.5421158359709457,
+      "sar_trades": 59
+    },
+    {
+      "period": 23,
+      "structural_score_unrounded": 56.871862449799195,
+      "score_displayed_rounded": 56.9,
+      "sar_return": -0.4739231535224314,
+      "sar_trades": 50
+    },
+    {
+      "period": 26,
+      "structural_score_unrounded": 55.00083668005355,
+      "score_displayed_rounded": 55.0,
+      "sar_return": -0.442572470574211,
+      "sar_trades": 52
+    },
+    {
+      "period": 32,
+      "structural_score_unrounded": 52.882624246987945,
+      "score_displayed_rounded": 52.9,
+      "sar_return": -0.5952557157282858,
+      "sar_trades": 53
+    }
+  ],
+  "current_finalists": [
+    20
+  ],
+  "current_final": 20,
+  "structural_best_period": 20,
+  "structural_best_score": 59.98807730923694,
+  "observed_best_sar": -0.3246754422105387,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 20
+}

@@ -1,0 +1,10 @@
+{
+  "ticker": "HPE",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "2f1d22f2b013d4bdebad25bf1f30ff6b49567ed70e9eee2e587d9af89eb0b2cd",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}

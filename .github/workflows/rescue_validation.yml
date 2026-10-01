@@ -1,0 +1,50 @@
+name: rescue-validation-open
+# STRUCTURAL_RESCUE_FRESH_VALIDATION_100 的一次性開封。只呼叫凍結的 production；先 commit A（全部 raw outputs），之後才產生 trigger summary（commit B）。
+# 本 workflow 在 commit A 之前不印、不寫進 step summary 任何 candidate／final／分數／報酬／trigger；harness 對已開封的批次會拒絕重跑。
+on:
+  push:
+    branches: ['claude/streamlit-webpage-v1-pw74j3']
+    paths: ['experiments/rescue_validation/run_validation.py', 'experiments/rescue_validation/rescue_rule.py', '.github/workflows/rescue_validation.yml']
+permissions:
+  contents: write
+concurrency:
+  group: rescue-validation-open
+  cancel-in-progress: false
+jobs:
+  open:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install pandas numpy pyarrow
+      - name: 單元測試（合成資料；沒有價格存取）
+        run: |
+          python experiments/rescue_validation/test_freeze_rescue_validation.py
+          python experiments/rescue_validation/test_run_validation.py
+      - name: integrity gate → rescue 交叉檢驗 → 抓資料 → 全部 100 檔 production＋rescue → commit 前檢查（不印結果）
+        run: python experiments/rescue_validation/run_validation.py
+      - name: commit A：全部 raw outputs（此時尚未有任何人檢視結果）
+        if: always()
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          for p in experiments/rescue_validation/raw_outputs experiments/rescue_validation/execution_record.json experiments/rescue_validation/execution_blocked.json; do
+            if [ -e "$p" ]; then git add "$p"; fi
+          done
+          if git diff --cached --quiet; then echo "nothing to commit"; else
+            git commit -q -m "STRUCTURAL_RESCUE_FRESH_VALIDATION_100: raw outputs (generated before any exposure)"
+            git pull --rebase -q origin "${GITHUB_REF_NAME}"
+            git rev-parse HEAD > /tmp/raw_output_commit_sha.txt
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+      - name: commit B：trigger summary ＋ execution record（commit A 之後才計算）
+        if: always()
+        run: |
+          test -f /tmp/raw_output_commit_sha.txt && test -d experiments/rescue_validation/raw_outputs || { echo "no raw outputs; nothing to finalize"; exit 0; }
+          python experiments/rescue_validation/run_validation.py --finalize --raw-commit "$(cat /tmp/raw_output_commit_sha.txt)"
+          git add experiments/rescue_validation/execution_record.json experiments/rescue_validation/trigger_summary.json experiments/rescue_validation/trigger_summary.md
+          git commit -q -m "STRUCTURAL_RESCUE_FRESH_VALIDATION_100: execution record and trigger summary"
+          git pull --rebase -q origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

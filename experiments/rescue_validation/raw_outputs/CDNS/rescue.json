@@ -1,0 +1,41 @@
+{
+  "requested_primary_ticker": "CDNS",
+  "actual_ticker": "CDNS",
+  "primary_rank": 60,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 19,
+      "structural_score_unrounded": 56.138303212851405,
+      "score_displayed_rounded": 56.1,
+      "sar_return": -0.29784203271159115,
+      "sar_trades": 45
+    },
+    {
+      "period": 16,
+      "structural_score_unrounded": 49.130584839357425,
+      "score_displayed_rounded": 49.1,
+      "sar_return": -0.3324866918593614,
+      "sar_trades": 48
+    }
+  ],
+  "current_finalists": [
+    16,
+    19
+  ],
+  "current_final": 19,
+  "structural_best_period": 19,
+  "structural_best_score": 56.138303212851405,
+  "observed_best_sar": -0.29784203271159115,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 19
+}

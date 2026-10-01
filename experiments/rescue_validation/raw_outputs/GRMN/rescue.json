@@ -1,0 +1,61 @@
+{
+  "requested_primary_ticker": "GRMN",
+  "actual_ticker": "GRMN",
+  "primary_rank": 69,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 33,
+      "structural_score_unrounded": 54.54340800702811,
+      "score_displayed_rounded": 54.5,
+      "sar_return": -0.13294429327865198,
+      "sar_trades": 27
+    },
+    {
+      "period": 22,
+      "structural_score_unrounded": 52.74959211847389,
+      "score_displayed_rounded": 52.7,
+      "sar_return": 0.22830800926786488,
+      "sar_trades": 26
+    },
+    {
+      "period": 19,
+      "structural_score_unrounded": 49.37505229250335,
+      "score_displayed_rounded": 49.4,
+      "sar_return": 0.2806616919757765,
+      "sar_trades": 31
+    },
+    {
+      "period": 25,
+      "structural_score_unrounded": 43.83121025769746,
+      "score_displayed_rounded": 43.8,
+      "sar_return": 0.07703291712867677,
+      "sar_trades": 29
+    },
+    {
+      "period": 16,
+      "structural_score_unrounded": 42.84408467202141,
+      "score_displayed_rounded": 42.8,
+      "sar_return": 0.15631221662952788,
+      "sar_trades": 36
+    }
+  ],
+  "current_finalists": [
+    19
+  ],
+  "current_final": 19,
+  "structural_best_period": 33,
+  "structural_best_score": 54.54340800702811,
+  "observed_best_sar": 0.2806616919757765,
+  "structural_score_advantage": 5.168355714524765,
+  "sar_gap": 0.4136059852544285,
+  "C1": true,
+  "C2": false,
+  "C3": false,
+  "trigger": false,
+  "rescue_final": 19
+}

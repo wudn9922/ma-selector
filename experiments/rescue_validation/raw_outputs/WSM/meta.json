@@ -1,0 +1,10 @@
+{
+  "ticker": "WSM",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "3c33834a710650205556147dd0d4763618be6f0ea01e5f7fd6fd0e9d8b01feab",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}

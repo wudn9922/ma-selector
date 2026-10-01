@@ -1,0 +1,55 @@
+{
+  "requested_primary_ticker": "FIS",
+  "actual_ticker": "FIS",
+  "primary_rank": 105,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 19,
+      "structural_score_unrounded": 42.14901271753681,
+      "score_displayed_rounded": 42.1,
+      "sar_return": -0.12410291846592048,
+      "sar_trades": 39
+    },
+    {
+      "period": 16,
+      "structural_score_unrounded": 34.15453480589022,
+      "score_displayed_rounded": 34.2,
+      "sar_return": 0.020757453156345695,
+      "sar_trades": 38
+    },
+    {
+      "period": 22,
+      "structural_score_unrounded": 33.62658969210174,
+      "score_displayed_rounded": 33.6,
+      "sar_return": -0.02163023607559733,
+      "sar_trades": 32
+    },
+    {
+      "period": 32,
+      "structural_score_unrounded": 32.97570490294511,
+      "score_displayed_rounded": 33.0,
+      "sar_return": -0.1624653595800527,
+      "sar_trades": 27
+    }
+  ],
+  "current_finalists": [
+    16,
+    22
+  ],
+  "current_final": 16,
+  "structural_best_period": 19,
+  "structural_best_score": 42.14901271753681,
+  "observed_best_sar": 0.020757453156345695,
+  "structural_score_advantage": 7.994477911646591,
+  "sar_gap": 0.14486037162226617,
+  "C1": true,
+  "C2": false,
+  "C3": false,
+  "trigger": false,
+  "rescue_final": 16
+}

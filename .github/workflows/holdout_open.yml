@@ -1,0 +1,51 @@
+name: holdout-open-v22-fresh-1
+# CURRENT_V22_FRESH_HOLDOUT_1 的一次性開封。只呼叫凍結的 production；先 commit 原始輸出，才會有人檢視。
+# 本 workflow 不印出、不寫進 step summary 任何結果；harness 對已開封的批次會拒絕重跑。
+on:
+  push:
+    branches: ['claude/streamlit-webpage-v1-pw74j3']
+    paths: ['experiments/holdout_v22/run_holdout.py', '.github/workflows/holdout_open.yml']
+permissions:
+  contents: write
+concurrency:
+  group: holdout-open-v22-fresh-1
+  cancel-in-progress: false
+jobs:
+  open:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install pandas numpy pyarrow
+      - name: integrity gate → 抓資料 → 全部 8 檔 production → commit 前檢查（不印結果）
+        run: python experiments/holdout_v22/run_holdout.py
+      - name: commit A：全部 raw outputs（此時尚未有任何人檢視結果）
+        if: always()
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          for p in experiments/holdout_v22/raw_outputs experiments/holdout_v22/execution_record.json experiments/holdout_v22/execution_blocked.json; do
+            if [ -e "$p" ]; then git add "$p"; fi
+          done
+          if git diff --cached --quiet; then echo "nothing to commit"; else
+            git commit -q -m "CURRENT_V22_FRESH_HOLDOUT_1: raw production outputs (generated before any review)"
+            git pull --rebase -q origin "${GITHUB_REF_NAME}"
+            git rev-parse HEAD > /tmp/raw_output_commit_sha.txt
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+      - name: commit B：把 raw output commit SHA 記進 execution record
+        if: always()
+        run: |
+          test -f /tmp/raw_output_commit_sha.txt && test -f experiments/holdout_v22/execution_record.json || { echo "no execution record to update"; exit 0; }
+          python - <<'PY'
+          import json
+          p = 'experiments/holdout_v22/execution_record.json'; r = json.load(open(p, encoding='utf-8'))
+          r['raw_output_commit_sha'] = open('/tmp/raw_output_commit_sha.txt').read().strip(); r['status'] = 'RAW_OUTPUTS_COMMITTED_BEFORE_REVIEW'
+          json.dump(r, open(p, 'w', encoding='utf-8'), ensure_ascii=False, indent=2); open(p, 'a').write('\n')
+          PY
+          git add experiments/holdout_v22/execution_record.json
+          git commit -q -m "CURRENT_V22_FRESH_HOLDOUT_1: record raw output commit SHA"
+          git pull --rebase -q origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

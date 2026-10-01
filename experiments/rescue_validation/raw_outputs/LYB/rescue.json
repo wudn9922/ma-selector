@@ -1,0 +1,48 @@
+{
+  "requested_primary_ticker": "LYB",
+  "actual_ticker": "LYB",
+  "primary_rank": 54,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 29,
+      "structural_score_unrounded": 66.256484270415,
+      "score_displayed_rounded": 66.3,
+      "sar_return": 0.28175097492602474,
+      "sar_trades": 25
+    },
+    {
+      "period": 32,
+      "structural_score_unrounded": 60.079327727576974,
+      "score_displayed_rounded": 60.1,
+      "sar_return": 0.17105420907225333,
+      "sar_trades": 27
+    },
+    {
+      "period": 26,
+      "structural_score_unrounded": 53.53696034136545,
+      "score_displayed_rounded": 53.5,
+      "sar_return": 0.27410714457577057,
+      "sar_trades": 29
+    }
+  ],
+  "current_finalists": [
+    26,
+    29
+  ],
+  "current_final": 29,
+  "structural_best_period": 29,
+  "structural_best_score": 66.256484270415,
+  "observed_best_sar": 0.28175097492602474,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 29
+}

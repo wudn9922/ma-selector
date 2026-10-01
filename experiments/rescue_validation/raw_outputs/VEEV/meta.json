@@ -1,0 +1,10 @@
+{
+  "ticker": "VEEV",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "b3476125216604eee52c9234151ea14bd440673a9f337e57d2c7421f3f369bee",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}

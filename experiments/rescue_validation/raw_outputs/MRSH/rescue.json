@@ -1,0 +1,61 @@
+{
+  "requested_primary_ticker": "MRSH",
+  "actual_ticker": "MRSH",
+  "primary_rank": 85,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 25,
+      "structural_score_unrounded": 45.56271962851405,
+      "score_displayed_rounded": 45.6,
+      "sar_return": 0.03618012115521552,
+      "sar_trades": 19
+    },
+    {
+      "period": 22,
+      "structural_score_unrounded": 39.59421017402945,
+      "score_displayed_rounded": 39.6,
+      "sar_return": -0.059476419168889016,
+      "sar_trades": 23
+    },
+    {
+      "period": 33,
+      "structural_score_unrounded": 36.315731676706825,
+      "score_displayed_rounded": 36.3,
+      "sar_return": -0.04195911686627618,
+      "sar_trades": 17
+    },
+    {
+      "period": 15,
+      "structural_score_unrounded": 34.939915913654616,
+      "score_displayed_rounded": 34.9,
+      "sar_return": -0.13097722894058672,
+      "sar_trades": 29
+    },
+    {
+      "period": 28,
+      "structural_score_unrounded": 33.583343791834,
+      "score_displayed_rounded": 33.6,
+      "sar_return": -0.030334691808162506,
+      "sar_trades": 19
+    }
+  ],
+  "current_finalists": [
+    25
+  ],
+  "current_final": 25,
+  "structural_best_period": 25,
+  "structural_best_score": 45.56271962851405,
+  "observed_best_sar": 0.03618012115521552,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 25
+}

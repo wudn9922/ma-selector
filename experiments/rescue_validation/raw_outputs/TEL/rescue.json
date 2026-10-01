@@ -1,0 +1,62 @@
+{
+  "requested_primary_ticker": "KVUE",
+  "actual_ticker": "TEL",
+  "primary_rank": 115,
+  "replacement_rank": 132,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 25,
+      "structural_score_unrounded": 47.01242469879518,
+      "score_displayed_rounded": 47.0,
+      "sar_return": -0.42966068558257564,
+      "sar_trades": 40
+    },
+    {
+      "period": 32,
+      "structural_score_unrounded": 41.69563671352075,
+      "score_displayed_rounded": 41.7,
+      "sar_return": -0.4281739237086273,
+      "sar_trades": 39
+    },
+    {
+      "period": 22,
+      "structural_score_unrounded": 41.12831534471218,
+      "score_displayed_rounded": 41.1,
+      "sar_return": -0.33050646955197605,
+      "sar_trades": 36
+    },
+    {
+      "period": 18,
+      "structural_score_unrounded": 38.67631986278447,
+      "score_displayed_rounded": 38.7,
+      "sar_return": -0.3735258854972845,
+      "sar_trades": 42
+    },
+    {
+      "period": 28,
+      "structural_score_unrounded": 36.07790537148594,
+      "score_displayed_rounded": 36.1,
+      "sar_return": -0.6232973759889562,
+      "sar_trades": 43
+    }
+  ],
+  "current_finalists": [
+    18,
+    22
+  ],
+  "current_final": 22,
+  "structural_best_period": 25,
+  "structural_best_score": 47.01242469879518,
+  "observed_best_sar": -0.33050646955197605,
+  "structural_score_advantage": 5.884109354083002,
+  "sar_gap": 0.0991542160305996,
+  "C1": true,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 22
+}

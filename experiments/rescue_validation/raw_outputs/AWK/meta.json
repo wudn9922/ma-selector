@@ -1,0 +1,10 @@
+{
+  "ticker": "AWK",
+  "role": "PRIMARY",
+  "asof": "2026-09-29",
+  "n_bars": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "bars_sha256": "af2abb405c71d5b247c9937c589cde0684bba1389d3093dbe0ada0f2a9b4f53c",
+  "price_source": "core.data.fetch_yahoo (production path), range=5y, cut at ASOF"
+}

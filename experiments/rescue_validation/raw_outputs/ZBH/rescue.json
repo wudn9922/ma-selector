@@ -1,0 +1,40 @@
+{
+  "requested_primary_ticker": "ZBH",
+  "actual_ticker": "ZBH",
+  "primary_rank": 93,
+  "replacement_rank": null,
+  "bar_count": 1254,
+  "first_date": "2021-09-30",
+  "last_date": "2026-09-29",
+  "asof": "2026-09-29",
+  "short_candidates": [
+    {
+      "period": 16,
+      "structural_score_unrounded": 59.02218247991968,
+      "score_displayed_rounded": 59.0,
+      "sar_return": -0.055087330552643476,
+      "sar_trades": 29
+    },
+    {
+      "period": 21,
+      "structural_score_unrounded": 54.22016189759036,
+      "score_displayed_rounded": 54.2,
+      "sar_return": -0.23530723348516736,
+      "sar_trades": 27
+    }
+  ],
+  "current_finalists": [
+    16
+  ],
+  "current_final": 16,
+  "structural_best_period": 16,
+  "structural_best_score": 59.02218247991968,
+  "observed_best_sar": -0.055087330552643476,
+  "structural_score_advantage": 0.0,
+  "sar_gap": 0.0,
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "trigger": false,
+  "rescue_final": 16
+}
