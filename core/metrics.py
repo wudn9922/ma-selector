@@ -2,6 +2,7 @@
 import numpy as np, pandas as pd
 from . import events as ev, tangle as t4
 from .data import wilder_atr
+from .ma import moving_average
 SV = 0.10
 PERIODS = range(15, 111)
 YEARS = (('1y', 252), ('2y', 504), ('3y', 756))
@@ -34,9 +35,9 @@ def period_metrics(O, H, L, C, atr, ma):
         r[f'quickfail_{nm}'] = len(quick) / len(xw) if xw else 0.                     # 明顯穿越後 5 天內又穿回的比例
     return r
 
-def compute_metrics(df, periods=PERIODS):
+def compute_metrics(df, periods=PERIODS, kind='SMA'):
     O, H, L, C = (df[k].to_numpy(float) for k in ('open', 'high', 'low', 'close')); atr = wilder_atr(df)
     close = df.close; rows = []
     for p in periods:
-        r = dict(period=p); r.update(period_metrics(O, H, L, C, atr, close.rolling(p).mean().to_numpy())); rows.append(r)
+        r = dict(period=p); r.update(period_metrics(O, H, L, C, atr, moving_average(close, p, kind))); rows.append(r)
     return pd.DataFrame(rows)

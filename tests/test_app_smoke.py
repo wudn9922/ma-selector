@@ -34,7 +34,7 @@ check(any('MSFT' in m.value for m in at.markdown), '頁面顯示 MSFT')
 check(len(at.tabs) == 3, f'三個分頁：{[t.label for t in at.tabs]}')
 imgs = at.get('image'); check(len(imgs) >= 1 and any(type(c).__name__ == 'Image' for c in at.tabs[1].children.values()), f'判定圖已渲染在「判定圖」分頁（{len(imgs)} 張）')
 mets = [m.label for m in at.metric]; check('總報酬（複利）' in mets and '最大回撤' in mets and '獲利因子' in mets, '回測分頁指標存在')
-at.radio[0].set_value('複雜').run(); check(not at.exception, '回測切換到複雜策略沒有例外')
+[r for r in at.radio if r.label == '策略'][0].set_value('複雜').run(); check(not at.exception, '回測切換到複雜策略沒有例外')
 at.number_input[0].set_value(20).run(); check(not at.exception, '檢視均線改成 20 沒有例外')
 # ── 新增功能（只新增，不取代）：欄名、原始統計展開表、進場價 radio ──
 at.sidebar.text_input[0].set_value('AAPL').run(); check(not at.exception and not at.error, '換回 AAPL 沒有例外')
@@ -52,4 +52,49 @@ def bt_metrics(): return [(m.label, m.value) for m in at.metric if m.label in ('
 base = bt_metrics(); ent[0].set_value('固定均線門檻價').run(); check(not at.exception, '切換「固定均線門檻價」沒有例外')
 ent = [r for r in at.radio if r.label == '進場價'][0]; ent.set_value('跳空用開盤價（現行）').run(); check(bt_metrics() == base, '切回預設後結果與一開始完全相同')
 at.number_input[1].set_value(1.5).run(); check(not at.exception, '雜訊區上緣可設 1.5（仍保留 0–5% 自由度）')
+# ── EMA／SMA＋EMA 並列 ──
+import os, tempfile
+import pandas as pd
+from core import metrics, score
+def kind_radio(): return [r for r in at.sidebar.radio if r.label == '均線類型'][0]
+def mvals(label): return [m.value for m in at.metric if m.label == label]
+at = AppTest.from_file(str(ROOT / 'app.py'), default_timeout=180).run()
+check(kind_radio().value == 'SMA' and list(kind_radio().options) == ['SMA', 'EMA', 'SMA＋EMA 並列'], '均線類型預設 SMA')
+check(mvals('短期最後選擇')[0].startswith('SMA') and mvals('短期最後選擇')[0] == final15, '預設 SMA：最後選擇仍是 SMA 且與原值相同')
+check(not any('EMA' in c.value for c in at.caption), '預設 SMA 不顯示 EMA 說明')
+os.environ['MA_SELECTOR_REF_EMA'] = str(Path(tempfile.mkdtemp()) / 'missing_reference_ema.parquet')   # 強制「沒有 EMA 基準」（不論 data/reference_ema.parquet 是否已存在）
+kind_radio().set_value('EMA').run()
+check(not at.exception, '選 EMA 但沒有 EMA 基準：沒有例外')
+check(any('找不到 EMA 基準分佈' in w.value for w in at.warning), '選 EMA 但沒有 EMA 基準：顯示警告')
+check(any(v.startswith('SMA') for v in mvals('短期最後選擇')) and not at.error, '選 EMA 但沒有 EMA 基準：退回只顯示 SMA')
+kind_radio().set_value('SMA＋EMA 並列').run()
+check(not at.exception and any('找不到 EMA 基準分佈' in w.value for w in at.warning), '並列模式沒有 EMA 基準：警告、不當機')
+# 建一個暫時的 EMA 基準（6 檔合成股；不寫入 data/）
+tmp = tempfile.mkdtemp(); ema_ref = Path(tmp) / 'reference_ema.parquet'
+feats = []
+for sd in range(1, 7):
+    Me = metrics.compute_metrics(data.normalize(synth(sd)), kind='EMA'); feats.append(score.make_features(Me).assign(ticker=f'T{sd}'))
+pd.concat(feats).to_parquet(ema_ref); os.environ['MA_SELECTOR_REF_EMA'] = str(ema_ref)
+at = AppTest.from_file(str(ROOT / 'app.py'), default_timeout=180).run()
+kind_radio().set_value('EMA').run()
+check(not at.exception and not at.error and not at.warning, 'EMA 模式（有基準）沒有例外／錯誤／警告')
+check(all(v.startswith('EMA') for v in mvals('短期最後選擇') + mvals('長期最後選擇')) and len(mvals('短期最後選擇')) == 1, f'EMA 模式：最後選擇值為 EMA…：{mvals("短期最後選擇")}')
+check(any('實驗性質' in c.value for c in at.caption), 'EMA 模式有實驗性質說明')
+tb = [d for d in at.dataframe]; check(sum('反手報酬(選參數)' in t.value.columns for t in tb) == 3 and sum('突破成功率' in t.value.columns for t in tb) == 3, f'EMA 模式：候選表 3 張、原始表 3 張（共 {len(tb)} 表）')
+check(any('EMA' in m.value and '最後選擇' in m.value for m in at.markdown), 'EMA 模式：區段標題用 EMA')
+check(any(m.value.startswith('**EMA') and '原始統計' in m.value for m in at.markdown), 'EMA 模式：判定圖頁原始統計用 EMA')
+kind_radio().set_value('SMA＋EMA 並列').run()
+check(not at.exception and not at.error and not at.warning, '並列模式沒有例外／錯誤／警告')
+check(mvals('短期最後選擇（SMA）')[0].startswith('SMA') and mvals('短期最後選擇（EMA）')[0].startswith('EMA') and mvals('長期最高分（EMA）') and mvals('股票適合度（短期最高分）（SMA）'), '並列模式：SMA 與 EMA 各一排指標')
+tb = [d for d in at.dataframe]; check(sum('反手報酬(選參數)' in t.value.columns for t in tb) == 6 and sum('突破成功率' in t.value.columns for t in tb) == 6, f'並列模式：候選表 6 張、原始表 6 張（共 {len(tb)} 表）')
+check(any(m.value.strip() == '#### SMA' or 'SMA' == m.value.strip('# ') for m in at.markdown) and any('EMA（實驗）' in m.value for m in at.markdown), '並列模式：有 SMA／EMA 小標題')
+vk = [r for r in at.sidebar.radio if r.label == '檢視均線類型']; check(len(vk) == 1 and list(vk[0].options) == ['SMA', 'EMA'] and vk[0].value == 'SMA', '並列模式有「檢視均線類型」radio')
+vk[0].set_value('EMA').run(); check(not at.exception and not at.error, '檢視均線類型改 EMA 沒有例外')
+check(len(at.get('image')) >= 1 and any(m.value.startswith('**EMA') and '原始統計' in m.value for m in at.markdown), '檢視 EMA：判定圖與原始統計渲染')
+cand_tabs = [t.value for t in at.dataframe if '反手報酬(選參數)' in t.value.columns]
+ema_c = sorted({int(x) for t in cand_tabs[3:] for x in t['均線']}); cap_c = [c.value for c in at.sidebar.caption if c.value.startswith('候選')]
+check(cap_c and cap_c[0] == '候選：' + '、'.join(map(str, ema_c)), f'側邊欄候選為 EMA 的候選：{cap_c}')
+check(len([m for m in at.metric if m.label == '總報酬（複利）']) == 1, '檢視 EMA：回測指標存在')
+[r for r in at.radio if r.label == '策略'][0].set_value('複雜').run(); check(not at.exception, '檢視 EMA：複雜策略回測沒有例外')
+kind_radio().set_value('SMA').run(); check(not at.exception and mvals('短期最後選擇')[0].startswith('SMA'), '切回 SMA 沒有例外')
 print('ALL PASS')

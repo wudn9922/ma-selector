@@ -2,6 +2,8 @@
 這些測試會檢查「工作目錄的 production 檔案 ＝ 凍結時的 production」；加入 STRUCTURAL_RESCUE_10PT_10PP 後 core/select.py 依設計已不同，
 所以在 HEAD 直接跑會失敗（預期行為）。本程式改在 git worktree（ARCHIVE_COMMIT＝加入 rescue 前最後一個 commit）裡跑原封不動的測試，
 證明封存批次的證據仍然完整；同時確認 HEAD 的凍結檔案（freeze manifests、raw outputs、trigger summary、manual review）與 ARCHIVE_COMMIT 逐位元組相同。
+data/reference.parquet 不在 HEAD 凍結清單內：README 規定它每月由 build-reference 重建；封存批次測試在 worktree 內使用當時的 reference。
+core/** 也不在 HEAD 凍結清單內：封存批次測試在 worktree 內使用當時的程式；HEAD 的程式改動由 regression、production sanity、fresh100 replay 與 tests/test_ma_kind.py（SMA 逐位元組相同）檢查。
 用法：python tests/run_archived_batch_tests.py"""
 import subprocess, sys, tempfile
 from pathlib import Path
@@ -14,7 +16,7 @@ TESTS = ['experiments/holdout_v22/test_select_holdout.py', 'experiments/holdout_
 FROZEN = ['experiments/holdout_v22/freeze_manifest.json', 'experiments/holdout_v22/freeze_manifest.md', 'experiments/holdout_v22/raw_outputs', 'experiments/holdout_v22/execution_record.json',
           'experiments/rescue_validation/freeze_manifest.json', 'experiments/rescue_validation/freeze_manifest.md', 'experiments/rescue_validation/raw_outputs', 'experiments/rescue_validation/execution_record.json',
           'experiments/rescue_validation/trigger_summary.json', 'experiments/rescue_validation/trigger_summary.md', 'experiments/rescue_validation/manual_review_results.json', 'experiments/rescue_validation/manual_review_results.md',
-          'experiments/rescue_validation/review_bundle', 'regression/baselines', 'data/reference.parquet', 'core/events.py', 'core/score.py', 'core/metrics.py', 'core/universe.py']
+          'experiments/rescue_validation/review_bundle', 'regression/baselines']
 
 def main():
     d = subprocess.run(['git', 'diff', '--name-only', ARCHIVE_COMMIT, '--'] + FROZEN, cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()

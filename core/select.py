@@ -9,11 +9,13 @@
 最後選擇的回測預設用「多空反手」（method='sar'）＝ events_v22 的模擬：一直有持倉，碰到反向邊界就出場並反手，
 影線假突破當天收盤出清；扣成本 0.1%。只有這一種策略，「回測平均」＝該報酬（只用來決定 finalists，最後仍看結構分數）。這樣長期下跌的股票也不會因只做多而失真。
 候選表另附只做多的簡單／複雜報酬當參考（網頁回測分頁也仍是只做多）。
+kind（SMA／EMA）只換均線序列，規則 B、rescue 與其餘流程完全相同。
 舊版（研究版 v22）＝ LEGACY（gap=15、method='bt'：回測引擎只做多、簡單＋複雜取平均），regression 用它與 frozen 研究版比對。
 """
 import numpy as np, pandas as pd
 from . import backtest as bt, events as ev
 from .data import wilder_atr
+from .ma import moving_average
 RANGES = (('短期', 15, 33, 252), ('中期', 34, 45, 504), ('長期', 46, 110, 756))
 GAP = 15                                   # 候選：與最高分差距上限（網頁可調 3–30）
 LEGACY = dict(gap=15, method='bt', longonly=True)   # 研究版 v22 的設定（只供 regression 使用）
@@ -48,7 +50,8 @@ def structural_rescue(cands, finalists, final):
     c3 = sb['反手報酬'] >= best_sar - RESCUE_SAR_PP                                  # 反手報酬 ≥ 最佳 − 10pp
     return sb if (c1 and c2 and c3) else final
 
-def select(df, S, gap=GAP, method='sar', longonly=True, final_rule='structural'):
+def select(df, S, gap=GAP, method='sar', longonly=True, final_rule='structural', kind='SMA'):
+    # kind 只換均線序列（SMA／EMA），規則 B 與短期 rescue 兩種都一樣
     O, H, L, C, V = (df[k].to_numpy(float) for k in ('open', 'high', 'low', 'close', 'volume')); atr = wilder_atr(df); N = len(C)
     P, Ss = smoothed_scores(S); out = {}
     for nm, lo, hi, W in RANGES:
@@ -57,7 +60,7 @@ def select(df, S, gap=GAP, method='sar', longonly=True, final_rule='structural')
         for i in order:
             if sm[i] < best - gap: break
             if all(abs(pm[i] - c['均線']) > 2 for c in cands):
-                ma = df.close.rolling(int(pm[i])).mean().to_numpy(); lo_ = max(N - W, 0)
+                ma = moving_average(df.close, int(pm[i]), kind); lo_ = max(N - W, 0)
                 s1, _ = bt.run(O, H, L, C, V, ma, atr, lo=lo_, mode='simple', longonly=longonly)
                 s2, _ = bt.run(O, H, L, C, V, ma, atr, lo=lo_, mode='complex', longonly=longonly)
                 c = {'均線': int(pm[i]), '分數': round(float(sm[i]), 1), '結構分': float(sm[i]), '簡單報酬': s1['總報酬'], '簡單回撤': s1['最大回撤'], '複雜報酬': s2['總報酬'], '複雜回撤': s2['最大回撤']}
