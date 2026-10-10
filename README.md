@@ -40,6 +40,15 @@
 
 候選表另附只做多的簡單／複雜報酬當參考；網頁「回測」分頁仍是**只做多**，沒有改。
 
+## SMA／EMA 選擇（EMA 為實驗功能）
+- 網頁側邊欄「均線類型」可選：SMA（預設，與原本完全相同）、EMA、SMA＋EMA 並列。並列時兩者各自有一組候選與最後選擇，分開顯示，不放在同一個池子裡互相比較（兩者分數的基準分佈不同）。
+- EMA 定義：`core/ma.py::moving_average(close, p, kind)`；EMA＝`close.ewm(span=p, adjust=False, min_periods=p)`（α＝2/(p+1)，以第一個收盤價起算，前 p−1 根設為空值，與 SMA 的暖機長度一致）。
+- EMA 走完整流程：同一套事件、糾結、指標（`compute_metrics(kind='EMA')`）、評分、候選（gap 15、間距 >2、最多 5 條）、多空反手回測、規則 B 與短期 STRUCTURAL_RESCUE_10PT_10PP；唯一差別是均線序列。
+- EMA 用自己的基準分佈 `data/reference_ema.parquet`（83 檔、EMA 版指標），由 GitHub Actions → `build-reference-ema` 產生並每月更新；檔案不存在時網頁會提示並只顯示 SMA。
+- **規則 B、5pp gate、短期 rescue 的門檻都只在 SMA 上驗證過**；EMA 結果是實驗性質，尚未做 holdout／人工驗證。
+- SMA 的 production selector、`data/reference.parquet`、regression 與 freeze 證據都沒有改；`kind` 預設為 'SMA' 時輸出與加入 EMA 前逐位元組相同（`tests/test_ma_kind.py`）。
+- 判定圖與回測分頁：並列模式下可在側邊欄「檢視均線類型」切換要看 SMA 或 EMA 的哪一條。
+
 ## 糾結／穿插、BOX、回測進場價、原始統計（網頁新增功能；production selector 完全沒改）
 - **糾結／穿插已經參與均線選擇**：`core/tangle.py` 的糾結次數（`tg4_*`）與穿插日（`qday_*`）由 `core/metrics.py` 計算，`core/score.py` 轉成 percentile（`p穿插_*`）後依權重進分數（短期：突破、二日、回測、雜訊、糾結/穿插；長期：快敗 50%＋糾結/穿插 50%；中期取短、長平均）。本次權重、公式、percentile 都沒動。候選表的欄位改名為「糾結/穿插百分位(1y/2y/3y)」——它是相對於 83 檔基準池的 percentile score，**不是發生機率**。
 - **BOX（箱型）尚未整合**：Current repository contains active tangle detection but no executable BOX-boundary implementation. Therefore this change does not implement BOX selection or breakout. BOX integration skipped because current repo has no authoritative executable BOX implementation（沒有新增任何 placeholder 評分，也沒有把交接文件提到、但 repo 裡不存在的程式搬回來）。
@@ -57,3 +66,4 @@
 - `scripts/production_sanity.py`：用診斷時相同的資料與基準（asof 2026-09-24、83 檔自身分佈）檢查 production 選擇與規則 B＋rescue 的獨立計算一致，且與加入 rescue 前的 select 逐檔相同（開發集觸發 0/83）。
 - `scripts/fresh_rescue_replay.py`：用 fresh validation 100 封存的 bars（不抓 Yahoo）重跑 production；只能有 PG 22→25、FDX 18→21 兩個改變。
 - `tests/test_select_rescue.py`：rescue 的 C1／C2／C3 邊界、同分取短、只套短期、LEGACY 不變。
+- `tests/test_ma_kind.py`：`kind='SMA'`（預設）時 metrics／select／charts 與加入 EMA 前逐位元組相同；EMA 的遞迴公式與手算一致。

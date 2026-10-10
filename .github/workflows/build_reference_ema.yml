@@ -1,0 +1,25 @@
+name: build-reference-ema
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 1 * *'   # 每月 1 號
+  push:
+    branches: ['claude/**']
+    paths: ['scripts/build_reference.py', 'core/ma.py', '.github/workflows/build_reference_ema.yml']
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install pandas numpy pyarrow
+      - name: EMA 基準分佈（83 檔、EMA 版指標；不動 SMA 的 data/reference.parquet）
+        run: python scripts/build_reference.py --kind EMA
+      - name: commit
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add data/reference_ema.parquet data/reference_ema.json
+          git diff --cached --quiet || (git commit -m "Update EMA reference distribution" && git pull --rebase -q origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}")
