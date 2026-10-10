@@ -34,6 +34,13 @@ def close(a, b):
     if isinstance(a, float) and isinstance(b, float): return abs(a - b) <= FTOL * max(1., abs(a))
     return a == b and type(a) == type(b)
 
+def sealed_reference():
+    """commit A 當時的 data/reference.parquet；SHA-256 必須等於 freeze manifest 記錄的 reference（每月 build-reference 會改寫 HEAD 的版本，所以不能用 HEAD）"""
+    blob = subprocess.run(['git', 'show', f'{RAW_COMMIT}:data/reference.parquet'], cwd=ROOT, capture_output=True, check=True).stdout
+    want = json.loads((ROOT / 'experiments/rescue_validation/freeze_manifest.json').read_text(encoding='utf-8'))['reference']['sha256']
+    assert hashlib.sha256(blob).hexdigest() == want, 'commit A 的 reference 與 freeze manifest 不一致'
+    return blob
+
 def one(tk):
     from core import data, metrics, score, select as sel
     rel = f'experiments/rescue_validation/raw_outputs/{tk}/bars.csv'
@@ -41,7 +48,7 @@ def one(tk):
     assert hashlib.sha256(blob).digest() == hashlib.sha256((ROOT / rel).read_bytes()).digest(), f'{tk} bars.csv 與 commit A 不同'
     meta = json.loads((RAW / tk / 'meta.json').read_text(encoding='utf-8'))
     df = data.normalize(pd.read_csv(io.BytesIO(blob), float_precision='round_trip'), meta['asof'])
-    ref = pd.read_parquet(ROOT / 'data' / 'reference.parquet')
+    ref = pd.read_parquet(io.BytesIO(sealed_reference()))                     # 封存時的 reference（不是每月重建後的 HEAD 版本）
     S = score.score_table(metrics.compute_metrics(df), ref); R = sel.select(df, S); R0 = prev_select().select(df, S)
     return tk, (clean(R), clean(R0))
 
@@ -63,7 +70,7 @@ def main():
             if not same_prev or not same_seal or of != pf or (exp_change and (of, nf) != EXPECT[tk]) or (not exp_change and of != nf): bad.append(f'{tk} {nm}: sealed {of} / prev {pf} → replay {nf}（候選 vs prev：{same_prev}；vs 封存：{same_seal}）')
     T = pd.DataFrame(rows); T.to_csv(out / 'fresh100_replay.csv', index=False); ch = T[T.changed]
     status = 'PASS' if not bad else 'STOP — RESCUE_REPLAY_MISMATCH'
-    L = [f'# Fresh 100 replay（commit A 封存的 bars；目前 production selector vs 封存時的規則 B 輸出）\n', f'- raw output commit：`{RAW_COMMIT}`（bars.csv 逐檔與 commit A blob 比對）', f'- reference：`data/reference.parquet`（未重建）',
+    L = [f'# Fresh 100 replay（commit A 封存的 bars；目前 production selector vs 封存時的規則 B 輸出）\n', f'- raw output commit：`{RAW_COMMIT}`（bars.csv 逐檔與 commit A blob 比對）', f'- reference：commit A 封存的 `data/reference.parquet`（SHA-256 與 freeze manifest 相同；不使用每月重建後的 HEAD 版本）',
          f'- (A) 同 process、同分數表：目前 select vs 改動前 select（`{PREV_COMMIT[:7]}`）候選與 best 逐位元組相同：{"是" if T.candidates_identical_vs_prev_select.all() else "**否**"}（{int(T.candidates_identical_vs_prev_select.sum())}/{len(T)}）',
          f'- (B) vs 封存 selection.json：final 與候選週期完全相同、浮點 ≤{FTOL:g}：{"是" if T.candidates_match_sealed_tol.all() else "**否**"}（{int(T.candidates_match_sealed_tol.sum())}/{len(T)}）；逐位元組相同 {int(T.candidates_bit_identical_sealed.sum())}/{len(T)}'
          + f'；不逐位元組相同者：中期 {int((~T.candidates_bit_identical_sealed & (T.range == "中期")).sum())}、短期 {int((~T.candidates_bit_identical_sealed & (T.range == "短期")).sum())}、長期 {int((~T.candidates_bit_identical_sealed & (T.range == "長期")).sum())}'
