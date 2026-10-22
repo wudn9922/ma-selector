@@ -12,6 +12,13 @@
 ## 結構
 `app.py` 介面｜`core/` data、events、tangle、metrics、score（對固定基準算百分位）、select、backtest、charts｜`scripts/build_reference.py`
 
+## 與 Atlas（my-stock-screener）整合
+- **連結**：網頁支援 `?ticker=2330.TW` 預填代號（換代號時網址跟著更新）；標題列有「在 Atlas 看圖表 ↗」連回 `wudn9922.github.io/my-stock-screener/atlas/?page=chart&symbol=…`。Atlas 圖表的「建議均線」卡片也連到這裡看詳情。
+- **建議均線 JSON**：`core/recommend.py` 把 production 選擇（SMA、預設權重、gap 15、規則 B＋短期 rescue；**與網頁預設完全相同，規則沒有改**）整理成 JSON；`scripts/build_recommendations.py` 批次產生每檔 `<ticker>.json`＋`index.json`。
+  - 由 my-stock-screener 的 workflow `ma-recommendations.yml` 每週 checkout 本 repo 執行，股票清單＝其 `data/*.csv`（全台股＋S&P 500），輸出到 `docs/report/ma-selector/`，Atlas 圖表直接讀。
+  - 抓不到或資料不足（< 376 根）的股票沿用上一次的檔案；成功率 < 50% 時不寫檔。資料不足 866 根的標記 `limited`（中長期視窗不足，僅供參考）。
+  - 測試：`tests/test_recommend.py`（與 `select()` 結果逐項相同、批次腳本行為）。
+
 ## Production selector
 **Candidate**：與區間最高（平滑後）結構分數相差 ≤ **gap = 15**（預設；網頁側邊欄可調 3–30）、彼此至少差 3、最多 5 條。
 

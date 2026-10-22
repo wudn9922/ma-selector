@@ -97,4 +97,11 @@ check(cap_c and cap_c[0] == '候選：' + '、'.join(map(str, ema_c)), f'側邊�
 check(len([m for m in at.metric if m.label == '總報酬（複利）']) == 1, '檢視 EMA：回測指標存在')
 [r for r in at.radio if r.label == '策略'][0].set_value('複雜').run(); check(not at.exception, '檢視 EMA：複雜策略回測沒有例外')
 kind_radio().set_value('SMA').run(); check(not at.exception and mvals('短期最後選擇')[0].startswith('SMA'), '切回 SMA 沒有例外')
+# ── 網址 ?ticker=（Atlas 連過來）與「在 Atlas 看圖表」連結 ──
+aq = AppTest.from_file(str(ROOT / 'app.py'), default_timeout=180); aq.query_params['ticker'] = '2330.tw'; aq.run()
+check(not aq.exception and not aq.error and aq.sidebar.text_input[0].value == '2330.TW', f'?ticker=2330.tw → 代號預填 2330.TW（{aq.sidebar.text_input[0].value}）')
+check(any('atlas/?page=chart&tf=1D&symbol=2330.TW' in m.value for m in aq.markdown), '有連回 Atlas 圖表的連結')
+aq.sidebar.text_input[0].set_value('MSFT').run(); check(aq.query_params.get('ticker') in ('MSFT', ['MSFT']), f'換代號後網址跟著更新：{aq.query_params.get("ticker")}')
+ab = AppTest.from_file(str(ROOT / 'app.py'), default_timeout=180); ab.query_params['ticker'] = '<script>'; ab.run()
+check(not ab.exception and ab.sidebar.text_input[0].value == 'AAPL', '不合法的 ?ticker= → 預設 AAPL')
 print('ALL PASS')
