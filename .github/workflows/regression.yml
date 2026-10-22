@@ -25,6 +25,8 @@ jobs:
         run: python tests/test_regression_paths.py
       - name: 網頁 smoke test（AppTest；合成股價＋repo 的 reference.parquet）
         run: python tests/test_app_smoke.py
+      - name: 建議均線 JSON（Atlas 用；合成股價）
+        run: python tests/test_recommend.py
       - name: run regression（frozen research/ 舊實作 vs core/ 新實作）
         run: python scripts/regression.py --asof "${{ github.event.inputs.asof || '2026-09-24' }}" --out regression
       - if: always()

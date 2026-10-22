@@ -1,5 +1,6 @@
 """趨勢分界均線選參數 — Streamlit 網頁第一版"""
-import datetime as dt, json, os
+import datetime as dt, json, os, re
+from urllib.parse import quote
 from pathlib import Path
 import numpy as np, pandas as pd, streamlit as st
 from core import data, metrics, score, select as sel, backtest as bt, charts, rawstats
@@ -7,6 +8,10 @@ from core.ma import moving_average
 
 st.set_page_config(page_title="均線選參數", layout="wide")
 ROOT = Path(__file__).parent
+ATLAS_CHART = "https://wudn9922.github.io/my-stock-screener/atlas/?page=chart&tf=1D&symbol="   # Atlas 圖表（my-stock-screener 的 GitHub Pages）
+def query_ticker():   # 網址 ?ticker=2330.TW（Atlas「在 ma-selector 查看詳情」連過來）；不合法就用 AAPL
+    q = str(st.query_params.get("ticker", "")).strip().upper()
+    return q if re.fullmatch(r"[A-Z0-9^][A-Z0-9.\-]{0,31}", q) else "AAPL"
 def ref_path(kind):   # SMA：data/reference.parquet；EMA：data/reference_ema.parquet（環境變數 MA_SELECTOR_REF_EMA 可覆寫，測試用）
     if kind == 'EMA': return Path(os.environ.get('MA_SELECTOR_REF_EMA') or ROOT / 'data' / 'reference_ema.parquet')
     return ROOT / 'data' / 'reference.parquet'
@@ -34,7 +39,7 @@ if ref is None:
 
 # ── 側邊欄 ──
 with st.sidebar:
-    tk = st.text_input("股票代號", "AAPL").strip().upper()
+    tk = st.text_input("股票代號", query_ticker()).strip().upper()
     kind_choice = st.radio("均線類型", ["SMA", "EMA", "SMA＋EMA 並列"], index=0, horizontal=True,
                            help="EMA 使用自己的 83 檔基準分佈（data/reference_ema.parquet）計算分數。選參數的規則（規則 B、短期 rescue）只在 SMA 上驗證過，EMA 結果屬於實驗性質。")
     up = st.file_uploader("（抓不到時）上傳日K CSV：time,open,high,low,close,volume", type='csv')
@@ -72,7 +77,8 @@ for k in KINDS:
     M[k] = calc_metrics(tk, last, N, k, df); S[k] = score.score_table(M[k], REFS[k], ws)
     R[k] = calc_select(tk, last, N, ws_key, gap, k, df, S[k]); SUIT[k] = sel.suitability(S[k])
 
-st.markdown(f"**{tk}**　<span style='font-size:0.85rem;color:gray'>資料到 {last}（{N} 根）</span>", unsafe_allow_html=True)
+if tk and st.query_params.get("ticker") != tk: st.query_params["ticker"] = tk   # 網址跟著代號，方便分享
+st.markdown(f"**{tk}**　<span style='font-size:0.85rem;color:gray'>資料到 {last}（{N} 根）</span>　[在 Atlas 看圖表 ↗]({ATLAS_CHART}{quote(tk)})", unsafe_allow_html=True)
 for k in KINDS:
     sfx = f"（{k}）" if len(KINDS) > 1 else ""; suit_s, suit_l = SUIT[k]
     c1, c2, c3, c4 = st.columns(4)
