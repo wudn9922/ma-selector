@@ -1,0 +1,2030 @@
+{
+  "batch": "SUITABILITY_VALIDATION_30",
+  "PRICE_DATA_ACCESSED": false,
+  "RESULTS_GENERATED": false,
+  "frozen_at_note": "本 manifest 只用股票代號 metadata 與既有 83 檔基準特徵建立；沒有取得任何價格資料、沒有執行 selector、沒有畫圖、沒有產生結果。",
+  "question": "「股票適合度（短期）」——該股 SMA15–33 平滑結構分數的最高值（core.select.suitability 的第一個值）——能不能區分「均線可用」與「均線不可用」的股票？",
+  "scope": "只驗證短期適合度。長期最高分不在本批：83 檔基準中一半 ≥ 87 分、很多貼近 99，幾乎沒有區辨力（見 NVO／TMO 長期診斷）。",
+  "production": {
+    "base_commit": "474d8f63a1ebc35dcb504e2358c2b8345602b8e6",
+    "kind": "SMA",
+    "settings": "網頁預設：SMA、預設權重、gap 15、多空反手、規則 B＋短期 STRUCTURAL_RESCUE_10PT_10PP",
+    "file_sha256": {
+      "core/select.py": "20296ec3f031d420e2f2ae9d9670f5391073e03267a48ca95e395e8c37357aaf",
+      "core/score.py": "4c064c6e24cc9f5fdf1fdfa7d7bb3012418ed04f49f14fd03232db63e549b053",
+      "core/metrics.py": "e442c69e2c1baf021e5725fc8ac03f0de13c26fe51d0e9a51bcd3c765fb2c437",
+      "core/events.py": "85635cb25b7bd345b91267653dde648b251b0516ed6b981beeb3ea8790dab128",
+      "core/tangle.py": "ae26c08c2e1aca1f45f927b37d851fcb809c8ca543e6279fd72b32d93d725271",
+      "core/ma.py": "b40863c28bf180cd6d83baf69cfd48dbefb4df76388be18bcaac727412ebd00e",
+      "core/charts.py": "90fa358b5770c871b140c1a92b30f27862d2eca26f6b295c591f9ad2027fe545",
+      "core/data.py": "54ed07bfd91608055d769b3516c04d7394cab23dc6776150013231f1b84fe4f3",
+      "core/universe.py": "38ff2d1bf24f6b66ec75b979fca73c444ccced831e9cea1a29b9068a17cb627a",
+      "data/reference.parquet": "080ac54583e4694a041c0a5a5972f1f385523b2800186ab43ccec60801960de3"
+    }
+  },
+  "reference": {
+    "path": "data/reference.parquet",
+    "sha256": "080ac54583e4694a041c0a5a5972f1f385523b2800186ab43ccec60801960de3",
+    "asof": "2026-09-30",
+    "note": "data/reference.parquet 每月 1 號由 build-reference 重建；開封時必須讀「本 freeze commit 的 blob」，並比對此 SHA，不得使用之後重建的 HEAD 版本。"
+  },
+  "source": {
+    "saved_raw_file": "experiments/holdout_v22/sp500_constituents_raw.csv",
+    "saved_raw_file_sha256": "8e8c5a9aa27079a1feb6f92f9d56c5ad7a2084263a66d4191c54705a5b77c2ed",
+    "ranking_seed": "MA_SELECTOR_V22_FINAL_HOLDOUT_2026-09-30|",
+    "ranking": "SHA256(seed + ticker) 遞增（與 CURRENT_V22_FRESH_HOLDOUT_1 完全相同的名單與排名；沒有重新抓名單、沒有換 seed）"
+  },
+  "eligibility": [
+    "ticker 在取得的 S&P 500 名單中",
+    "只含大寫英文字母（排除 BRK.B、BF.B 等含符號者）",
+    "不在 core/universe.py（83 檔）",
+    "不在上列歷史 holdout",
+    "排名 ≥ 151（排名 1–150 已被 holdout／rescue validation 使用或暴露）"
+  ],
+  "excluded_ranks_1_150": [
+    "NOC",
+    "WBD",
+    "AIZ",
+    "MTD",
+    "ELV",
+    "ALL",
+    "CIEN",
+    "BRO",
+    "PRU",
+    "LH",
+    "CTSH",
+    "GWW",
+    "ADP",
+    "ACGL",
+    "SJM",
+    "T",
+    "RSG",
+    "NDAQ",
+    "AXP",
+    "O",
+    "AMCR",
+    "BDX",
+    "ALLE",
+    "CCI",
+    "TROW",
+    "GL",
+    "STE",
+    "HII",
+    "CB",
+    "COR",
+    "HUBB",
+    "USB",
+    "CBOE",
+    "MMM",
+    "XYZ",
+    "FOXA",
+    "AIG",
+    "TDY",
+    "EXPD",
+    "PNR",
+    "NVDA",
+    "WDAY",
+    "CRL",
+    "SYF",
+    "MA",
+    "STZ",
+    "FAST",
+    "SW",
+    "CNP",
+    "DHI",
+    "ERIE",
+    "PFG",
+    "ICE",
+    "LYB",
+    "IDXX",
+    "WSM",
+    "OKE",
+    "SNPS",
+    "TXN",
+    "CDNS",
+    "FCX",
+    "DE",
+    "P",
+    "LUV",
+    "WFC",
+    "TYL",
+    "TPL",
+    "GIS",
+    "GRMN",
+    "NSC",
+    "VRTX",
+    "VRSK",
+    "L",
+    "CTVA",
+    "NTAP",
+    "LDOS",
+    "HPE",
+    "SWKS",
+    "PG",
+    "BE",
+    "SPGI",
+    "ADSK",
+    "XOM",
+    "VICI",
+    "MRSH",
+    "IP",
+    "AES",
+    "FICO",
+    "MPWR",
+    "NVR",
+    "ROP",
+    "CMCSA",
+    "ZBH",
+    "PSA",
+    "ETR",
+    "EMR",
+    "PNC",
+    "GLW",
+    "MO",
+    "COHR",
+    "VST",
+    "FE",
+    "KR",
+    "FDXF",
+    "FIS",
+    "ILMN",
+    "SYK",
+    "KDP",
+    "BAX",
+    "EFX",
+    "WRB",
+    "IEX",
+    "ADM",
+    "DHR",
+    "KVUE",
+    "BKNG",
+    "AWK",
+    "WAB",
+    "JKHY",
+    "GILD",
+    "VRT",
+    "VEEV",
+    "CFG",
+    "APD",
+    "FDX",
+    "FLEX",
+    "GEV",
+    "CAH",
+    "MKC",
+    "NCLH",
+    "FIX",
+    "TEL",
+    "HWM",
+    "CHD",
+    "MSCI",
+    "KMI",
+    "PHM",
+    "GEHC",
+    "COIN",
+    "TTWO",
+    "RF",
+    "MCK",
+    "SWK",
+    "TRGP",
+    "CTAS",
+    "MSI",
+    "DAL",
+    "ABNB",
+    "FRT",
+    "CINF"
+  ],
+  "screening_pool": [
+    {
+      "rank": 151,
+      "ticker": "HONA",
+      "sha256": "50fa1d9fbbb0f9c73d29f045911e7702e1e14c4f143f6f544a41e1c95c2d56db"
+    },
+    {
+      "rank": 152,
+      "ticker": "PPL",
+      "sha256": "52236f529c853308a6c8d9fd73b0fee67cbc532b73f1908492abdf54a73d3e08"
+    },
+    {
+      "rank": 153,
+      "ticker": "APA",
+      "sha256": "53b44227980c25e3a2c774c41d47af856d6be4b23dd5cb1cd8d6d9707e0b6f0b"
+    },
+    {
+      "rank": 154,
+      "ticker": "CARR",
+      "sha256": "5501dc53af711860ba5ebba4885eab8bdc8c339f8ffade57b68d8c0016901b5c"
+    },
+    {
+      "rank": 155,
+      "ticker": "BALL",
+      "sha256": "55f7de6a588d6815559383432ac764ca737c1e060767557c9d1be00646cd5139"
+    },
+    {
+      "rank": 156,
+      "ticker": "TDG",
+      "sha256": "563a0e2535135ab67749bf0afba9ffeebe022d2d3d548d38b7d0c0a2b04e8fb0"
+    },
+    {
+      "rank": 157,
+      "ticker": "SOLV",
+      "sha256": "564cd4169b28b17b38b3f1b6f576ba95325b378ae1a587757b015a764a1498ec"
+    },
+    {
+      "rank": 158,
+      "ticker": "LVS",
+      "sha256": "56fbacc2709bdc9d7219886ab574b9a41e3fe88e8ff3f8d822a83f026ca4c522"
+    },
+    {
+      "rank": 159,
+      "ticker": "CMG",
+      "sha256": "590f92bd0776bc50087a8d9b1ed7324a82d35a77d9de956f31def30edd04ec56"
+    },
+    {
+      "rank": 160,
+      "ticker": "SLB",
+      "sha256": "59d4b22db2353c222c6cff49b3aaa7d573daa3d095307166dc28f3512d6aedf5"
+    },
+    {
+      "rank": 161,
+      "ticker": "C",
+      "sha256": "5a169c1dcaadd1459caa5a037278b0779afedaae80671c2324d9df7a8fd1d115"
+    },
+    {
+      "rank": 162,
+      "ticker": "NI",
+      "sha256": "5a32215f8ba4472db813bd9cb64eac40116973bca893c9f529b48ee45fdae26d"
+    },
+    {
+      "rank": 163,
+      "ticker": "NRG",
+      "sha256": "5a35366ab8b67d8986bf972dc09d3d57a4d575b37b28aadff929fd67d1f7e64a"
+    },
+    {
+      "rank": 164,
+      "ticker": "VTR",
+      "sha256": "5a8860753d0d981f7fe693eefefb67220d4fcccc4153a2c611c90440ff7143e6"
+    },
+    {
+      "rank": 165,
+      "ticker": "EL",
+      "sha256": "5affecc1325ca437dd2c0e3031eb7766fbe312828121d21a2e87c7ae61dca129"
+    },
+    {
+      "rank": 166,
+      "ticker": "DLR",
+      "sha256": "5b526519aca2d3078e7997b44e45c11fdc7d90559ea53fc9a201d82177ae4103"
+    },
+    {
+      "rank": 167,
+      "ticker": "PWR",
+      "sha256": "5c7b2f969d37c27c909443f33a73983f386e8f31dbf3d6bbfe4379fd3317ffa4"
+    },
+    {
+      "rank": 168,
+      "ticker": "AMT",
+      "sha256": "5ce1a98f908d981ac054b330d99be5a6a23f877b0819a5a711e3b42922d9e55b"
+    },
+    {
+      "rank": 169,
+      "ticker": "LIN",
+      "sha256": "5d463aad2f31ba41c73dda1f3e35e12b0394afda6fbe73f327a47d4b3887cfac"
+    },
+    {
+      "rank": 170,
+      "ticker": "PODD",
+      "sha256": "5da578bb879fdbdbf95dee39a36d78ebf652b06ae4fe72ece6febc6f7f7b99b4"
+    },
+    {
+      "rank": 171,
+      "ticker": "GPC",
+      "sha256": "5df2d0c471e3bfd689e72526bc525ad1c480b358f2556b79d3a5fd7bf5db6e8a"
+    },
+    {
+      "rank": 172,
+      "ticker": "DXCM",
+      "sha256": "5f2fc80370e6d2f7dc7c4f5368d1f2eac4ad5c841d0c44b49f2e91c258cb644f"
+    },
+    {
+      "rank": 173,
+      "ticker": "PSX",
+      "sha256": "5f425f969012a6c2b5e3337d30a21fd027a0d90d58c46c30c95e21cbcaf461bb"
+    },
+    {
+      "rank": 174,
+      "ticker": "LITE",
+      "sha256": "5fcb9df0eef7822cca56976dbd4aee2b25ed5fc598d7dc16eafad41bb5ee43bd"
+    },
+    {
+      "rank": 175,
+      "ticker": "VLO",
+      "sha256": "5fda0b28cf26e246b80e066d13f07446343a7f61d52f854ac58566b14ea4824a"
+    },
+    {
+      "rank": 176,
+      "ticker": "GPN",
+      "sha256": "6076e795c03e7cc06e740c0e86cfdc6b18d6cf971b6416f13a0d320eb208404c"
+    },
+    {
+      "rank": 177,
+      "ticker": "BSX",
+      "sha256": "61158870c603dc3015b6179e914d1e78db13f25f51b028c31465a54d92455617"
+    },
+    {
+      "rank": 178,
+      "ticker": "INVH",
+      "sha256": "6130335bc3ef93e3cb3926ce1b789249cdfd0438d8f278bd6b30e37e92598563"
+    },
+    {
+      "rank": 179,
+      "ticker": "RMD",
+      "sha256": "6216d8c477adb6e2fd7f8d27d4f8cd2b4271f4751ca874ed9c9c4541f44b8c1c"
+    },
+    {
+      "rank": 180,
+      "ticker": "MCHP",
+      "sha256": "6260d4314aca35ef44451859e956823e63da56de7cfec2a066719eb39c4c6eb3"
+    },
+    {
+      "rank": 181,
+      "ticker": "AMP",
+      "sha256": "6291f3b0b7d04133b1f5f08d2a69d877534f45828b10e5e97b55dd75747352cd"
+    },
+    {
+      "rank": 182,
+      "ticker": "EVRG",
+      "sha256": "6305234c9f61c0c5a9bd28284c9d4cd3b353f7b0c652a12bc7f33c4e1512bfa9"
+    },
+    {
+      "rank": 183,
+      "ticker": "CPT",
+      "sha256": "636cbaef06b3f71662e18bc96adae93818fffa79419131d1914a4fed97fc9d40"
+    },
+    {
+      "rank": 184,
+      "ticker": "CDW",
+      "sha256": "63caed1fddddc5e45c1d20565f1bc092c75c3b7947da0ee9946ffaae5c87ce21"
+    },
+    {
+      "rank": 185,
+      "ticker": "EQT",
+      "sha256": "6435918d3f6c9753fbd2a5ca16cfdc9111965ab63688b0c02c83cba36f1e34b2"
+    },
+    {
+      "rank": 186,
+      "ticker": "SHW",
+      "sha256": "648563d212fc6c89bce7baf3121a0e1a5d683654b139a37a5dba160699d38c1e"
+    },
+    {
+      "rank": 187,
+      "ticker": "RVTY",
+      "sha256": "64b4de263f4c8a7a51313235e0f3405df5c59e7f481a9ac3991b156d94a866c3"
+    },
+    {
+      "rank": 188,
+      "ticker": "VMC",
+      "sha256": "64dfc201d37c0e43fb87ed235aeb5f447aee6242d4727cb48de28a6fe3f11486"
+    },
+    {
+      "rank": 189,
+      "ticker": "VTRS",
+      "sha256": "66a310171f580e9a66a95e651eac9da578fc681e670f592766fe5c85a64ef2bf"
+    },
+    {
+      "rank": 190,
+      "ticker": "NXPI",
+      "sha256": "670ca2365bb91fa4d2dc4aa716284df61af19dea3e5fab1983d4acd569bde9ab"
+    },
+    {
+      "rank": 191,
+      "ticker": "ANET",
+      "sha256": "6778013cbfa092fbf0a1b3153f0b2c7eac3210b6190f71254c3658e7df4bef3f"
+    },
+    {
+      "rank": 192,
+      "ticker": "CSCO",
+      "sha256": "68f6a252f7f73facaa672e3ea0527ded12967912b8c52f80359dfd04482d24a2"
+    },
+    {
+      "rank": 193,
+      "ticker": "SYY",
+      "sha256": "6915785d481b9a963aaf1e3090336fee7b4674416a2be5682708642ae3aa3f38"
+    },
+    {
+      "rank": 194,
+      "ticker": "MRVL",
+      "sha256": "696379d9b6af925e446004daa3b11fa01c727f95cae1ee722a537fa1a15776cd"
+    },
+    {
+      "rank": 195,
+      "ticker": "YUM",
+      "sha256": "6b99653d6fc57ed0bd0ce199266f80d017cbb4cb12a7b2d02841332ccc588797"
+    },
+    {
+      "rank": 196,
+      "ticker": "HLT",
+      "sha256": "6beb8076e62dad11883dc6a5d0fc308970d0b2c7718190324728a42abb2ae253"
+    },
+    {
+      "rank": 197,
+      "ticker": "SNA",
+      "sha256": "6cc708bc61a20789c9079ad389fbb2a5e6ce12eef3f9c71de42e1ae1605ba75b"
+    },
+    {
+      "rank": 198,
+      "ticker": "CRM",
+      "sha256": "6ce8542b941edf619f54298fce632efd195ad4d32cba201c24b2823d871cbdd1"
+    },
+    {
+      "rank": 199,
+      "ticker": "GOOG",
+      "sha256": "6d168aab645f5a813735415b89bee04d507c0fc8f08b23c7beea6bfb6d795fbf"
+    },
+    {
+      "rank": 200,
+      "ticker": "ATO",
+      "sha256": "6d52ffcdc7151b6cbb3af4970a477f0f2229003027e39c55b67b5a0d3a59fa37"
+    },
+    {
+      "rank": 201,
+      "ticker": "COO",
+      "sha256": "6e4195ceac47a0eb25f9f11160f55f97d0d458419b06d662eca6bbaae4f56682"
+    },
+    {
+      "rank": 202,
+      "ticker": "XEL",
+      "sha256": "6e69c3360fdd3e9dc8de7dfaa5d61fb644f4e133cdcd84d1719161fc39c46be9"
+    },
+    {
+      "rank": 203,
+      "ticker": "ARES",
+      "sha256": "6eeb2fa26a39f73412e62be5524fe2dc40c075f8c2e6f9cc3d6ff071611f43c2"
+    },
+    {
+      "rank": 204,
+      "ticker": "MNST",
+      "sha256": "6f7095fbe977e58e2cbf03d1d6ad1c93a1bf22cea0ef20115f1f474948d89c1d"
+    },
+    {
+      "rank": 205,
+      "ticker": "CPRT",
+      "sha256": "7009ba176b4344d276ee310fde410f01b06fe8538c2f688d5aa25e2f02a092c3"
+    },
+    {
+      "rank": 206,
+      "ticker": "KKR",
+      "sha256": "70b8461107b1f91f09a077e6192d34a4a9aec8ce8e7d44a0d5d013b09f82f378"
+    },
+    {
+      "rank": 207,
+      "ticker": "BLK",
+      "sha256": "70e008f9541e9dd7cdf0484829f81958db7940857ce8adb354ca0a3dbecdc7d9"
+    },
+    {
+      "rank": 208,
+      "ticker": "CHTR",
+      "sha256": "70e817af2ead9bcfac1361d9c0eabc327f17ab471c52e036423a77df34598de2"
+    },
+    {
+      "rank": 209,
+      "ticker": "KIM",
+      "sha256": "70fb89e36b075d19a599ce9dfe2f3e75ab0855e75ddb385896bfb8a42430cbc8"
+    },
+    {
+      "rank": 210,
+      "ticker": "EW",
+      "sha256": "711130c90141afc0a8ab373ff8ba21139fe6512cb125a7bfd494038090430582"
+    },
+    {
+      "rank": 211,
+      "ticker": "DELL",
+      "sha256": "71a2b9386991f9a66a3df8febedde087a1bbc303b3965ee7b94dfb3604a3a760"
+    },
+    {
+      "rank": 212,
+      "ticker": "NOW",
+      "sha256": "71c76da3c62e52ba855fb1dcaa0d788d7a810eb61aebb7cc747761ff457ce36f"
+    },
+    {
+      "rank": 213,
+      "ticker": "WAT",
+      "sha256": "7200bd378739da34dbf51da9154d54c64a8dcd84720ee3cc6e9f822024c0b93d"
+    },
+    {
+      "rank": 214,
+      "ticker": "TRV",
+      "sha256": "730a16379d5a6b693c8964dedfe6196b357ec67b9ec46da3efb716fd283cfdf4"
+    },
+    {
+      "rank": 215,
+      "ticker": "STX",
+      "sha256": "732c999f5c9bb72a9ab43c11e50eb6dd21dfa15e8490b17640fce7cd9f46e234"
+    },
+    {
+      "rank": 216,
+      "ticker": "PPG",
+      "sha256": "735bacfb78086776c6745aef94b24da32ea00a48df452053e86fdc7b08c1dd56"
+    },
+    {
+      "rank": 217,
+      "ticker": "ORCL",
+      "sha256": "73e83edb90f4c22c89c00b98c5e8fa9c32eeb865c6098887b835f6182adf01d3"
+    },
+    {
+      "rank": 218,
+      "ticker": "CSGP",
+      "sha256": "74bad53636e2dc66c63511921ffb5d42df3260bd86abad6d13c333a33d441c8a"
+    },
+    {
+      "rank": 219,
+      "ticker": "REG",
+      "sha256": "74ccd99d59e80cfd38aa87225bcb34f784b63e290aceddf55684a30b413a04b1"
+    },
+    {
+      "rank": 220,
+      "ticker": "LYV",
+      "sha256": "764b0a9aeae90c433f07b7771e1c871326c56a878b345359a6cd271a793b93f6"
+    },
+    {
+      "rank": 221,
+      "ticker": "MPC",
+      "sha256": "777b19b584529e05cbe1ffb12dc54a8eac90e66b9cd7e7ae0193b59187612d69"
+    },
+    {
+      "rank": 222,
+      "ticker": "MGM",
+      "sha256": "77af93053e76373874bdbdc8ee922acd205523aa2e0395ef4895d8ea59d2c1c2"
+    },
+    {
+      "rank": 223,
+      "ticker": "URI",
+      "sha256": "79179a5f6f34459227e38c5212f26312c50b37dc37d864d50b6201b8776d2e2b"
+    },
+    {
+      "rank": 224,
+      "ticker": "VZ",
+      "sha256": "7927813eb7567d73ada32fc940125c723bad837bff242bc7455c73a317ef94f5"
+    },
+    {
+      "rank": 225,
+      "ticker": "CBRE",
+      "sha256": "79717732651b9aafabacd34ba95bbf2e4d56ef3b625514a30b020e161e980f44"
+    },
+    {
+      "rank": 226,
+      "ticker": "NUE",
+      "sha256": "79e220fd011d6d6fd93de5926a0871cd67bba96cb2563e8a7fc52f5e1eee226b"
+    },
+    {
+      "rank": 227,
+      "ticker": "APP",
+      "sha256": "7a4c929ec092020969f790d7bb77b54ca7615927e420120e1e5ac14abbb16c1b"
+    },
+    {
+      "rank": 228,
+      "ticker": "ECHO",
+      "sha256": "7f47c16f03820e2b77c65cf5175a39f2dbfb460928ea3de3f7e87b9afe04ba7f"
+    },
+    {
+      "rank": 229,
+      "ticker": "J",
+      "sha256": "7fc44820bb1d25230a43b5f822404b23324862c65f79ab078f2bcf34d81e9a95"
+    },
+    {
+      "rank": 230,
+      "ticker": "CLX",
+      "sha256": "80e942aee5828a91b5c0c2d10f840d1ceb7f589071cc360ed5408f59b0afd7e0"
+    },
+    {
+      "rank": 231,
+      "ticker": "JBL",
+      "sha256": "81ed3170bc8ee6dfbefe3850d67195992a50143dcb2af25217ffe1abda4e5646"
+    },
+    {
+      "rank": 232,
+      "ticker": "RL",
+      "sha256": "82866c85abda9433b846a30a85f691222dd72598d7323af4821d01c1ec4caa1d"
+    },
+    {
+      "rank": 233,
+      "ticker": "VMRK",
+      "sha256": "82c998f8391f1f27f10494509fc5240f97fc0cd4597ebc9b12b2bd42b7f662a5"
+    },
+    {
+      "rank": 234,
+      "ticker": "EG",
+      "sha256": "82e64641da4e1616dc3de4a98520fd411cdd4f9e3595991d6ce58418905602ae"
+    },
+    {
+      "rank": 235,
+      "ticker": "RCL",
+      "sha256": "83cb1fe21ff5a0fca8607875ad33050cc8382dfa13f46b94410781d13c7cfc78"
+    },
+    {
+      "rank": 236,
+      "ticker": "EME",
+      "sha256": "84064ac7f86d82a0567df3dd74da9001cb3b3978ad312cae44af0da637312fb2"
+    },
+    {
+      "rank": 237,
+      "ticker": "WY",
+      "sha256": "8489b015ba5814e6f46b9bb0eaf440fb56abe0c2c3469052e7f31c663ebd1cb4"
+    },
+    {
+      "rank": 238,
+      "ticker": "BX",
+      "sha256": "856f3cda83f763ad81a971f130ad44c479ac177c5564e5146e061f42d857eb93"
+    },
+    {
+      "rank": 239,
+      "ticker": "KLAC",
+      "sha256": "863ecb4315a7b56e4b78dfad92795ee2f0e4698efb1b9456cd3c1344e36163f4"
+    },
+    {
+      "rank": 240,
+      "ticker": "EXR",
+      "sha256": "866da59deed3690bf2382bbbdcf20970e306064e5f0cdcfd9570217220cafe41"
+    },
+    {
+      "rank": 241,
+      "ticker": "HAL",
+      "sha256": "870e040c688080abd6095cd09e4708929c16fef316aebbc55b463663edbd65c5"
+    },
+    {
+      "rank": 242,
+      "ticker": "PCAR",
+      "sha256": "87abd9a75c5a2d9892ef2e213956102ec93a1a55a8eb849fe6012d51a2c485d9"
+    },
+    {
+      "rank": 243,
+      "ticker": "BR",
+      "sha256": "888d8128012cc95bc1e3bf78f81bebdd124b5dabd864dad40818573c3eea5aaf"
+    },
+    {
+      "rank": 244,
+      "ticker": "LOW",
+      "sha256": "88fe0090f8e3e619c4b30445db820e531168a89cd11a96e4f5bc80a8dd68039b"
+    },
+    {
+      "rank": 245,
+      "ticker": "HPQ",
+      "sha256": "893a1bb818a9201689e5568a6061cbd39b873bafdded03a98f66a35c63a9f3eb"
+    },
+    {
+      "rank": 246,
+      "ticker": "PLD",
+      "sha256": "898c473731b1a8d2d7b94dfd6e18054e6dfebf761be271ac072f89ce66a5fb15"
+    },
+    {
+      "rank": 247,
+      "ticker": "IBKR",
+      "sha256": "89ad3c54e75d6822d55339c6abb155963fb7b8dd57dfb2631fd7f5bbc3c9e0a7"
+    },
+    {
+      "rank": 248,
+      "ticker": "UDR",
+      "sha256": "8b395b8817176d02ffdc4c44239c3a82a322d202763003ab58703a54a7c80dc0"
+    },
+    {
+      "rank": 249,
+      "ticker": "F",
+      "sha256": "8b6b665e905f3093d4524fd08974114e5e0edf364047e238139b409102f43df4"
+    },
+    {
+      "rank": 250,
+      "ticker": "GM",
+      "sha256": "8baa436c72d8b64f563d38494d8f0e1eb0e5553f7074a5b857abcba376081837"
+    },
+    {
+      "rank": 251,
+      "ticker": "NWS",
+      "sha256": "8c45d34a0e71d769d5a0afef5ac2dd91cf0265ef57b6665e0efe56641791e54a"
+    },
+    {
+      "rank": 252,
+      "ticker": "AMGN",
+      "sha256": "8c6d35b9600d5763d9e26cf6dc81010686adccd5221c7861c686d77d03a6ff00"
+    },
+    {
+      "rank": 253,
+      "ticker": "TKO",
+      "sha256": "8daa0a2da3148b1f60dc377d66f95e46f044f2896b20746faaa00a04bc207769"
+    },
+    {
+      "rank": 254,
+      "ticker": "CEG",
+      "sha256": "8df032f8469e3d115d9bd0e75f91d379a328aa6c9c93c0185bfccba371d92006"
+    },
+    {
+      "rank": 255,
+      "ticker": "BNY",
+      "sha256": "907c5478ffbd8a74b4ba06ff155c1c6bc7ee94d1383f2df5cfb90ca361896df3"
+    },
+    {
+      "rank": 256,
+      "ticker": "XYL",
+      "sha256": "908bc04b7019c09d8d70055054ea54a92e99dee1ea278ffa678e81ff1228cee4"
+    },
+    {
+      "rank": 257,
+      "ticker": "KEY",
+      "sha256": "9182349c147bde47c4ef3f86eb4549c3708e96472a40c86f0afb5a8fb77073e3"
+    },
+    {
+      "rank": 258,
+      "ticker": "LRCX",
+      "sha256": "92174bb7e182bd2fd12955e8d322b8f46532d8074852537824ca62dbee0b882c"
+    },
+    {
+      "rank": 259,
+      "ticker": "HST",
+      "sha256": "93039edfb4035c9867c228897e8667b8099a47930946bcc499d7c6937e0ff604"
+    },
+    {
+      "rank": 260,
+      "ticker": "CVNA",
+      "sha256": "93669ed3ff026dea7dd906ea46147f7269c51cf7a7d00d872456c659b4f6a1ff"
+    },
+    {
+      "rank": 261,
+      "ticker": "CF",
+      "sha256": "9381a79d5444567af452eb02f3f5449def4c43c400047a1a61cb5d5118be3ec2"
+    },
+    {
+      "rank": 262,
+      "ticker": "FITB",
+      "sha256": "96db975d2280592f07b8409fbc96d98ead41cacd4a03e322161420ecc61b29a9"
+    },
+    {
+      "rank": 263,
+      "ticker": "DPZ",
+      "sha256": "96fb13cc4133f7efefa2266c71fdcde572cd495b9270a58693b49c28ea2ddd68"
+    },
+    {
+      "rank": 264,
+      "ticker": "SBAC",
+      "sha256": "97980d8b7d2907c078db78301c2d3411973ce701452e586d9dbdcdce7a854f15"
+    },
+    {
+      "rank": 265,
+      "ticker": "AZO",
+      "sha256": "9859b3586bb0d49d13903e2667e891807a7611322f64d4c8ea87e2395758ce3d"
+    },
+    {
+      "rank": 266,
+      "ticker": "MTB",
+      "sha256": "99508baebcb9d91ce52194698e02f8482f625d98ce82aae676de1b7831df17a3"
+    },
+    {
+      "rank": 267,
+      "ticker": "HAS",
+      "sha256": "996da60b543ec51c3d8ae5b998d28b98e00b2b650f356207e653ff1f936b7dd5"
+    },
+    {
+      "rank": 268,
+      "ticker": "ROL",
+      "sha256": "9abe3531fd1a7ee72c785827fbef5b54cf7626c31a97918fe3cc5355243fd216"
+    },
+    {
+      "rank": 269,
+      "ticker": "TECH",
+      "sha256": "9b6347ab8ed5ba1856478869492831d3d9421d0c2d1353e3e14ca082f80a43d1"
+    },
+    {
+      "rank": 270,
+      "ticker": "JPM",
+      "sha256": "9b6e955df7cb9665e6d4a03d3a27bf7259975f07c6a83cd0a142a5dfcbc43740"
+    },
+    {
+      "rank": 271,
+      "ticker": "EBAY",
+      "sha256": "9b7408d6a54ea5cc2ed08fdddd4a404240e649a8c1dc2c977b38922c1925cf79"
+    },
+    {
+      "rank": 272,
+      "ticker": "DDOG",
+      "sha256": "9bb0342ed703b7e981bb4971399ed81568834e57b56fc122655e6548bc57d608"
+    },
+    {
+      "rank": 273,
+      "ticker": "HUM",
+      "sha256": "9d2169af1e8c78b5d6e8304a830a5308e2789ace1729fe2b0ea806d7ff222966"
+    },
+    {
+      "rank": 274,
+      "ticker": "IR",
+      "sha256": "9d316265ec8d356987e3461baffd7fe7c893b2beed6a89c08fe6824341dd5c33"
+    },
+    {
+      "rank": 275,
+      "ticker": "TMUS",
+      "sha256": "9dc394c5622be30a7e6b1be09a7b4ecb117f47cb609b58a4ed5e199eee3715c1"
+    },
+    {
+      "rank": 276,
+      "ticker": "OXY",
+      "sha256": "9e0c3d93d5eef1d1647e3e4c7e668d15915052418a41050cfbec3eaea7736ed3"
+    },
+    {
+      "rank": 277,
+      "ticker": "ROK",
+      "sha256": "9ea1ec43915f3dbd4255bcb6718b9a82f505f92e5cb46f364408148e10a4c83d"
+    },
+    {
+      "rank": 278,
+      "ticker": "ORLY",
+      "sha256": "9f1810d0204758325419b9eaa06a9589462f31bf0be97b6f01f14e532488dd8e"
+    },
+    {
+      "rank": 279,
+      "ticker": "AME",
+      "sha256": "a01830bb923b80948261939c954a82619103d6e3f00e00a791c2d654c0a1a4ce"
+    },
+    {
+      "rank": 280,
+      "ticker": "AVY",
+      "sha256": "a055d8cc8a3d8ba3dff247d5cf2ec1ca7167950b5fd0845f1adb6be049da03d9"
+    },
+    {
+      "rank": 281,
+      "ticker": "WTW",
+      "sha256": "a136cb1b5ee25a3607c20db29f9fd78f15eeeaac10d82ac77068e6c17bbedcad"
+    },
+    {
+      "rank": 282,
+      "ticker": "WMB",
+      "sha256": "a21cc2da451b42938f02c93d285e55bdac25030b6d209eb39b046383d9a86eb2"
+    },
+    {
+      "rank": 283,
+      "ticker": "MAR",
+      "sha256": "a247b668189bec3ec88beaddc192b8d84127afc81ecf057072ef41969ed56a12"
+    },
+    {
+      "rank": 284,
+      "ticker": "CPAY",
+      "sha256": "a2d53b9358ff86ea5da16fca4903b6fce3902eb5fc17f465ad3632b4764e3b54"
+    },
+    {
+      "rank": 285,
+      "ticker": "FFIV",
+      "sha256": "a349ae9f58ced64f220372af45829afb31e313e5b1f1740ee3df028670ccbf60"
+    },
+    {
+      "rank": 286,
+      "ticker": "NEE",
+      "sha256": "a35f82aaa40a9b0a99b190466856b022d7d73431a892ab7324897fd288784b57"
+    },
+    {
+      "rank": 287,
+      "ticker": "PAYX",
+      "sha256": "a395c0482e3102863a13de4d87f3b39c70a20333968ec268d58d9b9538454e7f"
+    },
+    {
+      "rank": 288,
+      "ticker": "GD",
+      "sha256": "a3b1af88ca4ea66401b233964125880c7d20600ac0635a3ac0ddab0f8c3e1007"
+    },
+    {
+      "rank": 289,
+      "ticker": "MOS",
+      "sha256": "a3d1d54defe1d4ad412a67437b30aa9b61cc577da0cf47c2fa2469881004f313"
+    },
+    {
+      "rank": 290,
+      "ticker": "MAA",
+      "sha256": "a472baa54321196c1348bcb1aeb9a12716e913a8006dcacca1577e97b1e353eb"
+    },
+    {
+      "rank": 291,
+      "ticker": "PKG",
+      "sha256": "a4f0723685706af0405b9595e09ea62397e6b1ab851110ccc316bac28130977c"
+    },
+    {
+      "rank": 292,
+      "ticker": "AFL",
+      "sha256": "a56d401ed04b13413f3137fad108ee72ba19139bc44240c3ab60e9d7d4adcd9a"
+    },
+    {
+      "rank": 293,
+      "ticker": "TSN",
+      "sha256": "a5947e029f2f0177283443d76ec7611aa970e2ead8161f62517868b8de1c35c1"
+    },
+    {
+      "rank": 294,
+      "ticker": "CHRW",
+      "sha256": "a60dc0208e68dc265e7c63111345352f008078139e2af98fa62e56d7dfa55601"
+    },
+    {
+      "rank": 295,
+      "ticker": "A",
+      "sha256": "a63da454583140cc4898d2d1817b664abff9cf2261c8802e17e8f436738551c5"
+    },
+    {
+      "rank": 296,
+      "ticker": "LNT",
+      "sha256": "a6b6dda2ba73bf99db18f414b95b369a603bf31550a70443debcf01d83fea395"
+    },
+    {
+      "rank": 297,
+      "ticker": "UBER",
+      "sha256": "a754c60e4ee8a700c5c27eb5536304f1efe28b000024d2db3681421b67215d34"
+    },
+    {
+      "rank": 298,
+      "ticker": "PSKY",
+      "sha256": "a773822c1c25082fb9b1b49e81be02edd2d493b7ec2c636430713f05bbba5b81"
+    },
+    {
+      "rank": 299,
+      "ticker": "EXE",
+      "sha256": "a8e13374c9df70179d40d354148e3e96464653a20f50357c4f66805caad29a80"
+    },
+    {
+      "rank": 300,
+      "ticker": "LII",
+      "sha256": "a94e9a9d0b412d5fff2e85ffb6265efbfa245be46116ae4361da3ad874d64084"
+    },
+    {
+      "rank": 301,
+      "ticker": "TJX",
+      "sha256": "a9901785fda9121650c65d8dd82ea40a6456a3091929b1d5857c911f4a38b333"
+    },
+    {
+      "rank": 302,
+      "ticker": "AEE",
+      "sha256": "a9a546622003bfdb711627deb4392790b9ccc3d0c4144a4ff65b5a80f3220c77"
+    },
+    {
+      "rank": 303,
+      "ticker": "DVA",
+      "sha256": "aaa1e91fa743e8a3927e28a53eeb2f3e8e4fbff906a198f4595dbfbbc39aa413"
+    },
+    {
+      "rank": 304,
+      "ticker": "PNW",
+      "sha256": "abadeb60cb51a9977236267d558536e3a2e7549769dfeaff808f52f4d33b51c8"
+    },
+    {
+      "rank": 305,
+      "ticker": "MRNA",
+      "sha256": "ac2c6bb2a68d5338c3075b04609a37f6de7365aac63abbae63d32f3a8075bc55"
+    },
+    {
+      "rank": 306,
+      "ticker": "MS",
+      "sha256": "ac9cbe991e9ce6e0bbf0144eec40526d7bfd8b83d264bbae90b824f690c63225"
+    },
+    {
+      "rank": 307,
+      "ticker": "PH",
+      "sha256": "ace51863e493eb6575c5af73bb93567110b842c26473001f3172b022e2d46723"
+    },
+    {
+      "rank": 308,
+      "ticker": "ZBRA",
+      "sha256": "add7d8f472e4b07db901f325ec17248d8e3a42ea4a2b45b30843ac7dacd81531"
+    },
+    {
+      "rank": 309,
+      "ticker": "UAL",
+      "sha256": "afd5ec46dc43c2b360a540ee64a972bb8399731922e65ce66ee69e10b9d649fe"
+    },
+    {
+      "rank": 310,
+      "ticker": "TPR",
+      "sha256": "b14a4fe228dc07fc62f3b0963206e091d246d839f4432a233ecf728b3d424d0d"
+    },
+    {
+      "rank": 311,
+      "ticker": "RJF",
+      "sha256": "b17d443aa958b94f791e13529693caf55a1456ec30a6964594abcf36f88d9576"
+    },
+    {
+      "rank": 312,
+      "ticker": "PFE",
+      "sha256": "b1b7710d2db6ebfd50c1bffe0a356f6442dd5d9fe8420be5d27bb63a2fb6b687"
+    },
+    {
+      "rank": 313,
+      "ticker": "MRK",
+      "sha256": "b21ea9cf5fc69e15292d3f63c49468b74cba6cd99665a3e76115040f31543d13"
+    },
+    {
+      "rank": 314,
+      "ticker": "ECL",
+      "sha256": "b254c8652d6d26e6fcbd0f6a7eb83c2503949ff7d7771f85f47dc717ea4609dd"
+    },
+    {
+      "rank": 315,
+      "ticker": "APO",
+      "sha256": "b3607730bbbaf64d0d0e3a085dd73ee94b270f9721f19189ee58d740dbdde349"
+    },
+    {
+      "rank": 316,
+      "ticker": "EXPE",
+      "sha256": "b46df0b92e92f6b44638283b304fcf409827a7f4f66ea034d597a369a5f305f3"
+    },
+    {
+      "rank": 317,
+      "ticker": "ALB",
+      "sha256": "b4ce77768b873f977851f6cbfa847ac4cbc68f75df4fd49f0dcce06c799e1241"
+    },
+    {
+      "rank": 318,
+      "ticker": "CASY",
+      "sha256": "b59c28c4d5722db198ee23eb3460f3f281f050c5be4b8dc28919b0c97ef1deb0"
+    },
+    {
+      "rank": 319,
+      "ticker": "BBY",
+      "sha256": "b6a860b69e277a503b62748615f5c5312212556e0844421ed3585928c98b071f"
+    },
+    {
+      "rank": 320,
+      "ticker": "BMY",
+      "sha256": "b6e8cdb1e17a590820e05dbefe4072a244de951eb89d8826b54a8402500d2386"
+    },
+    {
+      "rank": 321,
+      "ticker": "HSY",
+      "sha256": "b8a4c3c45b85229fd1754adb2686cbac297334ea5d54e90f697d54680ec68346"
+    },
+    {
+      "rank": 322,
+      "ticker": "CL",
+      "sha256": "b935ded9478e1bbf9a16adff2fd90a45b7a4df0469b2b53b96cf44591899acd8"
+    },
+    {
+      "rank": 323,
+      "ticker": "FISV",
+      "sha256": "b9448229ce16204b1a88a6c4e0d010ffe6f85bf6a01a0b2e93d08bd2bfd43f3b"
+    },
+    {
+      "rank": 324,
+      "ticker": "BIIB",
+      "sha256": "b94b04e441d2e15acb1bbadb4e666e9dc3a05057c741b02437dd27dc61c8917b"
+    },
+    {
+      "rank": 325,
+      "ticker": "D",
+      "sha256": "b9b5ff28c13e9eba3777c6e53cfa994f9b4b71d649732eb6ca8cf4938b3dc29e"
+    },
+    {
+      "rank": 326,
+      "ticker": "TFC",
+      "sha256": "bb8c5bb0a9b0d88263d9155a68c0e76c302396b7ea4dc1e537c012cb8c865ac3"
+    },
+    {
+      "rank": 327,
+      "ticker": "TER",
+      "sha256": "bb9da13e4f9839a7167d3e7b8bbc5b2ac8512eaa35f2d0e1cf30997ac30cf643"
+    },
+    {
+      "rank": 328,
+      "ticker": "GNRC",
+      "sha256": "bc3c8942af5cb2ce5a3cad184e484e5e31cfa97c638f9f976bb58066f5659fbd"
+    },
+    {
+      "rank": 329,
+      "ticker": "BXP",
+      "sha256": "bc836007f93a2662c4c14bfcd6da5186cdec8634f25e07a3c8fac85e262a1710"
+    },
+    {
+      "rank": 330,
+      "ticker": "GDDY",
+      "sha256": "bcd3d055d24f2b4d8d759aec6f6036a548172beb549cd30078aadd54bea861ff"
+    },
+    {
+      "rank": 331,
+      "ticker": "AKAM",
+      "sha256": "bdb0889bf4ac947af7c68b824ac30919f5f67e84fbbde808992590a46631f945"
+    },
+    {
+      "rank": 332,
+      "ticker": "DLTR",
+      "sha256": "be13bcfdd460f092d7a0ea69b876d43ad2fa246e4137da872c7016e233e0dc25"
+    },
+    {
+      "rank": 333,
+      "ticker": "DOC",
+      "sha256": "be956e951eb3bc9b3bb234db7243220f00e6773b6be23ce796ab7f8c8d369920"
+    },
+    {
+      "rank": 334,
+      "ticker": "OTIS",
+      "sha256": "becdfd7e9b1039f8c2233a5cb32a81792ecfb18db06fd26de861ac497a16e947"
+    },
+    {
+      "rank": 335,
+      "ticker": "RDDT",
+      "sha256": "bf62c1230ac0c23824c650d1d652b1d98caa3d789bf81d9b5ff4cce693570a5b"
+    },
+    {
+      "rank": 336,
+      "ticker": "AXON",
+      "sha256": "bfaee6c6c0ff5436008b3a442647ca4e027cd0c58949a0057d44f616d10d0a6a"
+    },
+    {
+      "rank": 337,
+      "ticker": "HRL",
+      "sha256": "c0367a529337f13069e03f42abd402cd4670490149a704e465ef331b008ba034"
+    },
+    {
+      "rank": 338,
+      "ticker": "INCY",
+      "sha256": "c0ecf015c78b10f974811838f5aab86b12ef2ee8f8b8f57b525fb0a7bc2f585e"
+    },
+    {
+      "rank": 339,
+      "ticker": "ISRG",
+      "sha256": "c11b6ec32ca077e6a11b8c82a9ed7cacdc5809f3c5af01948b257430ad4414f4"
+    },
+    {
+      "rank": 340,
+      "ticker": "EQIX",
+      "sha256": "c1434de676c91885558dce4233b873260e127f2dd07b89a525eaa2af775553d7"
+    },
+    {
+      "rank": 341,
+      "ticker": "DASH",
+      "sha256": "c514ce2ed1754d2caf10d72bcc43592906b3a8f6a3feca08a705aadc7554963d"
+    },
+    {
+      "rank": 342,
+      "ticker": "CRH",
+      "sha256": "c6519610bf60d749bcf7785b59787532d97843a8efd79a0c35fc57cadb32af91"
+    },
+    {
+      "rank": 343,
+      "ticker": "HBAN",
+      "sha256": "c6db8b6394372a11c5fd222f281feca0177eaf0968cc863d9076a16a53cda190"
+    },
+    {
+      "rank": 344,
+      "ticker": "COP",
+      "sha256": "c6dce3ad88f3d8bae5829b9e1fc77d8722287e97fd79b7a1ed0aec46870cc787"
+    },
+    {
+      "rank": 345,
+      "ticker": "KEYS",
+      "sha256": "c88312983ebac48bd74881617f4394eefdef6b9cdada5cec4743dd9d9ec4c6fc"
+    },
+    {
+      "rank": 346,
+      "ticker": "AMZN",
+      "sha256": "c90beb72e427c0b7a01c56194a536aefc3b9279795fbe80b2d9ad8110aa904e2"
+    },
+    {
+      "rank": 347,
+      "ticker": "NTRS",
+      "sha256": "c922efb806ca4466fc07f5b4eeb5c3b772b2476ab41067c3fd48c1af0bd37465"
+    },
+    {
+      "rank": 348,
+      "ticker": "CI",
+      "sha256": "cae7046705424756cfa1ccc179d775489c91aed9bb52681b2921662edfaf3f8b"
+    },
+    {
+      "rank": 349,
+      "ticker": "WELL",
+      "sha256": "cc2bc4f857a0c77544c34a3dd9a2f4f7b72461d873e562451fb4f3bc63ac8e1d"
+    },
+    {
+      "rank": 350,
+      "ticker": "TRMB",
+      "sha256": "ccbd71c52c7c1fef7d0f0584d9e5d00cab2c98057b28f242aea90b24f3af6fe5"
+    },
+    {
+      "rank": 351,
+      "ticker": "DVN",
+      "sha256": "cf28a58cdc505930c2e585ab20a9fabc4d625d9429a6891af659872a298dce70"
+    },
+    {
+      "rank": 352,
+      "ticker": "SPG",
+      "sha256": "cf6c79b67cd24807a123d8fea3c7a56d671d5f5c244e93a2552d05fd5e7d6e1d"
+    },
+    {
+      "rank": 353,
+      "ticker": "SNDK",
+      "sha256": "d04a4cf665f26f48e541364b8228d98a711e24699601cda6bdd5766e875d017a"
+    },
+    {
+      "rank": 354,
+      "ticker": "FSLR",
+      "sha256": "d0c9e46c9eeee2f795467ec202bb03fc65e9d1fa4cc410da73104a7aa818ac02"
+    },
+    {
+      "rank": 355,
+      "ticker": "MDT",
+      "sha256": "d0d29d67295682c89e142f07f25f6e2bbc3df6563a6b3db61ca3ac3304f4dc96"
+    },
+    {
+      "rank": 356,
+      "ticker": "DG",
+      "sha256": "d11723bc9f6f12473da38df561f8ca09e166fb791cd53bbdd0c345c7801be10f"
+    },
+    {
+      "rank": 357,
+      "ticker": "VRSN",
+      "sha256": "d14cd87c0008d17b945e711d4e147d2a60d3863f9fcd74d6d4234a1f73a5dc01"
+    },
+    {
+      "rank": 358,
+      "ticker": "TXT",
+      "sha256": "d29ed9882b6e6d0859af06d07938f8ac85de70e01656852a18a1221c9a837789"
+    },
+    {
+      "rank": 359,
+      "ticker": "ON",
+      "sha256": "d3098485d7b1cc0d6fc51caeec60c96f7a01902bb6da74fe9b16fb49b83b84fa"
+    },
+    {
+      "rank": 360,
+      "ticker": "SRE",
+      "sha256": "d344e9aaf2921e8e3761cac5ae61f3d94a0b1d0690de33fa56d9f00d94b0c178"
+    },
+    {
+      "rank": 361,
+      "ticker": "IQV",
+      "sha256": "d411f415fc20db99b6ebaf142abe6a06a6f20c5dc71a273e1375eb3ddb67737e"
+    },
+    {
+      "rank": 362,
+      "ticker": "ALGN",
+      "sha256": "d43649bdbc78ea2842581d55f5f8a2c5c7a159e823ca3c5c1a219865b7f9af9f"
+    },
+    {
+      "rank": 363,
+      "ticker": "FOX",
+      "sha256": "d44185cb0e9e4190b51f653efd0f271c5eb0f268cc6d48b8d3688f45a56947e0"
+    },
+    {
+      "rank": 364,
+      "ticker": "DGX",
+      "sha256": "d4d7430f66fb00238dea6ddb967fd7f7e4e03ec2f245a600aa4a669ac776ff37"
+    },
+    {
+      "rank": 365,
+      "ticker": "CMI",
+      "sha256": "d53c1a678dadbca21d54f7b004485527a6c817acee366fca8cbdbc022a828ff1"
+    },
+    {
+      "rank": 366,
+      "ticker": "PEG",
+      "sha256": "d5c3a4fb0ed9d43cc20276ac65f3163695d2a277d7229794afea5e1586fc2dcc"
+    },
+    {
+      "rank": 367,
+      "ticker": "Q",
+      "sha256": "d5f35ddd6b0a7fe82c10b38b2b27d912d8063915eddfe93d0f546ecfe6cc2a83"
+    },
+    {
+      "rank": 368,
+      "ticker": "IVZ",
+      "sha256": "d6c21d7e41fcefca9d37d5863dcbeaf5833dba427b1045716f89c5322611e29d"
+    },
+    {
+      "rank": 369,
+      "ticker": "ES",
+      "sha256": "d7087374c1b96cc547570f298fc9baab61e604e0cc410ab53b45a912bb16c667"
+    },
+    {
+      "rank": 370,
+      "ticker": "DRI",
+      "sha256": "d741235f2bacdd10a3e7b2597b4710348c24648ce752f57a7a88e2f74e48b838"
+    },
+    {
+      "rank": 371,
+      "ticker": "TT",
+      "sha256": "d848f4ff9100f231493408c7af12df5fe0f5df253c9bea0126ac0aa6185bf674"
+    },
+    {
+      "rank": 372,
+      "ticker": "CCL",
+      "sha256": "d8832ef14fe7a9126cf98cfebd6f38784eafa413686b1cdab1e015e572d878f1"
+    },
+    {
+      "rank": 373,
+      "ticker": "LEN",
+      "sha256": "d8bcb865cae1b1371e4df5f785acfa576cf68f1557230e0463228ddb1807d08c"
+    },
+    {
+      "rank": 374,
+      "ticker": "JCI",
+      "sha256": "d8f2f14ef0d9cbeafa89391062032168cbbda0da06a0a8ac2a90779fd80c2bbb"
+    },
+    {
+      "rank": 375,
+      "ticker": "PTC",
+      "sha256": "d987a97f47d7a5d2ec427f2d3c0ece916b3e734ef2bcada261d89dc54b671d95"
+    },
+    {
+      "rank": 376,
+      "ticker": "ITW",
+      "sha256": "d9b6f7b897031c7fb924ca3e15ebe9cedde4ede54b7a22ee1d3a13ac857ad012"
+    },
+    {
+      "rank": 377,
+      "ticker": "PM",
+      "sha256": "da446fa52cac3d954e990a1ae7d2de525deca2b182fff7448e7bac8665fa18e3"
+    },
+    {
+      "rank": 378,
+      "ticker": "APTV",
+      "sha256": "dabd3570d9bfeaf6d7bf9a3259a176057a7e0bb477f03266fdf0ee628fa72a03"
+    },
+    {
+      "rank": 379,
+      "ticker": "ESS",
+      "sha256": "dafa3079c21c3c4016c5d5461054d380612ff24bfb3d1f69d2e5a7593ad160f9"
+    },
+    {
+      "rank": 380,
+      "ticker": "AON",
+      "sha256": "dbf8a54121163f3decbd77d3263371ca693760e081a31062bc7cb872683b7838"
+    },
+    {
+      "rank": 381,
+      "ticker": "DTE",
+      "sha256": "dc08105ae35c0efce6c804c899982dfd23c32d82b77582c3b8aabcf225068076"
+    },
+    {
+      "rank": 382,
+      "ticker": "PCG",
+      "sha256": "dc418f1316cec0da88f08b1881f1e45e7b489206fae213e4a853dd74628f71fe"
+    },
+    {
+      "rank": 383,
+      "ticker": "DD",
+      "sha256": "dcad0bab710627ba1d6538e99b72dd5de8b398baa92d89cd08a7da81c849c730"
+    },
+    {
+      "rank": 384,
+      "ticker": "WEC",
+      "sha256": "dcc37152e3898f4af83d99f49b9dfd6a56f2015363e2f715a2ae00c44e9b368b"
+    },
+    {
+      "rank": 385,
+      "ticker": "OMC",
+      "sha256": "dd516c0221fdbfbb91757e73bdb634d5d879dfb84cc8cffc616a1271cf5e7295"
+    },
+    {
+      "rank": 386,
+      "ticker": "NDSN",
+      "sha256": "dd59218e9947ff5b63a4937c43a2ff00ee202e055f42e57153daa2e223e4ccb7"
+    },
+    {
+      "rank": 387,
+      "ticker": "EXC",
+      "sha256": "ddd131131fceb9098975662d0e2ce77a19f9b8a0633c2f8890b053957ad873d2"
+    },
+    {
+      "rank": 388,
+      "ticker": "VLTO",
+      "sha256": "de410546bcc07273e632eb8314dcd5dfbc8c936461ab852e64a02f59af7c5e49"
+    },
+    {
+      "rank": 389,
+      "ticker": "FDS",
+      "sha256": "def9206507f84e35d1731ad3e565a76b49262bd023dd322771327957e81036e9"
+    },
+    {
+      "rank": 390,
+      "ticker": "STLD",
+      "sha256": "df8e9eb87b5d84099e3c5911cacb6d2bf774798b5555d53cd5683a4d401f140f"
+    },
+    {
+      "rank": 391,
+      "ticker": "CVS",
+      "sha256": "dfdd5c8de830bb90a2f9b172889c88e980bf827a37fc7b7139ca863d8d8b7148"
+    },
+    {
+      "rank": 392,
+      "ticker": "WM",
+      "sha256": "dfe0d7bc0e88f97c08de63bf47b8464072e93fc2e04e3b8d308d15b960c03647"
+    },
+    {
+      "rank": 393,
+      "ticker": "HOOD",
+      "sha256": "e0a1b458477f5bf7e6879934ecc69f81addb41cb2305c5575db32f411570eb22"
+    },
+    {
+      "rank": 394,
+      "ticker": "ED",
+      "sha256": "e0cda87d8a888cdfd305a30d5c6323f1f6c76d5d9546de984b8c362b727d4ccc"
+    },
+    {
+      "rank": 395,
+      "ticker": "GEN",
+      "sha256": "e12c90bfdb3210b5251bd14849bc753582c1aa62cb2cbbd67b04c189071f922e"
+    },
+    {
+      "rank": 396,
+      "ticker": "FERG",
+      "sha256": "e21ca64b981d597eca5a1a200666ee46cfec53888fb062d5179bd3d957fb7388"
+    },
+    {
+      "rank": 397,
+      "ticker": "DOW",
+      "sha256": "e50cb6552b45219af915675043a11588ac19baec9237209322c4809716a3c69b"
+    },
+    {
+      "rank": 398,
+      "ticker": "CNC",
+      "sha256": "e59bb860885e4ac70ef492afe7c2d9b20ce9ddbf24c5dd84c7086eb577d8a13f"
+    },
+    {
+      "rank": 399,
+      "ticker": "MDLZ",
+      "sha256": "e62c78a116f1d795c70c5fa03f88f4ea993caa6a14c8110bb857a7b6fdf06599"
+    },
+    {
+      "rank": 400,
+      "ticker": "V",
+      "sha256": "e73b222742bcae328254c66897942ad36a018eb0699aa370aadd009537d98510"
+    },
+    {
+      "rank": 401,
+      "ticker": "NEM",
+      "sha256": "e79740f64778a729364d12797a89373ae74eb12048a00a5753741dc62ff294b2"
+    },
+    {
+      "rank": 402,
+      "ticker": "APH",
+      "sha256": "e880bd6e55d7971c0d2fe0ac2e36e2ff4af51ed94ff0fa2b25258a4d8e363dbd"
+    },
+    {
+      "rank": 403,
+      "ticker": "JBHT",
+      "sha256": "e8de57fb0f92ae64ff02393ec288a3b32b32c47012ae63411ac3d42b49dda18d"
+    },
+    {
+      "rank": 404,
+      "ticker": "EIX",
+      "sha256": "e9e43aaf4e5fae73f2d644e6b74ec76a3353bdabcf12deda9edaff972cf6fe31"
+    },
+    {
+      "rank": 405,
+      "ticker": "DOV",
+      "sha256": "eb0658896f1e3bb976a2e00a831248718e71920bbb29ff3c6d91427c36344c8a"
+    },
+    {
+      "rank": 406,
+      "ticker": "WDC",
+      "sha256": "eb5a161a33f6910bb5b85f91ecc26c627f99d13f618529bddb3ae996062823d0"
+    },
+    {
+      "rank": 407,
+      "ticker": "IRM",
+      "sha256": "ed020a18e5f96fa01c03a4540f8a0461a84aa84cbb10626ba73988da17c875cc"
+    },
+    {
+      "rank": 408,
+      "ticker": "ADI",
+      "sha256": "ed744a3facd9fc0f7dc96b1268d933731c42bdf29c062106d3a468296be68975"
+    },
+    {
+      "rank": 409,
+      "ticker": "ARE",
+      "sha256": "eda579c9364a37f278c2c9f516626f81941ee08d956acdcd531189af6dfdfcef"
+    },
+    {
+      "rank": 410,
+      "ticker": "IFF",
+      "sha256": "edcd266a9e3c5f5733694d2400294223b06571660f3d0f11265250afdb3648a0"
+    },
+    {
+      "rank": 411,
+      "ticker": "HSIC",
+      "sha256": "ee64b04a71acf63225c84d70d5e2fc795f1253b0e74a02a32fbc147650244c82"
+    },
+    {
+      "rank": 412,
+      "ticker": "SO",
+      "sha256": "ee658866f90da74c4e03b15ab15bddfefdece13e917f0f35ea7278df97046893"
+    },
+    {
+      "rank": 413,
+      "ticker": "WYNN",
+      "sha256": "ee9e34eb3deb4290c98be9a295d474773f58babad28ae66a55812091166f82ab"
+    },
+    {
+      "rank": 414,
+      "ticker": "HON",
+      "sha256": "ef05ab6e3b443cf03ac24339d51bcaafd8c12056a538625525facf0a3b5dc23b"
+    },
+    {
+      "rank": 415,
+      "ticker": "ABBV",
+      "sha256": "ef4e10b44b6235983702b11a563d2e3fde5ca9a51551638895f54ef6a1c915cc"
+    },
+    {
+      "rank": 416,
+      "ticker": "HCA",
+      "sha256": "ef81e131f8d0032737386fd607f49b23ceec671cc32a6d56d41b27fd7820af27"
+    },
+    {
+      "rank": 417,
+      "ticker": "LHX",
+      "sha256": "f004fbc93557d0d8251246c0544d2aed9ce3e075b5a8a1fbbbf97bc13a21e20d"
+    },
+    {
+      "rank": 418,
+      "ticker": "IT",
+      "sha256": "f185bf9788c2c359d082ffeb3949f98705111ade3f5cd4f7bd2e0c76dd9bcc6f"
+    },
+    {
+      "rank": 419,
+      "ticker": "BEN",
+      "sha256": "f214aee06c35e4cf933626b9914ba05926660756895aea8b4bb401e819fbd302"
+    },
+    {
+      "rank": 420,
+      "ticker": "KHC",
+      "sha256": "f22870961eed6f9041aad4a5a891cbf085ff486ddfacef3e5192d31852a590ca"
+    },
+    {
+      "rank": 421,
+      "ticker": "MAS",
+      "sha256": "f2798f222ca2020d900e0d351e472221de89851aad3725f652be2e53418d17fe"
+    },
+    {
+      "rank": 422,
+      "ticker": "WST",
+      "sha256": "f2b48676d7dcce2fb6d78421491aa9539d1101f6adbc6ad0bfc3576145cc67ce"
+    },
+    {
+      "rank": 423,
+      "ticker": "REGN",
+      "sha256": "f3334b8bf92798e6a6d1fc9710f734517fcc4329972f3afaa370e3b10203b128"
+    },
+    {
+      "rank": 424,
+      "ticker": "BG",
+      "sha256": "f6f5478fd514b6ff8e5b8399cf7fb96ffdeae6c1962ea50845d2ba920e653709"
+    },
+    {
+      "rank": 425,
+      "ticker": "FANG",
+      "sha256": "f6fc7af073abbbe6832cf3eca2282c700822c0ac512015cec22331a950a0d59e"
+    },
+    {
+      "rank": 426,
+      "ticker": "FTV",
+      "sha256": "f78d535af64153937ef1482875adefd9ec1f27c9036327b60c62032c646074c0"
+    },
+    {
+      "rank": 427,
+      "ticker": "STT",
+      "sha256": "f80afd48e11289df55b6f27a419fd3e6832738a6cb4cb85a7f97f4c1ed2672f0"
+    },
+    {
+      "rank": 428,
+      "ticker": "MCO",
+      "sha256": "f82efa2a8cac624a05a4801464b6c9e435ad396b2a6e0d664e522e881992d418"
+    },
+    {
+      "rank": 429,
+      "ticker": "COF",
+      "sha256": "f8eb31ed2b39608f629abfb188fdd4aa838362fc31552d7c64300df13f55bbc9"
+    },
+    {
+      "rank": 430,
+      "ticker": "MET",
+      "sha256": "f9f818b4a4189462aeae3feb2adf8b57394de0b291a15e2c75d8ae1ff449501f"
+    },
+    {
+      "rank": 431,
+      "ticker": "PANW",
+      "sha256": "fb1cb9c82805b3b9d01fe574abce107d64b9f0a9597ae452794c9ab85e86df71"
+    },
+    {
+      "rank": 432,
+      "ticker": "CMS",
+      "sha256": "fb4794b00e41fb542a2df203c988399f4ee7814090e0870952abfec266d20692"
+    },
+    {
+      "rank": 433,
+      "ticker": "BKR",
+      "sha256": "fbdf3c6725c5f2e0779bcd91583fc5e5e8e63213f5d00edab9268634d358310d"
+    },
+    {
+      "rank": 434,
+      "ticker": "NWSA",
+      "sha256": "fcd2b33b94c830fda6a5a59be661606b7ff1b3d3b3bce960bc6bbecc60c23e16"
+    },
+    {
+      "rank": 435,
+      "ticker": "MCD",
+      "sha256": "fced89761f8cd08b4bf5ce1585680a76d450f4582a1a340fcf82a2fb29b22026"
+    },
+    {
+      "rank": 436,
+      "ticker": "AOS",
+      "sha256": "fd052bfbd237f1d488f3237b799e8e5e44fc7711acd0b882bb0fc6f166f38f9f"
+    },
+    {
+      "rank": 437,
+      "ticker": "HIG",
+      "sha256": "ff8347757f7157da9688d4ddc79e970128382216f24aeeea3d4ace625a1234d2"
+    },
+    {
+      "rank": 438,
+      "ticker": "MLM",
+      "sha256": "ffc1bebe0385d33aa6ba5a0256ba7b8813344352c725b2f39694d8b20812256d"
+    }
+  ],
+  "strata": {
+    "basis": "83 檔基準股（本 freeze 的 reference）自己的短期適合度分布四分位數（凍結當下計算，之後不改）",
+    "Q1": 50.34978455488621,
+    "Q3": 65.7194141147925,
+    "LOW": "短期適合度 ≤ Q1（50.3498）",
+    "MID": "Q1 < 短期適合度 < Q3",
+    "HIGH": "短期適合度 ≥ Q3（65.7194）",
+    "per_stratum": 10,
+    "n_total": 30,
+    "rationale": "兩端各取 25% 的分數區間、中間 50% 為 MID：刻意多抽兩端，以檢驗分數高低是否對應人工判斷。"
+  },
+  "reference_suitability_83": {
+    "AAPL": {
+      "short": 68.3552438922356,
+      "long": 89.54045348058902
+    },
+    "ABT": {
+      "short": 52.88204902945114,
+      "long": 87.53765060240963
+    },
+    "ACN": {
+      "short": 42.06299154953147,
+      "long": 97.0627300870147
+    },
+    "ADBE": {
+      "short": 76.12664198460509,
+      "long": 95.0207078313253
+    },
+    "AEP": {
+      "short": 70.5714001840696,
+      "long": 84.28348811914324
+    },
+    "AJG": {
+      "short": 62.05483391900937,
+      "long": 95.28792252342703
+    },
+    "ALSN": {
+      "short": 50.03597724230254,
+      "long": 67.36790913654619
+    },
+    "AMAT": {
+      "short": 59.30555555555555,
+      "long": 91.50612868139223
+    },
+    "AMD": {
+      "short": 73.70633575970548,
+      "long": 95.77894912985273
+    },
+    "ASML": {
+      "short": 59.29279618473895,
+      "long": 65.10835006693439
+    },
+    "AVGO": {
+      "short": 58.81123452141901,
+      "long": 73.76955739625167
+    },
+    "BA": {
+      "short": 52.60500334672021,
+      "long": 82.51809320615796
+    },
+    "BAC": {
+      "short": 68.2818252175368,
+      "long": 97.83665913654617
+    },
+    "BB": {
+      "short": 62.930550326305216,
+      "long": 73.01759119812584
+    },
+    "CAT": {
+      "short": 47.64898134203481,
+      "long": 97.12391231593038
+    },
+    "CME": {
+      "short": 46.26987115127175,
+      "long": 67.62989457831324
+    },
+    "COST": {
+      "short": 32.057239374163316,
+      "long": 72.8826765394913
+    },
+    "CRWD": {
+      "short": 72.74044093038822,
+      "long": 96.4969252008032
+    },
+    "CSX": {
+      "short": 56.40760960508702,
+      "long": 82.230484437751
+    },
+    "CVX": {
+      "short": 61.456764558232926,
+      "long": 66.278656291834
+    },
+    "DECK": {
+      "short": 76.40039323962516,
+      "long": 93.92570281124497
+    },
+    "DIS": {
+      "short": 45.68497950133869,
+      "long": 84.16844461178044
+    },
+    "DUK": {
+      "short": 64.44894159973225,
+      "long": 67.80402861445783
+    },
+    "EOG": {
+      "short": 65.92055722891565,
+      "long": 51.77533048862115
+    },
+    "ETN": {
+      "short": 49.0992093373494,
+      "long": 72.10927041499329
+    },
+    "FTNT": {
+      "short": 58.7434111445783,
+      "long": 88.82404618473895
+    },
+    "GE": {
+      "short": 61.82741382195448,
+      "long": 91.0062123493976
+    },
+    "GOOGL": {
+      "short": 64.5517486613119,
+      "long": 94.68237533467202
+    },
+    "GS": {
+      "short": 39.79642528447121,
+      "long": 97.9323544176707
+    },
+    "HD": {
+      "short": 43.24516817269076,
+      "long": 96.8556517737617
+    },
+    "IBM": {
+      "short": 50.774844168340024,
+      "long": 95.74182145247656
+    },
+    "INTC": {
+      "short": 68.17253388554217,
+      "long": 87.0868892235609
+    },
+    "INTU": {
+      "short": 58.343425786479244,
+      "long": 69.45751757028111
+    },
+    "JNJ": {
+      "short": 32.84889558232931,
+      "long": 78.1950719544846
+    },
+    "KMB": {
+      "short": 29.14146168005355,
+      "long": 86.27321787148594
+    },
+    "KO": {
+      "short": 47.68129810910307,
+      "long": 92.34542336010708
+    },
+    "LCII": {
+      "short": 55.57477305053548,
+      "long": 64.0991047523427
+    },
+    "LLY": {
+      "short": 54.26283258032128,
+      "long": 75.73104919678715
+    },
+    "LMT": {
+      "short": 73.81583626171351,
+      "long": 90.43936161311913
+    },
+    "LULU": {
+      "short": 53.15250585676037,
+      "long": 94.339859437751
+    },
+    "META": {
+      "short": 67.85647799531458,
+      "long": 98.1613955823293
+    },
+    "MLR": {
+      "short": 26.55240754685408,
+      "long": 96.2882781124498
+    },
+    "MMS": {
+      "short": 58.73572414658635,
+      "long": 96.28566348728248
+    },
+    "MP": {
+      "short": 60.80927878179384,
+      "long": 49.713437081659976
+    },
+    "MSFT": {
+      "short": 55.32086680053547,
+      "long": 87.86918507362785
+    },
+    "MU": {
+      "short": 75.42367386211512,
+      "long": 64.61470883534136
+    },
+    "NFLX": {
+      "short": 55.75949631860776,
+      "long": 86.981781291834
+    },
+    "NKE": {
+      "short": 55.179363286479244,
+      "long": 86.80241800535475
+    },
+    "NOK": {
+      "short": 69.27350025100401,
+      "long": 74.89070866800535
+    },
+    "NU": {
+      "short": 61.57693273092368,
+      "long": 91.32362784471218
+    },
+    "NVO": {
+      "short": 59.97286019076304,
+      "long": 85.41143741633199
+    },
+    "ODFL": {
+      "short": 51.124968624497996,
+      "long": 81.6134328982597
+    },
+    "PEP": {
+      "short": 49.2371046686747,
+      "long": 86.17333919009369
+    },
+    "PGR": {
+      "short": 43.7885657212182,
+      "long": 75.1689047858099
+    },
+    "PLTR": {
+      "short": 65.51827100066934,
+      "long": 88.56519829317268
+    },
+    "PYPL": {
+      "short": 42.49111027443105,
+      "long": 77.7150267737617
+    },
+    "QCOM": {
+      "short": 84.88725736278447,
+      "long": 96.53143825301206
+    },
+    "ROST": {
+      "short": 84.38279158299865,
+      "long": 97.37125585676037
+    },
+    "RRX": {
+      "short": 57.52489123159304,
+      "long": 39.68321201472557
+    },
+    "RTX": {
+      "short": 60.953972138554214,
+      "long": 97.95170264390897
+    },
+    "SAIC": {
+      "short": 55.02180597389558,
+      "long": 91.15838353413655
+    },
+    "SBUX": {
+      "short": 52.674081743641224,
+      "long": 82.20067771084337
+    },
+    "SCHW": {
+      "short": 56.355526271753675,
+      "long": 81.49891231593038
+    },
+    "SFM": {
+      "short": 67.023406124498,
+      "long": 92.26750753012047
+    },
+    "SMCI": {
+      "short": 65.01417126840697,
+      "long": 51.56093122489959
+    },
+    "SOFI": {
+      "short": 64.11860985609103,
+      "long": 85.51079317269075
+    },
+    "SSD": {
+      "short": 61.981728999330656,
+      "long": 72.45178631191432
+    },
+    "TGT": {
+      "short": 57.82939047858099,
+      "long": 87.64537315930389
+    },
+    "TMO": {
+      "short": 69.20316683400267,
+      "long": 99.34425200803213
+    },
+    "TSCO": {
+      "short": 49.9669249916332,
+      "long": 90.77873995983936
+    },
+    "TSLA": {
+      "short": 60.34262048192771,
+      "long": 33.993787650602414
+    },
+    "TSM": {
+      "short": 54.61434278781794,
+      "long": 91.58665913654619
+    },
+    "TTC": {
+      "short": 32.81940261044176,
+      "long": 78.32475736278447
+    },
+    "TXRH": {
+      "short": 46.75326305220883,
+      "long": 91.05275267737618
+    },
+    "UHS": {
+      "short": 77.33151355421687,
+      "long": 99.00278196117802
+    },
+    "ULTA": {
+      "short": 66.24654869477911,
+      "long": 91.65829986613119
+    },
+    "UNH": {
+      "short": 62.61221971218205,
+      "long": 88.68756275100401
+    },
+    "UNP": {
+      "short": 72.86202100066933,
+      "long": 68.6176999665328
+    },
+    "UPS": {
+      "short": 75.13104501338687,
+      "long": 83.10795264390896
+    },
+    "WDFC": {
+      "short": 47.69808400267736,
+      "long": 87.25161060910307
+    },
+    "WMT": {
+      "short": 45.97922941767068,
+      "long": 93.89066683400267
+    },
+    "WSO": {
+      "short": 53.310952141900934,
+      "long": 78.6970799866131
+    },
+    "ZTS": {
+      "short": 50.663591867469876,
+      "long": 78.69655706157965
+    }
+  },
+  "selection_procedure": [
+    "依 screening_pool 的排名順序逐檔處理（排名 151 起）。",
+    "每檔用 production 的資料路徑（core.data.fetch_yahoo，5 年日K）取得截至 2026-10-28 的已完成日線。",
+    "抓取失敗（重試後）或已完成日線 < 900 根 → 記錄後略過；此時尚未計算任何分數，略過與結果無關。",
+    "其餘用凍結的 production 程式與凍結 reference 計算短期適合度，依 strata 分到 LOW／MID／HIGH。",
+    "每個 stratum 取「排名順序上最先出現的 10 檔」；三個 stratum 都滿 10 檔就停止。不得人工挑選或替換。",
+    "若整個 screening_pool 用完仍有 stratum 未滿 → BLOCKED_INSUFFICIENT_POOL（不得放寬門檻）。"
+  ],
+  "review": {
+    "what_is_shown": "每檔一張圖：production 的「短期最後選擇」那條 SMA（core/charts.py::chart_png，bars=126、segs=4，近兩年四段）。圖上與檔名只有「ticker＋SMA週期」，不得出現適合度、任何分數、stratum、回測報酬。",
+    "question_wording": "「如果用這條短期均線當這檔股票的趨勢分界（站上偏多、跌破偏空），以近兩年的圖來看，可不可行？」",
+    "rating_scale": {
+      "可用": "大部分轉折都能用這條線判斷，假突破／糾結少",
+      "勉強": "有時可用，但糾結或假突破明顯",
+      "不可用": "常常穿來穿去，這條線沒有分界意義"
+    },
+    "order": "SHA256(\"MA_SELECTOR_SUITABILITY_REVIEW_ORDER_2026-10-29|\" + ticker) 的十六進位字串遞增排序（與分層、分數無關；把高中低分混在一起）",
+    "blinding": [
+      "分數、stratum 在開封時一起計算並 commit（證明事先產生），但不得在審閱前向使用者顯示，審閱包與圖不得含分數。",
+      "使用者逐檔給評分；所有 30 檔評分記錄並 commit 之後才揭盲。",
+      "審閱期間不得修改程式、規則、門檻或分析計畫。"
+    ],
+    "missing": "使用者若對某檔不給評分，記為 MISSING，不補、不替換。"
+  },
+  "analysis_plan": {
+    "primary": "AUC：以短期適合度區分「可用」vs「不可用」（「勉強」不納入）；95% CI 用 ticker 層級 bootstrap（10000 次，seed 20261029）。",
+    "primary_decision": {
+      "INFORMATIVE": "AUC 95% CI 下界 > 0.5",
+      "NOT_SHOWN_INFORMATIVE": "CI 下界 ≤ 0.5（不是「證明無效」，只是本樣本沒有證據）",
+      "INSUFFICIENT_CLASS_BALANCE": "「可用」或「不可用」任一類 < 5 檔 → 不計算主要結論，只做描述"
+    },
+    "secondary": [
+      "Spearman：適合度 vs 三級評分（不可用=0、勉強=1、可用=2），bootstrap 95% CI（同上設定）",
+      "各 stratum 的「可用／勉強／不可用」檔數與比例（Wilson 95% CI）"
+    ],
+    "threshold": "本批不訂正式門檻。若 INFORMATIVE，可描述性地報告使「可用 vs 不可用」最好分開的分數（Youden），但標記為探索性，必須用另一批新的、未暴露的股票驗證後才可採用。",
+    "design_caveat": "分層抽樣刻意多抽兩端，AUC 與比例是「此抽樣設計下」的數值，不能直接當成全市場的比例。",
+    "no_retuning": "揭盲後不得改分層門檻、評分定義或分析方式再重算宣稱結果。"
+  },
+  "anti_leakage": [
+    "本 freeze commit 早於任何價格資料存取",
+    "開封：先完整產生並 commit 全部 30 檔的分數、分層、圖（commit A），之後才把圖給使用者看",
+    "審閱期間只顯示圖，不顯示分數／分層",
+    "若 production 程式或規則在審閱完成前改動，此批不得再當 untouched 重跑"
+  ],
+  "asof": "2026-10-28",
+  "min_bars": 900
+}
