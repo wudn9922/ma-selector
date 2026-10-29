@@ -1,0 +1,31 @@
+{
+  "batch": "SUITABILITY_VALIDATION_30",
+  "note": "使用者原話，逐字記錄（只追加，不改）。對應到 可用／勉強／不可用 的轉換由使用者確認後才做，揭盲前完成。",
+  "ratings": {
+    "1": {
+      "ticker": "LVS",
+      "ma": "SMA32",
+      "raw_text": "好"
+    },
+    "2": {
+      "ticker": "APA",
+      "ma": "SMA22",
+      "raw_text": "好"
+    },
+    "3": {
+      "ticker": "VTR",
+      "ma": "SMA31",
+      "raw_text": "偏好"
+    },
+    "4": {
+      "ticker": "CDW",
+      "ma": "SMA16",
+      "raw_text": "勉強"
+    },
+    "5": {
+      "ticker": "NI",
+      "ma": "SMA28",
+      "raw_text": "勉強"
+    }
+  }
+}
