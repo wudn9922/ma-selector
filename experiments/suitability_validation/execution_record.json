@@ -1,0 +1,386 @@
+{
+  "batch": "SUITABILITY_VALIDATION_30",
+  "status": "OPENED_PENDING_COMMIT",
+  "raw_output_commit_sha": null,
+  "freeze_commit": "63d88f16bd0229eb56344339f25900a4c6d01bcc",
+  "asof": "2026-10-28",
+  "PRICE_DATA_ACCESSED": true,
+  "RESULTS_GENERATED": true,
+  "review_order": [
+    {
+      "order": 1,
+      "ticker": "LVS",
+      "ma": "SMA32"
+    },
+    {
+      "order": 2,
+      "ticker": "APA",
+      "ma": "SMA22"
+    },
+    {
+      "order": 3,
+      "ticker": "VTR",
+      "ma": "SMA31"
+    },
+    {
+      "order": 4,
+      "ticker": "CDW",
+      "ma": "SMA16"
+    },
+    {
+      "order": 5,
+      "ticker": "NI",
+      "ma": "SMA28"
+    },
+    {
+      "order": 6,
+      "ticker": "PWR",
+      "ma": "SMA23"
+    },
+    {
+      "order": 7,
+      "ticker": "PPL",
+      "ma": "SMA26"
+    },
+    {
+      "order": 8,
+      "ticker": "NRG",
+      "ma": "SMA23"
+    },
+    {
+      "order": 9,
+      "ticker": "GPC",
+      "ma": "SMA15"
+    },
+    {
+      "order": 10,
+      "ticker": "LITE",
+      "ma": "SMA29"
+    },
+    {
+      "order": 11,
+      "ticker": "BALL",
+      "ma": "SMA19"
+    },
+    {
+      "order": 12,
+      "ticker": "RMD",
+      "ma": "SMA33"
+    },
+    {
+      "order": 13,
+      "ticker": "BSX",
+      "ma": "SMA33"
+    },
+    {
+      "order": 14,
+      "ticker": "DXCM",
+      "ma": "SMA16"
+    },
+    {
+      "order": 15,
+      "ticker": "EVRG",
+      "ma": "SMA28"
+    },
+    {
+      "order": 16,
+      "ticker": "SLB",
+      "ma": "SMA32"
+    },
+    {
+      "order": 17,
+      "ticker": "TDG",
+      "ma": "SMA30"
+    },
+    {
+      "order": 18,
+      "ticker": "CARR",
+      "ma": "SMA25"
+    },
+    {
+      "order": 19,
+      "ticker": "C",
+      "ma": "SMA26"
+    },
+    {
+      "order": 20,
+      "ticker": "GPN",
+      "ma": "SMA22"
+    },
+    {
+      "order": 21,
+      "ticker": "EL",
+      "ma": "SMA32"
+    },
+    {
+      "order": 22,
+      "ticker": "PSX",
+      "ma": "SMA29"
+    },
+    {
+      "order": 23,
+      "ticker": "VLO",
+      "ma": "SMA31"
+    },
+    {
+      "order": 24,
+      "ticker": "AMT",
+      "ma": "SMA23"
+    },
+    {
+      "order": 25,
+      "ticker": "LIN",
+      "ma": "SMA15"
+    },
+    {
+      "order": 26,
+      "ticker": "DLR",
+      "ma": "SMA33"
+    },
+    {
+      "order": 27,
+      "ticker": "CMG",
+      "ma": "SMA16"
+    },
+    {
+      "order": 28,
+      "ticker": "PODD",
+      "ma": "SMA22"
+    },
+    {
+      "order": 29,
+      "ticker": "MCHP",
+      "ma": "SMA27"
+    },
+    {
+      "order": 30,
+      "ticker": "INVH",
+      "ma": "SMA32"
+    }
+  ],
+  "n_screened": 34,
+  "data_status": [
+    {
+      "rank": 151,
+      "ticker": "HONA",
+      "status": "SKIPPED_INSUFFICIENT_BARS",
+      "bars": 95
+    },
+    {
+      "rank": 152,
+      "ticker": "PPL",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 153,
+      "ticker": "APA",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 154,
+      "ticker": "CARR",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 155,
+      "ticker": "BALL",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 156,
+      "ticker": "TDG",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 157,
+      "ticker": "SOLV",
+      "status": "SKIPPED_INSUFFICIENT_BARS",
+      "bars": 651
+    },
+    {
+      "rank": 158,
+      "ticker": "LVS",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 159,
+      "ticker": "CMG",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 160,
+      "ticker": "SLB",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 161,
+      "ticker": "C",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 162,
+      "ticker": "NI",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 163,
+      "ticker": "NRG",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 164,
+      "ticker": "VTR",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 165,
+      "ticker": "EL",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 166,
+      "ticker": "DLR",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 167,
+      "ticker": "PWR",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 168,
+      "ticker": "AMT",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 169,
+      "ticker": "LIN",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 170,
+      "ticker": "PODD",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 171,
+      "ticker": "GPC",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 172,
+      "ticker": "DXCM",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 173,
+      "ticker": "PSX",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 174,
+      "ticker": "LITE",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 175,
+      "ticker": "VLO",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 176,
+      "ticker": "GPN",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 177,
+      "ticker": "BSX",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 178,
+      "ticker": "INVH",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 179,
+      "ticker": "RMD",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 180,
+      "ticker": "MCHP",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 181,
+      "ticker": "AMP",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 182,
+      "ticker": "EVRG",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 183,
+      "ticker": "CPT",
+      "status": "FETCHED",
+      "bars": 1254
+    },
+    {
+      "rank": 184,
+      "ticker": "CDW",
+      "status": "FETCHED",
+      "bars": 1254
+    }
+  ],
+  "sealed_scores_sha256": "bd89789eeb41350403f5a0965eaa1cc64676048fb3d29babf0fc42badafc7237",
+  "pre_commit_checks": {
+    "n_selected_equals_manifest": true,
+    "ten_per_stratum": true,
+    "each_ge_min_bars": true,
+    "last_le_asof": true,
+    "production_unchanged": true,
+    "review_bundle_blind": true,
+    "one_image_per_stock": true
+  },
+  "reference_sha256": "080ac54583e4694a041c0a5a5972f1f385523b2800186ab43ccec60801960de3",
+  "environment": {
+    "python": "3.11.17",
+    "github_run_id": "40828611890"
+  },
+  "started_utc": "2026-10-29T06:21:27+00:00",
+  "finished_utc": "2026-10-29T06:23:38+00:00",
+  "note": "本檔不含分數與分層；分數封存在 sealed_scores.json，全部評分 commit 前不得顯示。"
+}

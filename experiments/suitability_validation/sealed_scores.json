@@ -1,0 +1,652 @@
+{
+  "batch": "SUITABILITY_VALIDATION_30",
+  "note": "審閱完成並 commit 全部評分之前，不得顯示給使用者。",
+  "Q1": 50.34978455488621,
+  "Q3": 65.7194141147925,
+  "selected": {
+    "PPL": {
+      "order": 7,
+      "stratum": "LOW",
+      "short_suitability": 42.65996276773762,
+      "long_max": 66.39317687416332,
+      "short_final": 26
+    },
+    "CARR": {
+      "order": 18,
+      "stratum": "LOW",
+      "short_suitability": 50.08277903279786,
+      "long_max": 98.94787483266397,
+      "short_final": 25
+    },
+    "C": {
+      "order": 19,
+      "stratum": "LOW",
+      "short_suitability": 37.0033780957162,
+      "long_max": 73.93950803212851,
+      "short_final": 26
+    },
+    "NI": {
+      "order": 5,
+      "stratum": "LOW",
+      "short_suitability": 46.128472222222214,
+      "long_max": 46.28566348728246,
+      "short_final": 28
+    },
+    "NRG": {
+      "order": 8,
+      "stratum": "LOW",
+      "short_suitability": 43.852807061579654,
+      "long_max": 81.8461345381526,
+      "short_final": 23
+    },
+    "PWR": {
+      "order": 6,
+      "stratum": "LOW",
+      "short_suitability": 41.0084609270415,
+      "long_max": 85.70845883534136,
+      "short_final": 23
+    },
+    "LIN": {
+      "order": 25,
+      "stratum": "LOW",
+      "short_suitability": 41.357774849397586,
+      "long_max": 96.35102911646587,
+      "short_final": 15
+    },
+    "INVH": {
+      "order": 30,
+      "stratum": "LOW",
+      "short_suitability": 38.42489750669344,
+      "long_max": 88.94954819277108,
+      "short_final": 32
+    },
+    "RMD": {
+      "order": 12,
+      "stratum": "LOW",
+      "short_suitability": 40.14443189424364,
+      "long_max": 83.96607262382864,
+      "short_final": 33
+    },
+    "EVRG": {
+      "order": 15,
+      "stratum": "LOW",
+      "short_suitability": 32.997380145582326,
+      "long_max": 75.12863955823292,
+      "short_final": 28
+    },
+    "BALL": {
+      "order": 11,
+      "stratum": "MID",
+      "short_suitability": 58.83251757028113,
+      "long_max": 89.99644410977241,
+      "short_final": 19
+    },
+    "TDG": {
+      "order": 17,
+      "stratum": "MID",
+      "short_suitability": 57.137665244310575,
+      "long_max": 82.12067018072288,
+      "short_final": 30
+    },
+    "LVS": {
+      "order": 1,
+      "stratum": "MID",
+      "short_suitability": 50.495732931726906,
+      "long_max": 97.37857680722891,
+      "short_final": 32
+    },
+    "CMG": {
+      "order": 27,
+      "stratum": "MID",
+      "short_suitability": 63.05027401271753,
+      "long_max": 91.47736780455153,
+      "short_final": 16
+    },
+    "SLB": {
+      "order": 16,
+      "stratum": "MID",
+      "short_suitability": 63.18121444109771,
+      "long_max": 70.06515645917001,
+      "short_final": 32
+    },
+    "VTR": {
+      "order": 3,
+      "stratum": "MID",
+      "short_suitability": 60.06677752677376,
+      "long_max": 96.51679635207496,
+      "short_final": 31
+    },
+    "EL": {
+      "order": 21,
+      "stratum": "MID",
+      "short_suitability": 60.80258534136546,
+      "long_max": 86.94779116465864,
+      "short_final": 32
+    },
+    "AMT": {
+      "order": 24,
+      "stratum": "MID",
+      "short_suitability": 65.40040369812583,
+      "long_max": 70.93164323962517,
+      "short_final": 23
+    },
+    "DXCM": {
+      "order": 14,
+      "stratum": "MID",
+      "short_suitability": 64.64122113453814,
+      "long_max": 95.43224983266398,
+      "short_final": 16
+    },
+    "MCHP": {
+      "order": 29,
+      "stratum": "MID",
+      "short_suitability": 60.61182228915662,
+      "long_max": 75.2755814926372,
+      "short_final": 27
+    },
+    "APA": {
+      "order": 2,
+      "stratum": "HIGH",
+      "short_suitability": 68.65958626171351,
+      "long_max": 86.74855672690762,
+      "short_final": 22
+    },
+    "DLR": {
+      "order": 26,
+      "stratum": "HIGH",
+      "short_suitability": 66.62174740629183,
+      "long_max": 92.14618892235609,
+      "short_final": 33
+    },
+    "PODD": {
+      "order": 28,
+      "stratum": "HIGH",
+      "short_suitability": 67.48274347389558,
+      "long_max": 87.55490712851405,
+      "short_final": 22
+    },
+    "GPC": {
+      "order": 9,
+      "stratum": "HIGH",
+      "short_suitability": 75.08053045515393,
+      "long_max": 84.19302208835342,
+      "short_final": 15
+    },
+    "PSX": {
+      "order": 22,
+      "stratum": "HIGH",
+      "short_suitability": 82.20993348393574,
+      "long_max": 78.99200970548861,
+      "short_final": 29
+    },
+    "LITE": {
+      "order": 10,
+      "stratum": "HIGH",
+      "short_suitability": 65.82663989290494,
+      "long_max": 74.66637382864792,
+      "short_final": 29
+    },
+    "VLO": {
+      "order": 23,
+      "stratum": "HIGH",
+      "short_suitability": 76.5185220046854,
+      "long_max": 93.34525602409639,
+      "short_final": 31
+    },
+    "GPN": {
+      "order": 20,
+      "stratum": "HIGH",
+      "short_suitability": 68.64295724564926,
+      "long_max": 93.91524431057564,
+      "short_final": 22
+    },
+    "BSX": {
+      "order": 13,
+      "stratum": "HIGH",
+      "short_suitability": 71.30760019243641,
+      "long_max": 95.55199966532798,
+      "short_final": 33
+    },
+    "CDW": {
+      "order": 4,
+      "stratum": "HIGH",
+      "short_suitability": 73.92131024096385,
+      "long_max": 86.83065595716198,
+      "short_final": 16
+    }
+  },
+  "screening": [
+    {
+      "rank": 151,
+      "ticker": "HONA",
+      "bars": 95,
+      "first": "2026-06-15",
+      "last": "2026-10-28",
+      "status": "SKIPPED_INSUFFICIENT_BARS"
+    },
+    {
+      "rank": 152,
+      "ticker": "PPL",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 42.65996276773762,
+      "long_max": 66.39317687416332,
+      "stratum": "LOW",
+      "short_final": 26,
+      "selected": true
+    },
+    {
+      "rank": 153,
+      "ticker": "APA",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 68.65958626171351,
+      "long_max": 86.74855672690762,
+      "stratum": "HIGH",
+      "short_final": 22,
+      "selected": true
+    },
+    {
+      "rank": 154,
+      "ticker": "CARR",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 50.08277903279786,
+      "long_max": 98.94787483266397,
+      "stratum": "LOW",
+      "short_final": 25,
+      "selected": true
+    },
+    {
+      "rank": 155,
+      "ticker": "BALL",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 58.83251757028113,
+      "long_max": 89.99644410977241,
+      "stratum": "MID",
+      "short_final": 19,
+      "selected": true
+    },
+    {
+      "rank": 156,
+      "ticker": "TDG",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 57.137665244310575,
+      "long_max": 82.12067018072288,
+      "stratum": "MID",
+      "short_final": 30,
+      "selected": true
+    },
+    {
+      "rank": 157,
+      "ticker": "SOLV",
+      "bars": 651,
+      "first": "2024-03-26",
+      "last": "2026-10-28",
+      "status": "SKIPPED_INSUFFICIENT_BARS"
+    },
+    {
+      "rank": 158,
+      "ticker": "LVS",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 50.495732931726906,
+      "long_max": 97.37857680722891,
+      "stratum": "MID",
+      "short_final": 32,
+      "selected": true
+    },
+    {
+      "rank": 159,
+      "ticker": "CMG",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 63.05027401271753,
+      "long_max": 91.47736780455153,
+      "stratum": "MID",
+      "short_final": 16,
+      "selected": true
+    },
+    {
+      "rank": 160,
+      "ticker": "SLB",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 63.18121444109771,
+      "long_max": 70.06515645917001,
+      "stratum": "MID",
+      "short_final": 32,
+      "selected": true
+    },
+    {
+      "rank": 161,
+      "ticker": "C",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 37.0033780957162,
+      "long_max": 73.93950803212851,
+      "stratum": "LOW",
+      "short_final": 26,
+      "selected": true
+    },
+    {
+      "rank": 162,
+      "ticker": "NI",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 46.128472222222214,
+      "long_max": 46.28566348728246,
+      "stratum": "LOW",
+      "short_final": 28,
+      "selected": true
+    },
+    {
+      "rank": 163,
+      "ticker": "NRG",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 43.852807061579654,
+      "long_max": 81.8461345381526,
+      "stratum": "LOW",
+      "short_final": 23,
+      "selected": true
+    },
+    {
+      "rank": 164,
+      "ticker": "VTR",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 60.06677752677376,
+      "long_max": 96.51679635207496,
+      "stratum": "MID",
+      "short_final": 31,
+      "selected": true
+    },
+    {
+      "rank": 165,
+      "ticker": "EL",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 60.80258534136546,
+      "long_max": 86.94779116465864,
+      "stratum": "MID",
+      "short_final": 32,
+      "selected": true
+    },
+    {
+      "rank": 166,
+      "ticker": "DLR",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 66.62174740629183,
+      "long_max": 92.14618892235609,
+      "stratum": "HIGH",
+      "short_final": 33,
+      "selected": true
+    },
+    {
+      "rank": 167,
+      "ticker": "PWR",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 41.0084609270415,
+      "long_max": 85.70845883534136,
+      "stratum": "LOW",
+      "short_final": 23,
+      "selected": true
+    },
+    {
+      "rank": 168,
+      "ticker": "AMT",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 65.40040369812583,
+      "long_max": 70.93164323962517,
+      "stratum": "MID",
+      "short_final": 23,
+      "selected": true
+    },
+    {
+      "rank": 169,
+      "ticker": "LIN",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 41.357774849397586,
+      "long_max": 96.35102911646587,
+      "stratum": "LOW",
+      "short_final": 15,
+      "selected": true
+    },
+    {
+      "rank": 170,
+      "ticker": "PODD",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 67.48274347389558,
+      "long_max": 87.55490712851405,
+      "stratum": "HIGH",
+      "short_final": 22,
+      "selected": true
+    },
+    {
+      "rank": 171,
+      "ticker": "GPC",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 75.08053045515393,
+      "long_max": 84.19302208835342,
+      "stratum": "HIGH",
+      "short_final": 15,
+      "selected": true
+    },
+    {
+      "rank": 172,
+      "ticker": "DXCM",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 64.64122113453814,
+      "long_max": 95.43224983266398,
+      "stratum": "MID",
+      "short_final": 16,
+      "selected": true
+    },
+    {
+      "rank": 173,
+      "ticker": "PSX",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 82.20993348393574,
+      "long_max": 78.99200970548861,
+      "stratum": "HIGH",
+      "short_final": 29,
+      "selected": true
+    },
+    {
+      "rank": 174,
+      "ticker": "LITE",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 65.82663989290494,
+      "long_max": 74.66637382864792,
+      "stratum": "HIGH",
+      "short_final": 29,
+      "selected": true
+    },
+    {
+      "rank": 175,
+      "ticker": "VLO",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 76.5185220046854,
+      "long_max": 93.34525602409639,
+      "stratum": "HIGH",
+      "short_final": 31,
+      "selected": true
+    },
+    {
+      "rank": 176,
+      "ticker": "GPN",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 68.64295724564926,
+      "long_max": 93.91524431057564,
+      "stratum": "HIGH",
+      "short_final": 22,
+      "selected": true
+    },
+    {
+      "rank": 177,
+      "ticker": "BSX",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 71.30760019243641,
+      "long_max": 95.55199966532798,
+      "stratum": "HIGH",
+      "short_final": 33,
+      "selected": true
+    },
+    {
+      "rank": 178,
+      "ticker": "INVH",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 38.42489750669344,
+      "long_max": 88.94954819277108,
+      "stratum": "LOW",
+      "short_final": 32,
+      "selected": true
+    },
+    {
+      "rank": 179,
+      "ticker": "RMD",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 40.14443189424364,
+      "long_max": 83.96607262382864,
+      "stratum": "LOW",
+      "short_final": 33,
+      "selected": true
+    },
+    {
+      "rank": 180,
+      "ticker": "MCHP",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 60.61182228915662,
+      "long_max": 75.2755814926372,
+      "stratum": "MID",
+      "short_final": 27,
+      "selected": true
+    },
+    {
+      "rank": 181,
+      "ticker": "AMP",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 63.3992218875502,
+      "long_max": 82.47259872824631,
+      "stratum": "MID",
+      "short_final": 33,
+      "selected": false
+    },
+    {
+      "rank": 182,
+      "ticker": "EVRG",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 32.997380145582326,
+      "long_max": 75.12863955823292,
+      "stratum": "LOW",
+      "short_final": 28,
+      "selected": true
+    },
+    {
+      "rank": 183,
+      "ticker": "CPT",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 38.640290327978576,
+      "long_max": 62.163236278447116,
+      "stratum": "LOW",
+      "short_final": 25,
+      "selected": false
+    },
+    {
+      "rank": 184,
+      "ticker": "CDW",
+      "bars": 1254,
+      "first": "2021-10-29",
+      "last": "2026-10-28",
+      "status": "SCORED",
+      "short_suitability": 73.92131024096385,
+      "long_max": 86.83065595716198,
+      "stratum": "HIGH",
+      "short_final": 16,
+      "selected": true
+    }
+  ]
+}
