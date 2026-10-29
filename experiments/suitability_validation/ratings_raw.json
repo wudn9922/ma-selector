@@ -101,6 +101,31 @@
       "ticker": "GPN",
       "ma": "SMA22",
       "raw_text": "勉強"
+    },
+    "21": {
+      "ticker": "EL",
+      "ma": "SMA32",
+      "raw_text": "勉強"
+    },
+    "22": {
+      "ticker": "PSX",
+      "ma": "SMA29",
+      "raw_text": "勉強"
+    },
+    "23": {
+      "ticker": "VLO",
+      "ma": "SMA31",
+      "raw_text": "可用"
+    },
+    "24": {
+      "ticker": "AMT",
+      "ma": "SMA23",
+      "raw_text": "可用"
+    },
+    "25": {
+      "ticker": "LIN",
+      "ma": "SMA15",
+      "raw_text": "不可用"
     }
   },
   "mapping_confirmed_by_user": {
