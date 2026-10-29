@@ -126,6 +126,31 @@
       "ticker": "LIN",
       "ma": "SMA15",
       "raw_text": "不可用"
+    },
+    "26": {
+      "ticker": "DLR",
+      "ma": "SMA33",
+      "raw_text": "可用"
+    },
+    "27": {
+      "ticker": "CMG",
+      "ma": "SMA16",
+      "raw_text": "勉強"
+    },
+    "28": {
+      "ticker": "PODD",
+      "ma": "SMA22",
+      "raw_text": "勉強"
+    },
+    "29": {
+      "ticker": "MCHP",
+      "ma": "SMA27",
+      "raw_text": "勉強"
+    },
+    "30": {
+      "ticker": "INVH",
+      "ma": "SMA32",
+      "raw_text": "不可用"
     }
   },
   "mapping_confirmed_by_user": {
@@ -135,5 +160,7 @@
     "勉強": "勉強",
     "不可用": "不可用",
     "note": "使用者確認（揭盲前）：「好」＝可用；「偏好」＝可用。其他說法若出現，先請使用者確認再轉換。"
-  }
+  },
+  "status": "ALL_30_RATED_BEFORE_UNBLINDING",
+  "user_remark_after_rating": "通常不可用的數量會有15-30%左右（使用者在評完 30 檔後、揭盲前的說明；只記錄，不改分析計畫）"
 }
