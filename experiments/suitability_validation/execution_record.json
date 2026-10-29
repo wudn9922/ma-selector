@@ -1,7 +1,7 @@
 {
   "batch": "SUITABILITY_VALIDATION_30",
-  "status": "OPENED_PENDING_COMMIT",
-  "raw_output_commit_sha": null,
+  "status": "OPENED_COMMITTED_BEFORE_REVIEW",
+  "raw_output_commit_sha": "7dff3c41715a2d2fba45bd5993fd76315292e1ca",
   "freeze_commit": "63d88f16bd0229eb56344339f25900a4c6d01bcc",
   "asof": "2026-10-28",
   "PRICE_DATA_ACCESSED": true,
