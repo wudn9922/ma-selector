@@ -76,6 +76,31 @@
       "ticker": "EVRG",
       "ma": "SMA28",
       "raw_text": "勉強"
+    },
+    "16": {
+      "ticker": "SLB",
+      "ma": "SMA32",
+      "raw_text": "勉強"
+    },
+    "17": {
+      "ticker": "TDG",
+      "ma": "SMA30",
+      "raw_text": "勉強"
+    },
+    "18": {
+      "ticker": "CARR",
+      "ma": "SMA25",
+      "raw_text": "可用"
+    },
+    "19": {
+      "ticker": "C",
+      "ma": "SMA26",
+      "raw_text": "可用"
+    },
+    "20": {
+      "ticker": "GPN",
+      "ma": "SMA22",
+      "raw_text": "勉強"
     }
   },
   "mapping_confirmed_by_user": {
