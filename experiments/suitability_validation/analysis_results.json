@@ -1,0 +1,413 @@
+{
+  "batch": "SUITABILITY_VALIDATION_30",
+  "raw_output_commit": "7dff3c41715a2d2fba45bd5993fd76315292e1ca",
+  "ratings_commit": "02a057f1b0baec4a240096a3779d98dcee46099e",
+  "counts": {
+    "不可用": 4,
+    "勉強": 17,
+    "可用": 9
+  },
+  "primary_decision": "INSUFFICIENT_CLASS_BALANCE",
+  "primary_rule": {
+    "INFORMATIVE": "AUC 95% CI 下界 > 0.5",
+    "NOT_SHOWN_INFORMATIVE": "CI 下界 ≤ 0.5（不是「證明無效」，只是本樣本沒有證據）",
+    "INSUFFICIENT_CLASS_BALANCE": "「可用」或「不可用」任一類 < 5 檔 → 不計算主要結論，只做描述"
+  },
+  "auc_descriptive": {
+    "value": 0.7222222222222222,
+    "ci95_bootstrap": [
+      0.38461538461538464,
+      1.0
+    ],
+    "n_valid_reps": 9881,
+    "n_pos": 9,
+    "n_neg": 4
+  },
+  "spearman_secondary": {
+    "rho": 0.12693754994440803,
+    "ci95_bootstrap": [
+      -0.25840593642797033,
+      0.47948406788445114
+    ]
+  },
+  "strata": {
+    "LOW": {
+      "n": 10,
+      "不可用": 3,
+      "勉強": 4,
+      "可用": 3,
+      "score_range": [
+        32.997380145582326,
+        50.08277903279786
+      ],
+      "wilson95": {
+        "不可用": [
+          0.10779126655639398,
+          0.6032218546540291
+        ],
+        "勉強": [
+          0.1681803285264069,
+          0.6873262320788047
+        ],
+        "可用": [
+          0.10779126655639398,
+          0.6032218546540291
+        ]
+      }
+    },
+    "MID": {
+      "n": 10,
+      "不可用": 1,
+      "勉強": 6,
+      "可用": 3,
+      "score_range": [
+        50.495732931726906,
+        65.40040369812583
+      ],
+      "wilson95": {
+        "不可用": [
+          0.017876212896073995,
+          0.4041500295247722
+        ],
+        "勉強": [
+          0.3126737679211953,
+          0.831819671473593
+        ],
+        "可用": [
+          0.10779126655639398,
+          0.6032218546540291
+        ]
+      }
+    },
+    "HIGH": {
+      "n": 10,
+      "不可用": 0,
+      "勉強": 7,
+      "可用": 3,
+      "score_range": [
+        65.82663989290494,
+        82.20993348393574
+      ],
+      "wilson95": {
+        "不可用": [
+          0.0,
+          0.2775328030260577
+        ],
+        "勉強": [
+          0.3967781453459709,
+          0.892208733443606
+        ],
+        "可用": [
+          0.10779126655639398,
+          0.6032218546540291
+        ]
+      }
+    }
+  },
+  "rows": [
+    {
+      "order": 1,
+      "ticker": "LVS",
+      "ma": "SMA32",
+      "raw": "好",
+      "rating": "可用",
+      "stratum": "MID",
+      "score": 50.495732931726906,
+      "long_max": 97.37857680722891
+    },
+    {
+      "order": 2,
+      "ticker": "APA",
+      "ma": "SMA22",
+      "raw": "好",
+      "rating": "可用",
+      "stratum": "HIGH",
+      "score": 68.65958626171351,
+      "long_max": 86.74855672690762
+    },
+    {
+      "order": 3,
+      "ticker": "VTR",
+      "ma": "SMA31",
+      "raw": "偏好",
+      "rating": "可用",
+      "stratum": "MID",
+      "score": 60.06677752677376,
+      "long_max": 96.51679635207496
+    },
+    {
+      "order": 4,
+      "ticker": "CDW",
+      "ma": "SMA16",
+      "raw": "勉強",
+      "rating": "勉強",
+      "stratum": "HIGH",
+      "score": 73.92131024096385,
+      "long_max": 86.83065595716198
+    },
+    {
+      "order": 5,
+      "ticker": "NI",
+      "ma": "SMA28",
+      "raw": "勉強",
+      "rating": "勉強",
+      "stratum": "LOW",
+      "score": 46.128472222222214,
+      "long_max": 46.28566348728246
+    },
+    {
+      "order": 6,
+      "ticker": "PWR",
+      "ma": "SMA23",
+      "raw": "可用",
+      "rating": "可用",
+      "stratum": "LOW",
+      "score": 41.0084609270415,
+      "long_max": 85.70845883534136
+    },
+    {
+      "order": 7,
+      "ticker": "PPL",
+      "ma": "SMA26",
+      "raw": "勉強",
+      "rating": "勉強",
+      "stratum": "LOW",
+      "score": 42.65996276773762,
+      "long_max": 66.39317687416332
+    },
+    {
+      "order": 8,
+      "ticker": "NRG",
+      "ma": "SMA23",
+      "raw": "不可用",
+      "rating": "不可用",
+      "stratum": "LOW",
+      "score": 43.852807061579654,
+      "long_max": 81.8461345381526
+    },
+    {
+      "order": 9,
+      "ticker": "GPC",
+      "ma": "SMA15",
+      "raw": "勉強",
+      "rating": "勉強",
+      "stratum": "HIGH",
+      "score": 75.08053045515393,
+      "long_max": 84.19302208835342
+    },
+    {
+      "order": 10,
+      "ticker": "LITE",
+      "ma": "SMA29",
+      "raw": "勉強",
+      "rating": "勉強",
+      "stratum": "HIGH",
+      "score": 65.82663989290494,
+      "long_max": 74.66637382864792
+    },
+    {
+      "order": 11,
+      "ticker": "BALL",
+      "ma": "SMA19",
+      "raw": "勉強",
+      "rating": "勉強",
+      "stratum": "MID",
+      "score": 58.83251757028113,
+      "long_max": 89.99644410977241
+    },
+    {
+      "order": 12,
+      "ticker": "RMD",
+      "ma": "SMA33",
+      "raw": "勉強",
+      "rating": "勉強",
+      "stratum": "LOW",
+      "score": 40.14443189424364,
+      "long_max": 83.96607262382864
+    },
+    {
+      "order": 13,
+      "ticker": "BSX",
+      "ma": "SMA33",
+      "raw": "勉強",
+      "rating": "勉強",
+      "stratum": "HIGH",
+      "score": 71.30760019243641,
+      "long_max": 95.55199966532798
+    },
+    {
+      "order": 14,
+      "ticker": "DXCM",
+      "ma": "SMA16",
+      "raw": "不可用",
+      "rating": "不可用",
+      "stratum": "MID",
+      "score": 64.64122113453814,
+      "long_max": 95.43224983266398
+    },
+    {
+      "order": 15,
+      "ticker": "EVRG",
+      "ma": "SMA28",
+      "raw": "勉強",
+      "rating": "勉強",
+      "stratum": "LOW",
+      "score": 32.997380145582326,
+      "long_max": 75.12863955823292
+    },
+    {
+      "order": 16,
+      "ticker": "SLB",
+      "ma": "SMA32",
+      "raw": "勉強",
+      "rating": "勉強",
+      "stratum": "MID",
+      "score": 63.18121444109771,
+      "long_max": 70.06515645917001
+    },
+    {
+      "order": 17,
+      "ticker": "TDG",
+      "ma": "SMA30",
+      "raw": "勉強",
+      "rating": "勉強",
+      "stratum": "MID",
+      "score": 57.137665244310575,
+      "long_max": 82.12067018072288
+    },
+    {
+      "order": 18,
+      "ticker": "CARR",
+      "ma": "SMA25",
+      "raw": "可用",
+      "rating": "可用",
+      "stratum": "LOW",
+      "score": 50.08277903279786,
+      "long_max": 98.94787483266397
+    },
+    {
+      "order": 19,
+      "ticker": "C",
+      "ma": "SMA26",
+      "raw": "可用",
+      "rating": "可用",
+      "stratum": "LOW",
+      "score": 37.0033780957162,
+      "long_max": 73.93950803212851
+    },
+    {
+      "order": 20,
+      "ticker": "GPN",
+      "ma": "SMA22",
+      "raw": "勉強",
+      "rating": "勉強",
+      "stratum": "HIGH",
+      "score": 68.64295724564926,
+      "long_max": 93.91524431057564
+    },
+    {
+      "order": 21,
+      "ticker": "EL",
+      "ma": "SMA32",
+      "raw": "勉強",
+      "rating": "勉強",
+      "stratum": "MID",
+      "score": 60.80258534136546,
+      "long_max": 86.94779116465864
+    },
+    {
+      "order": 22,
+      "ticker": "PSX",
+      "ma": "SMA29",
+      "raw": "勉強",
+      "rating": "勉強",
+      "stratum": "HIGH",
+      "score": 82.20993348393574,
+      "long_max": 78.99200970548861
+    },
+    {
+      "order": 23,
+      "ticker": "VLO",
+      "ma": "SMA31",
+      "raw": "可用",
+      "rating": "可用",
+      "stratum": "HIGH",
+      "score": 76.5185220046854,
+      "long_max": 93.34525602409639
+    },
+    {
+      "order": 24,
+      "ticker": "AMT",
+      "ma": "SMA23",
+      "raw": "可用",
+      "rating": "可用",
+      "stratum": "MID",
+      "score": 65.40040369812583,
+      "long_max": 70.93164323962517
+    },
+    {
+      "order": 25,
+      "ticker": "LIN",
+      "ma": "SMA15",
+      "raw": "不可用",
+      "rating": "不可用",
+      "stratum": "LOW",
+      "score": 41.357774849397586,
+      "long_max": 96.35102911646587
+    },
+    {
+      "order": 26,
+      "ticker": "DLR",
+      "ma": "SMA33",
+      "raw": "可用",
+      "rating": "可用",
+      "stratum": "HIGH",
+      "score": 66.62174740629183,
+      "long_max": 92.14618892235609
+    },
+    {
+      "order": 27,
+      "ticker": "CMG",
+      "ma": "SMA16",
+      "raw": "勉強",
+      "rating": "勉強",
+      "stratum": "MID",
+      "score": 63.05027401271753,
+      "long_max": 91.47736780455153
+    },
+    {
+      "order": 28,
+      "ticker": "PODD",
+      "ma": "SMA22",
+      "raw": "勉強",
+      "rating": "勉強",
+      "stratum": "HIGH",
+      "score": 67.48274347389558,
+      "long_max": 87.55490712851405
+    },
+    {
+      "order": 29,
+      "ticker": "MCHP",
+      "ma": "SMA27",
+      "raw": "勉強",
+      "rating": "勉強",
+      "stratum": "MID",
+      "score": 60.61182228915662,
+      "long_max": 75.2755814926372
+    },
+    {
+      "order": 30,
+      "ticker": "INVH",
+      "ma": "SMA32",
+      "raw": "不可用",
+      "rating": "不可用",
+      "stratum": "LOW",
+      "score": 38.42489750669344,
+      "long_max": 88.94954819277108
+    }
+  ],
+  "bootstrap": {
+    "reps": 10000,
+    "seed": 20261029
+  }
+}
