@@ -26,6 +26,39 @@
       "ticker": "NI",
       "ma": "SMA28",
       "raw_text": "勉強"
+    },
+    "6": {
+      "ticker": "PWR",
+      "ma": "SMA23",
+      "raw_text": "可用"
+    },
+    "7": {
+      "ticker": "PPL",
+      "ma": "SMA26",
+      "raw_text": "勉強"
+    },
+    "8": {
+      "ticker": "NRG",
+      "ma": "SMA23",
+      "raw_text": "不可用"
+    },
+    "9": {
+      "ticker": "GPC",
+      "ma": "SMA15",
+      "raw_text": "勉強"
+    },
+    "10": {
+      "ticker": "LITE",
+      "ma": "SMA29",
+      "raw_text": "勉強"
     }
+  },
+  "mapping_confirmed_by_user": {
+    "好": "可用",
+    "偏好": "可用",
+    "可用": "可用",
+    "勉強": "勉強",
+    "不可用": "不可用",
+    "note": "使用者確認（揭盲前）：「好」＝可用；「偏好」＝可用。其他說法若出現，先請使用者確認再轉換。"
   }
 }
