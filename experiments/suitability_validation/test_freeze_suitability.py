@@ -11,6 +11,12 @@ check(not set(M['excluded_ranks_1_150']) & {x['ticker'] for x in M['screening_po
 check(M['strata']['Q1'] < M['strata']['Q3'] and M['strata']['n_total'] == 30, '分層門檻與樣本數')
 src = (HERE / 'freeze_suitability.py').read_text(encoding='utf-8'); code = '\n'.join(l for l in src.splitlines() if not l.lstrip().startswith(('#', '"""')))
 check(not any(b in code for b in ('fetch_yahoo(', 'urllib', 'yfinance', 'compute_metrics(')), '凍結程式沒有任何價格存取')
+def close(a, b):                                       # core/score.py 中期權重的加總順序受 PYTHONHASHSEED 影響（既有行為），最後一位小數可能不同
+    if isinstance(a, dict): return a.keys() == b.keys() and all(close(a[k], b[k]) for k in a)
+    if isinstance(a, list): return len(a) == len(b) and all(close(x, y) for x, y in zip(a, b))
+    if isinstance(a, float): return abs(a - b) <= 1e-9 * max(1., abs(a))
+    return a == b
 re = F.build(); re.pop('production'); m2 = dict(M); m2.pop('production')
-check(re == m2, '重算 manifest（不含 base commit）與存檔相同')
+check(close(re, m2), '重算 manifest（不含 base commit）與存檔相同（浮點 ≤1e-9）')
+check(set(M['production']['file_sha256']) >= {'core/select.py', 'data/reference.parquet'} and M['reference']['sha256'] == M['production']['file_sha256']['data/reference.parquet'], 'production／reference SHA 已記錄')
 print('ALL PASS')
