@@ -10,7 +10,7 @@ YEARS = (('1y', 252), ('2y', 504), ('3y', 756))
 def period_metrics(O, H, L, C, atr, ma):
     N = len(C); mp = np.r_[np.nan, ma[:-1]]
     brk, wick, rts, _pl, _trs = ev.events(O, H, L, C, ma, atr); r = {}
-    for nm, W in (('252', 252), ('504', 504)):
+    def win(nm, W):
         lo = N - W
         b = [v for v in brk if v['t'] >= lo and v['res'] >= 0]; h = [v for v in b if v['d2']]
         q = [v for v in rts if v['t'] >= lo and v['state'] in ('進場', '失敗') and v['res'] >= 0]
@@ -18,6 +18,7 @@ def period_metrics(O, H, L, C, atr, ma):
         r[f'A_d2_n@{nm}'] = len(h); r[f'A_d2@{nm}'] = np.mean([v['res'] for v in h]) if h else np.nan
         r[f'A_rt_n@{nm}'] = len(q); r[f'A_rt@{nm}'] = np.mean([v['res'] for v in q]) if q else np.nan
         r[f'A_wick@{nm}'] = sum(1 for v in wick if v['t'] >= lo)
+    for nm, W in (('252', 252), ('504', 504)): win(nm, W)
     spans = t4.detect(O, H, L, C, ma, mp, atr); q = t4.qualify(O, H, L, C, ma, mp, atr)
     last = 0; xs = []
     for t in range(N):
@@ -33,6 +34,7 @@ def period_metrics(O, H, L, C, atr, ma):
         xw = [t for t in xs if t >= lo]
         quick = [1 for i, t in enumerate(xs) if t >= lo and i + 1 < len(xs) and xs[i + 1] - t <= 5]
         r[f'quickfail_{nm}'] = len(quick) / len(xw) if xw else 0.                     # 明顯穿越後 5 天內又穿回的比例
+    win('756', 756)                                                                  # 3 年事件指標（selector v2 用）；放在最後，既有欄位與順序不變
     return r
 
 def compute_metrics(df, periods=PERIODS, kind='SMA'):
