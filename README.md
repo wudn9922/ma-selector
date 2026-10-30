@@ -18,6 +18,7 @@
   - 由 my-stock-screener 的 workflow `ma-recommendations.yml` 每週 checkout 本 repo 執行，股票清單＝其 `data/*.csv`（全台股＋S&P 500），輸出到 `docs/report/ma-selector/`，Atlas 圖表直接讀。
   - 抓不到或資料不足（< 376 根）的股票沿用上一次的檔案；成功率 < 50% 時不寫檔。資料不足 866 根的標記 `limited`（中長期視窗不足，僅供參考）。
   - 測試：`tests/test_recommend.py`（與 `select()` 結果逐項相同、批次腳本行為）。
+  - JSON VERSION 2（只多欄位，現行欄位不變）：每個區間的 `rank`（股票層級排名，同網頁 `standardize`）、短中期候選的 `score2y`（近2年分數(參考)）、`v2`（實驗選線 v2：短期 final1／final2、中期、長期、適合度與排名；**尚未驗證，只顯示**）。需要 `data/reference_v2.parquet`，不存在就不輸出 `score2y`／`v2`。
 
 ## Production selector
 **Candidate**：與區間最高（平滑後）結構分數相差 ≤ **gap = 15**（預設；網頁側邊欄可調 3–30）、彼此至少差 3、最多 5 條。
