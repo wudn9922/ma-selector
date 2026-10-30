@@ -122,7 +122,11 @@ v2_ref = Path(tempfile.mkdtemp()) / 'reference_v2.parquet'
 pd.concat([score_v2.make_features_v2(metrics.compute_metrics(data.normalize(synth(sd)))).assign(ticker=f'T{sd}') for sd in range(1, 7)]).to_parquet(v2_ref)
 os.environ['MA_SELECTOR_REF_V2'] = str(v2_ref)
 av = AppTest.from_file(str(ROOT / 'app.py'), default_timeout=180).run()
-check(not av.exception and not v2_exp(av) and [list(t.value.columns) for t in av.dataframe] == v2_off_tables, '有 v2 基準但沒勾：不顯示 v2、其餘不變')
+C2Y = '近2年分數(參考)'; on_tables = [list(t.value.columns) for t in av.dataframe]
+check(not any(C2Y in c for c in v2_off_tables), '沒有 v2 基準：現行候選表沒有「近2年分數(參考)」欄')
+check(not av.exception and not v2_exp(av) and [[x for x in c if x != C2Y] for c in on_tables] == v2_off_tables, '有 v2 基準但沒勾：不顯示 v2、其餘不變（只多「近2年分數(參考)」欄）')
+cand_tabs = [t.value for t in av.dataframe if '分數(平滑)' in t.value.columns]
+check(sum(C2Y in t.columns for t in cand_tabs) == 2 and C2Y not in cand_tabs[2].columns and list(cand_tabs[0].columns).index(C2Y) == list(cand_tabs[0].columns).index('分數(平滑)') + 1, '有 v2 基準：現行短期、中期候選表多「近2年分數(參考)」欄（緊接分數(平滑)），長期沒有')
 v2_box(av)[0].set_value(True).run()
 check(not av.exception and not av.error and not av.warning and not av.info, '勾選 v2（有基準）：沒有例外／錯誤／警告／說明')
 check(len(v2_exp(av)) == 1, '出現「實驗選線 v2（尚未驗證，僅供比較）」區塊')
@@ -138,6 +142,10 @@ Ra = sel.select(dfa, score.score_table(Ma, pd.read_parquet(ROOT / 'data/referenc
 txt = ' '.join(m.value for m in av.markdown); s1, s2 = V['短期']['final1'], V['短期']['final2']
 check(f"第一條 SMA{s1}" in txt and (f"第二條 SMA{s2}" in txt if s2 is not None else '找不到第二條' in txt) and f"v2：SMA{V['中期']['final']}" in txt and f"v2：SMA{V['長期']['final']}" in txt, f'摘要與 select_v2 相同：短 {s1}/{s2}、中 {V["中期"]["final"]}、長 {V["長期"]["final"]}')
 cap = ' '.join(c.value for c in av.caption); check(f"SMA{Ra['短期']['final']}" in cap and f"SMA{Ra['中期']['final']}" in cap and f"現行：SMA{Ra['長期']['final']}" in cap, '旁邊列出現行選線的短／中／長 final')
+T2a = score_v2.score_table_v2(Ma, pd.read_parquet(v2_ref), wsd).sort_values('period'); s2y = dict(zip(T2a['period'].tolist(), sel.smooth(T2a['分數_2y'].to_numpy()).tolist()))
+ct = [t.value for t in av.dataframe if '近2年分數(參考)' in t.value.columns]
+check(len(ct) == 2 and all(float(v) == round(s2y[int(p)], 1) for t in ct for p, v in zip(t['均線'], t['近2年分數(參考)'])), '「近2年分數(參考)」＝score_table_v2 的 分數_2y 平滑後四捨五入（短期、中期候選）')
+vc = {c['均線']: c['分數_2y'] for c in V['短期']['cands']}; check(all(float(v) == vc[int(p)] for p, v in zip(ct[0]['均線'], ct[0]['近2年分數(參考)']) if int(p) in vc), '與 v2 短期候選表的 分數_2y 相同（重疊的週期）')
 check(sorted(int(x) for x in sc['均線']) == sorted(c['均線'] for c in V['短期']['cands']) and sorted(int(x) for x in mc['均線']) == sorted(c['均線'] for c in V['中期']['cands']), 'v2 候選表的均線與 select_v2 相同')
 vm = {m.label: m.value for m in av.metric}; su = V['suitability']
 check(vm['v2 短期適合度（2 年最高分）'] == f"{su['short_2y']:.1f} / 100" and vm['v2 短期（1 年最高分）'] == f"{su['short_1y']:.1f} / 100" and vm['v2 中期（3 年最高分）'] == f"{su['mid_3y']:.1f} / 100", '適合度指標（2y／1y／3y 最高分）與 select_v2 相同')

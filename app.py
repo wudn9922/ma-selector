@@ -47,6 +47,9 @@ def rank_cap(label, x, B, col):   # 「贏過 71% 的基準股票」：x（這�
     if B is None: return f"{label}：—"
     pc, n = standardize.rank_pct(B[col].to_numpy(float), x)
     return f"{label}：贏過 {pc:.0f}% 的基準股票（{n} 檔；區間最高分對區間最高分）" if pc == pc else f"{label}：—"
+@st.cache_data(show_spinner=False)
+def calc_score2y(tk, last, n, ws_key, ref_key, _M, _ref, _ws):   # 現行短期／中期候選表的「近2年分數(參考)」：v2 的 2 年分數（短期公式、SMA15–110 整條平滑），只顯示
+    T = score_v2.score_table_v2(_M, _ref, _ws).sort_values('period'); return dict(zip(T['period'].tolist(), sel.smooth(T['分數_2y'].to_numpy()).tolist()))
 @st.cache_data(show_spinner="畫圖中…")
 def render(tk, last, n, p, title, kind, _df): return charts.chart_png(_df, p, title, kind=kind)
 
@@ -107,6 +110,12 @@ if show_v2:
             try: V2 = calc_select_v2(tk, last, N, ws_key, gap, str(ref_path('V2').stat().st_mtime), df, M['SMA'], ref_v2, ws, R['SMA']['長期'])
             except Exception as e: V2_NOTE = ('warning', f"實驗選線 v2 計算失敗：{e}")
 
+SC2Y = None   # 近2年分數(參考)：只給 SMA；reference_v2 不存在或失敗就不顯示這欄
+if 'SMA' in KINDS:
+    try:
+        _r2, _ = load_ref('V2')
+        if _r2 is not None: SC2Y = calc_score2y(tk, last, N, ws_key, str(ref_path('V2').stat().st_mtime), M['SMA'], _r2, ws)
+    except Exception: SC2Y = None
 if tk and st.query_params.get("ticker") != tk: st.query_params["ticker"] = tk   # 網址跟著代號，方便分享
 st.markdown(f"**{tk}**　<span style='font-size:0.85rem;color:gray'>資料到 {last}（{N} 根）</span>　[在 Atlas 看圖表 ↗]({ATLAS_CHART}{quote(tk)})", unsafe_allow_html=True)
 for k in KINDS:
@@ -141,12 +150,14 @@ with tab1:
             for c in r['cands']:
                 g = Sk[Sk.period == c['均線']].iloc[0]
                 rows.append({'': '★' if c['均線'] == r['final'] else '', '均線': c['均線'], '分數(平滑)': c['分數'],
+                             **({'近2年分數(參考)': round(SC2Y[c['均線']], 1)} if (SC2Y and k == 'SMA' and nm != '長期') else {}),
                              '突破': g['p突破'], '二日': g['p二日'], '回測': g['p回測'], '雜訊': g['p雜訊'],
                              '糾結/穿插百分位(1y/2y/3y)': f"{g['p穿插_1y']:.0f}/{g['p穿插_2y']:.0f}/{g['p穿插_3y']:.0f}",
                              '快敗百分位(2y/3y)': f"{g['p快敗_2y']:.0f}/{g['p快敗_3y']:.0f}",
                              '反手報酬(選參數)': pct(c['反手報酬']), '反手回撤': pct(c['反手回撤']), '反手勝率': f"{c['反手勝率']*100:.0f}%" if c['反手勝率'] == c['反手勝率'] else '—', '反手筆數': c['反手筆數'],
                              '只做多簡單(參考)': pct(c['簡單報酬']), '只做多複雜(參考)': pct(c['複雜報酬'])})
             st.dataframe(pd.DataFrame(rows).style.format({k_: '{:.0f}' for k_ in ('突破', '二日', '回測', '雜訊')}), hide_index=True, width='stretch')
+            if SC2Y and k == 'SMA' and nm != '長期': st.caption("近2年分數(參考)＝同一個短期公式在近 2 年視窗的分數（實驗選線 v2 的 分數_2y），短期與中期候選用同一把尺，可以直接比；只是參考，不影響選線。")
             with st.expander(f"原始機率／比率／頻率（{nm}候選；實際統計，不是 percentile）"):
                 raw_rows = [{'均線': c['均線'], **rawstats.raw_row(Mik.loc[c['均線']], rawstats.cross_counts(*cc_arrays(c['均線'], k)))} for c in r['cands']]
                 st.dataframe(pd.DataFrame(raw_rows), hide_index=True, width='stretch')
