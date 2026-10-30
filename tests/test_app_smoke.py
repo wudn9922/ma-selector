@@ -147,4 +147,38 @@ gv = [s for s in av.sidebar.slider if '候選門檻' in s.label][0]; gv.set_valu
 av.sidebar.text_input[0].set_value('MSFT').run(); check(not av.exception and not av.error and len(v2_exp(av)) == 1, '勾選 v2 後換代號沒有例外')
 kr = [r for r in av.sidebar.radio if r.label == '均線類型'][0]; kr.set_value('EMA').run()
 check(not av.exception and any('只支援 SMA' in i.value for i in av.info), '勾選 v2 且選 EMA：只顯示「只支援 SMA」說明')
+# ── 股票層級排名（display-only；core/standardize.py）：只新增 caption，數字與直接呼叫 standardize 相同 ──
+import re
+from core import standardize as sd
+def rank_caps(a): return [(m.group(1), float(m.group(2)), int(m.group(3)), int(m.group(4))) for c in a.caption for m in [re.search(r'^(.+?)最高分 ([\d.]+)：贏過 (\d+)% 的基準股票（(\d+) 檔；區間最高分對區間最高分）$', c.value)] if m]
+def rank_caps_v2(a): return [(m.group(1), int(m.group(2)), int(m.group(3))) for c in a.caption for m in [re.search(r'^(.+年.+?)：贏過 (\d+)% 的基準股票（(\d+) 檔', c.value)] if m]
+HELP = '基準＝83 檔大型股，排名＝這檔的區間最高分（平滑後）在 83 檔各自的區間最高分中贏過幾 %；只是參考，不影響選線。'
+def pc0(B, c, x): return int(f"{sd.rank_pct(B[c].to_numpy(float), x)[0]:.0f}")   # 同 app 的 {:.0f} 顯示
+def got(caps): return [(b, pc, n) for _l, b, pc, n in caps]
+refa = pd.read_parquet(ROOT / 'data/reference.parquet'); Ba = sd.ref_stock_bests(refa, wsd); Sa = score.score_table(Ma, refa, wsd); ba = sd.range_bests(Sa)
+ar = AppTest.from_file(str(ROOT / 'app.py'), default_timeout=180).run()
+check(not ar.exception and not ar.error and not ar.warning, '股票層級排名：預設載入沒有例外／錯誤／警告')
+caps = rank_caps(ar); check([c[0] for c in caps] == ['短期', '中期', '長期'], f'現行：短／中／長各有一句排名 caption：{[c.value for c in ar.caption if "贏過" in c.value]}')
+check(got(caps) == [(round(ba[c], 1), pc0(Ba, c, ba[c]), 83) for c in ('短期', '中期', '長期')], f'caption 的最高分／百分位／n 等於直接用 standardize 算的 {got(caps)}')
+check(abs(ba['短期'] - sel.suitability(Sa)[0]) < 1e-12 and abs(ba['長期'] - sel.suitability(Sa)[1]) < 1e-12 and f"{ba['短期']:.0f} / 100" in mvals('股票適合度（短期最高分）'), '短期／長期最高分等於既有適合度指標（排名用同一個數）')
+check(any(HELP in c.value for c in ar.caption), '有股票層級排名的說明 caption')
+check(mvals('短期最後選擇') == [f"SMA{Ra['短期']['final']}"] and not any('EMA' in c.value for c in ar.caption) and not rank_caps_v2(ar), '預設 SMA：最後選擇不變、沒有 EMA 字樣、沒有 v2 排名')
+# 勾選 v2（有 v2 基準）：多 3 句 v2 排名，數字等於直接 standardize
+v2_box(ar)[0].set_value(True).run(); check(not ar.exception and not ar.error and not ar.warning and not ar.info, '勾選 v2 後沒有例外')
+B2 = sd.ref_stock_bests_v2(pd.read_parquet(v2_ref), wsd); su = V['suitability']; c2 = rank_caps_v2(ar); vm2 = {m.label: m.value for m in ar.metric}
+check(len(c2) == 3 and [c[0] for c in c2] == ['短期（2 年最高分）', '短期（1 年最高分）', '中期（3 年最高分）'], f'v2 三個指標旁各一句排名 caption：{[c[0] for c in c2]}')
+check([(c[1], c[2]) for c in c2] == [(pc0(B2, k, su[k]), len(B2)) for k in ('short_2y', 'short_1y', 'mid_3y')], f'v2 排名百分位與 n 等於直接 standardize：{[(c[1], c[2]) for c in c2]}')
+check(vm2['v2 短期適合度（2 年最高分）'] == f"{su['short_2y']:.1f} / 100" and vm2['v2 中期（3 年最高分）'] == f"{su['mid_3y']:.1f} / 100", 'v2 適合度指標本身不變')
+check(len(rank_caps(ar)) == 3 and got(rank_caps(ar)) == got(caps), '勾選 v2 後現行排名 caption 不變')
+# 改權重：基準分佈重算，排名跟著 ws 走
+sl = [x for x in ar.sidebar.slider if x.key == 's突破'][0]; sl.set_value(60).run(); check(not ar.exception, '調整權重後沒有例外')
+ws2 = {'短': {k: (60 if k == '突破' else int(v * 100)) / 100 for k, v in score.WS['短'].items()}, '長': {k: int(v * 100) / 100 for k, v in score.WS['長'].items()}}
+Bw = sd.ref_stock_bests(refa, ws2); bw = sd.range_bests(score.score_table(Ma, refa, ws2))
+check(got(rank_caps(ar)) == [(round(bw[c], 1), pc0(Bw, c, bw[c]), 83) for c in ('短期', '中期', '長期')], f'調權重後 caption 等於以新權重直接 standardize：{got(rank_caps(ar))}')
+# 並列模式（SMA 對 SMA 基準 83 檔、EMA 對自己的 EMA 基準）
+ref_ema_df = pd.read_parquet(ema_ref); Me = metrics.compute_metrics(dfa, kind='EMA'); Se = score.score_table(Me, ref_ema_df, wsd); be = sd.range_bests(Se); Be = sd.ref_stock_bests(ref_ema_df, wsd)
+ap = AppTest.from_file(str(ROOT / 'app.py'), default_timeout=180).run(); kind_radio_ = [r for r in ap.sidebar.radio if r.label == '均線類型'][0]; kind_radio_.set_value('SMA＋EMA 並列').run()
+cp = rank_caps(ap); check(not ap.exception and not ap.error and len(cp) == 6 and [c[0] for c in cp] == ['短期（SMA）', '中期（SMA）', '長期（SMA）', '短期（EMA）', '中期（EMA）', '長期（EMA）'], f'並列：SMA、EMA 各 3 句排名：{[c[0] for c in cp]}')
+check(got(cp[:3]) == got(caps) and got(cp[3:]) == [(round(be[c], 1), pc0(Be, c, be[c]), 6) for c in ('短期', '中期', '長期')], f'EMA 對自己的 EMA 基準排名（n=6），SMA 對 83 檔：{got(cp[3:])}')
+check(len([c for c in ap.caption if HELP in c.value]) == 1, '並列模式說明 caption 只出現一次')
 print('ALL PASS')

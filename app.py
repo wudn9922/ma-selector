@@ -4,7 +4,7 @@ from urllib.parse import quote
 from pathlib import Path
 import numpy as np, pandas as pd, streamlit as st
 from core import data, metrics, score, select as sel, backtest as bt, charts, rawstats
-from core import score_v2, select_v2
+from core import score_v2, select_v2, standardize
 from core.ma import moving_average
 
 st.set_page_config(page_title="均線選參數", layout="wide")
@@ -37,6 +37,16 @@ def calc_select_v2(tk, last, n, ws_key, gap, ref_key, _df, _M, _ref, _ws, _long)
     T = score_v2.score_table_v2(_M, _ref, _ws).sort_values('period')
     curve = pd.DataFrame({f'分數_{y}（平滑）': sel.smooth(T[f'分數_{y}'].to_numpy()) for y in ('1y', '2y', '3y')}, index=pd.Index(T['period'].to_numpy(), name='均線週期'))
     return out, curve
+@st.cache_data(show_spinner="基準股票的區間最高分計算中…")
+def calc_ref_bests(kind, mtime, ws_key, _ref, _ws):   # 股票層級排名（只顯示）：基準每檔的區間最高分；kind＋基準檔 mtime＋權重當 cache key
+    return standardize.ref_stock_bests_v2(_ref, _ws) if kind == 'V2' else standardize.ref_stock_bests(_ref, _ws)
+def ref_bests(kind, ref_df, ws_, ws_key_):   # 失敗就回 None（排名只是參考，不能讓選線頁面掛掉）
+    try: return calc_ref_bests(kind, str(ref_path(kind).stat().st_mtime), ws_key_, ref_df, ws_)
+    except Exception: return None
+def rank_cap(label, x, B, col):   # 「贏過 71% 的基準股票」：x（這檔的區間最高分）在基準每檔區間最高分 B[col] 中的百分位
+    if B is None: return f"{label}：—"
+    pc, n = standardize.rank_pct(B[col].to_numpy(float), x)
+    return f"{label}：贏過 {pc:.0f}% 的基準股票（{n} 檔；區間最高分對區間最高分）" if pc == pc else f"{label}：—"
 @st.cache_data(show_spinner="畫圖中…")
 def render(tk, last, n, p, title, kind, _df): return charts.chart_png(_df, p, title, kind=kind)
 
@@ -104,6 +114,9 @@ for k in KINDS:
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("股票適合度（短期最高分）" + sfx, f"{suit_s:.0f} / 100"); c2.metric("長期最高分" + sfx, f"{suit_l:.0f} / 100")
     c3.metric("短期最後選擇" + sfx, f"{k}{R[k]['短期']['final']}"); c4.metric("長期最後選擇" + sfx, f"{k}{R[k]['長期']['final']}")
+    RB, bst = ref_bests(k, REFS[k], ws, ws_key), standardize.range_bests(S[k]); d1, d2, d3 = st.columns(3)   # 股票層級排名（只顯示；中期最高分只用來排名）
+    for d, (nm, lo, hi, _w) in zip((d1, d2, d3), sel.RANGES): d.caption(rank_cap(f"{nm}{sfx}最高分 {bst[nm]:.1f}", bst[nm], RB, nm))
+st.caption("股票層級排名（參考）：基準＝83 檔大型股，排名＝這檔的區間最高分（平滑後）在 83 檔各自的區間最高分中贏過幾 %；只是參考，不影響選線。")
 
 pct = lambda x: f"{x*100:+.1f}%"
 Mi = {k: M[k].set_index('period') for k in KINDS}; _C = df.close.to_numpy(float); _ATR = data.wilder_atr(df)
@@ -155,6 +168,8 @@ with tab1:
                 a3.markdown(f"**長期（SMA46–110，近 3 年）**\n\nv2：SMA{lg['final']}（同現行）"); a3.caption(f"現行：SMA{cur['長期']['final']}")
                 b1, b2, b3 = st.columns(3)
                 b1.metric("v2 短期適合度（2 年最高分）", f"{su['short_2y']:.1f} / 100"); b2.metric("v2 短期（1 年最高分）", f"{su['short_1y']:.1f} / 100"); b3.metric("v2 中期（3 年最高分）", f"{su['mid_3y']:.1f} / 100")
+                RB2 = ref_bests('V2', ref_v2, ws, ws_key)   # 股票層級排名（只顯示）：對 v2 基準每檔的同一指標
+                b1.caption(rank_cap("短期（2 年最高分）", su['short_2y'], RB2, 'short_2y')); b2.caption(rank_cap("短期（1 年最高分）", su['short_1y'], RB2, 'short_1y')); b3.caption(rank_cap("中期（3 年最高分）", su['mid_3y'], RB2, 'mid_3y'))
                 def v2_rows(cs, cols, stars):
                     rows = [{'': stars.get(c['均線'], ''), **{k_: c[k_] for k_ in cols}} for c in cs]
                     for r_ in rows:
