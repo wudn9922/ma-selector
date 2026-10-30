@@ -25,6 +25,8 @@ jobs:
           python tests/test_rawstats.py
       - name: SMA／EMA 均線種類測試（kind='SMA' 與加入 EMA 前逐位元組相同）
         run: python tests/test_ma_kind.py
+      - name: selector v2（實驗；production 逐位元組不變）
+        run: python tests/test_selector_v2.py
       - name: 封存批次測試（加入 rescue 前的 worktree）＋凍結檔案未變
         run: python tests/run_archived_batch_tests.py
       - name: fresh 100 replay（commit A 封存的 bars）
