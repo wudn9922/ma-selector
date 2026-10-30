@@ -21,9 +21,12 @@ def stock(seed, n=1300): return data.normalize(synth(seed, n))
 def S_of(M): return score.score_table(M, REF)
 
 def test_sar_metrics_identical():
+    # metrics 之後新增了 @756 的 7 欄（selector v2）：既有欄位（值＋順序）必須和舊版 DataFrame.equals，多出的欄位必須正好是 @756 那 7 欄
+    new756 = [f'{k}@756' for k in ('A_raw_n', 'A_raw', 'A_d2_n', 'A_d2', 'A_rt_n', 'A_rt', 'A_wick')]
     for seed in SEEDS:
-        df = stock(seed); o = OLD_M.compute_metrics(df)
-        check(metrics.compute_metrics(df).equals(o) and metrics.compute_metrics(df, kind='SMA').equals(o), f'seed {seed}：compute_metrics 預設與 kind=SMA 對舊版 DataFrame.equals')
+        df = stock(seed); o = OLD_M.compute_metrics(df); oc = list(o.columns)
+        for nm, n in (('預設', metrics.compute_metrics(df)), ('kind=SMA', metrics.compute_metrics(df, kind='SMA'))):
+            check(list(n.columns)[:len(oc)] == oc and n[oc].equals(o) and list(n.columns)[len(oc):] == new756, f'seed {seed}：compute_metrics {nm} 既有欄位對舊版 DataFrame.equals，且多出的欄位正好是 @756 七欄')
 
 def test_sma_select_identical():
     n = 0

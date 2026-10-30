@@ -1,0 +1,25 @@
+name: build-reference-v2
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 1 * *'   # 每月 1 號
+  push:
+    branches: ['claude/**']
+    paths: ['core/score_v2.py', 'core/metrics.py', 'scripts/build_reference_v2.py', '.github/workflows/build_reference_v2.yml']
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install pandas numpy pyarrow
+      - name: v2 基準分佈（83 檔、1y／2y／3y 三視窗特徵；不動 data/reference.parquet）
+        run: python scripts/build_reference_v2.py
+      - name: commit
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add data/reference_v2.parquet data/reference_v2.json
+          git diff --cached --quiet || (git commit -m "Update v2 reference distribution" && git pull --rebase -q origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}")

@@ -74,3 +74,15 @@
 - `scripts/fresh_rescue_replay.py`：用 fresh validation 100 封存的 bars（不抓 Yahoo）重跑 production；只能有 PG 22→25、FDX 18→21 兩個改變。
 - `tests/test_select_rescue.py`：rescue 的 C1／C2／C3 邊界、同分取短、只套短期、LEGACY 不變。
 - `tests/test_ma_kind.py`：`kind='SMA'`（預設）時 metrics／select／charts 與加入 EMA 前逐位元組相同；EMA 的遞迴公式與手算一致。
+
+## 實驗選線 v2（附加顯示，不取代現行）
+- 網頁側邊欄勾選「顯示實驗選線 v2」才會顯示（預設不勾）；只支援 SMA；現行選線結果完全不變。
+- 短期 SMA15–45：用近 2 年分數選 2 條（第二條需與第一條週期比例 ≥1.5；候選裡沒有就放寬到區間內分數達門檻者；仍沒有則顯示「找不到第二條」），另列近 1 年分數參考。
+- 中期 SMA46–70：用近 3 年分數選 1 條；長期同現行。
+- 分數用短期公式（突破、二日、回測、雜訊、糾結/穿插；網頁權重同樣套用），百分位對 `data/reference_v2.parquet`（83 檔，每月由 GitHub Actions 的 `build-reference-v2` 自動更新；本機可跑 `python scripts/build_reference_v2.py`）。
+- 用途：多一個判斷參考（例如 30–45 與 15–30 分數接近時並排比較），**尚未驗證**；83 檔開發集診斷結果在 `experiments/selector_v2/diag/diag_report.md`，規格在 `experiments/selector_v2/SPEC.md`。
+- 83 檔開發集診斷：15–45 人工線兩條命中 v2 30/67、現行（短期＋中期）32/67；46–70 中期接近隨機 → 只當參考，不取代現行。
+
+## 參考欄位（只顯示，不影響選線）
+- **股票層級排名**：這檔的區間最高分（平滑後）在 83 檔基準股票各自的區間最高分中贏過幾 %（現行：短期／中期／長期；v2：短期 2 年、1 年、中期 3 年）。EMA 對 EMA 基準。`core/standardize.py`。
+- **近2年分數(參考)**：現行短期、中期候選表多一欄，同一個短期公式在近 2 年視窗的分數（＝v2 的 分數_2y），讓近 1 年算分的短期與近 2 年算分的中期可以用同一把尺比較。只給 SMA；`data/reference_v2.parquet` 不存在時不顯示。
