@@ -17,7 +17,7 @@ def old_module(name):
     src = subprocess.run(['git', 'show', f'{OLD_COMMIT}:core/{name}.py'], cwd=ROOT, capture_output=True, check=True).stdout.decode()
     m = types.ModuleType(f'core._{name}_old'); m.__package__ = 'core'; m.__file__ = str(ROOT / 'core' / f'{name}.py'); exec(compile(src, f'core/{name}.py@old', 'exec'), m.__dict__); return m
 OLD_M, OLD_SC, OLD_S = old_module('metrics'), old_module('score'), old_module('select')
-REF = pd.read_parquet(ROOT / 'data/reference.parquet'); SEEDS = (3, 11, 29); POOL = (101, 102, 103, 104, 105, 106); NEW756 = [f'{k}@756' for k in ('A_raw_n', 'A_raw', 'A_d2_n', 'A_d2', 'A_rt_n', 'A_rt', 'A_wick')]
+REF = pd.read_parquet(ROOT / 'data/reference.parquet'); SEEDS = (3, 11, 29); POOL = (101, 102, 103, 104, 105, 106); NEW756 = [f'{k}@756' for k in ('A_raw_n', 'A_raw', 'A_d2_n', 'A_d2', 'A_rt_n', 'A_rt', 'A_wick')]; NEWMFE = [f'mfe_{k}@{W}' for W in (252, 504, 756) for k in ('n', 'med')]   # 後面追加的突破幅度 6 欄
 def check(cond, msg): print(('PASS ' if cond else 'FAIL ') + msg); assert cond, msg
 def stock(seed, n=1300): return data.normalize(synth(seed, n))
 _M = {}
@@ -37,7 +37,7 @@ def test_metrics_old_columns_identical():
     for seed in SEEDS:
         o = OLD_M.compute_metrics(stock(seed)); n = M_of(seed); oc = list(o.columns)
         check(list(n.columns)[:len(oc)] == oc and n[oc].equals(o) and all(tobytes(n[c]) == tobytes(o[c]) for c in oc), f'seed {seed}：既有 {len(oc)} 欄的值（逐位元組）與順序和舊版相同')
-        check(list(n.columns)[len(oc):] == NEW756, f'seed {seed}：多出來的欄位正好是 @756 的 7 欄 {NEW756}')
+        check(list(n.columns)[len(oc):] == NEW756 + NEWMFE, f'seed {seed}：多出來的欄位正好是 @756 的 7 欄 {NEW756} ＋其後 6 欄 mfe')
 
 def test_756_matches_hand():
     df = stock(3); n = M_of(3); O, H, L, C = (df[k].to_numpy(float) for k in ('open', 'high', 'low', 'close')); atr = wilder_atr(df); N = len(C)

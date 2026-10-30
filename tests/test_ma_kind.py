@@ -22,11 +22,11 @@ def S_of(M): return score.score_table(M, REF)
 
 def test_sar_metrics_identical():
     # metrics 之後新增了 @756 的 7 欄（selector v2）：既有欄位（值＋順序）必須和舊版 DataFrame.equals，多出的欄位必須正好是 @756 那 7 欄
-    new756 = [f'{k}@756' for k in ('A_raw_n', 'A_raw', 'A_d2_n', 'A_d2', 'A_rt_n', 'A_rt', 'A_wick')]
+    new756 = [f'{k}@756' for k in ('A_raw_n', 'A_raw', 'A_d2_n', 'A_d2', 'A_rt_n', 'A_rt', 'A_wick')] + [f'mfe_{k}@{W}' for W in (252, 504, 756) for k in ('n', 'med')]   # 後面再追加突破幅度實驗的 6 欄 mfe_*
     for seed in SEEDS:
         df = stock(seed); o = OLD_M.compute_metrics(df); oc = list(o.columns)
         for nm, n in (('預設', metrics.compute_metrics(df)), ('kind=SMA', metrics.compute_metrics(df, kind='SMA'))):
-            check(list(n.columns)[:len(oc)] == oc and n[oc].equals(o) and list(n.columns)[len(oc):] == new756, f'seed {seed}：compute_metrics {nm} 既有欄位對舊版 DataFrame.equals，且多出的欄位正好是 @756 七欄')
+            check(list(n.columns)[:len(oc)] == oc and n[oc].equals(o) and list(n.columns)[len(oc):] == new756, f'seed {seed}：compute_metrics {nm} 既有欄位對舊版 DataFrame.equals，且多出的欄位正好是 @756 七欄＋mfe 六欄')
 
 def test_sma_select_identical():
     n = 0

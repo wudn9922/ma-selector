@@ -1,0 +1,28 @@
+name: selector-v2-diagnosis-mag
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths: ['experiments/selector_v2/diagnose_mag.py', '.github/workflows/selector_v2_diag_mag.yml']
+permissions:
+  contents: write
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install pandas numpy matplotlib pyarrow
+      - name: 突破幅度實驗診斷：四版並列（83 檔，asof 2026-09-24，基準＝這批股票自己）
+        run: python experiments/selector_v2/diagnose_mag.py --asof 2026-09-24 --out experiments/selector_v2/diag_mag
+      - if: always()
+        run: test -f experiments/selector_v2/diag_mag/diag_report.md && cat experiments/selector_v2/diag_mag/diag_report.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: commit report
+        if: always()
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add experiments/selector_v2/diag_mag
+          git diff --cached --quiet || (git commit -m "Selector v2 magnitude diagnosis" && git pull --rebase -q origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}")

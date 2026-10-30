@@ -9,7 +9,7 @@ YEARS = (('1y', 252), ('2y', 504), ('3y', 756))
 
 def period_metrics(O, H, L, C, atr, ma):
     N = len(C); mp = np.r_[np.nan, ma[:-1]]
-    brk, wick, rts, _pl, _trs = ev.events(O, H, L, C, ma, atr); r = {}
+    brk, wick, rts, plog, _trs = ev.events(O, H, L, C, ma, atr); r = {}
     def win(nm, W):
         lo = N - W
         b = [v for v in brk if v['t'] >= lo and v['res'] >= 0]; h = [v for v in b if v['d2']]
@@ -35,6 +35,9 @@ def period_metrics(O, H, L, C, atr, ma):
         quick = [1 for i, t in enumerate(xs) if t >= lo and i + 1 < len(xs) and xs[i + 1] - t <= 5]
         r[f'quickfail_{nm}'] = len(quick) / len(xw) if xw else 0.                     # 明顯穿越後 5 天內又穿回的比例
     win('756', 756)                                                                  # 3 年事件指標（selector v2 用）；放在最後，既有欄位與順序不變
+    mf = [(a, ((H[a:b + 1].max() - e) if sg == 1 else (e - L[a:b + 1].min())) / atr[a]) for a, b, sg, e, _x, k in plog if k == 'B']   # 突破幅度實驗：突破進場持倉的最大有利幅度÷進場日 ATR（含進出場日）
+    for W in (252, 504, 756):
+        v = [m for a, m in mf if a >= N - W]; r[f'mfe_n@{W}'] = len(v); r[f'mfe_med@{W}'] = float(np.median(v)) if v else np.nan
     return r
 
 def compute_metrics(df, periods=PERIODS, kind='SMA'):

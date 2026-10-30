@@ -1,0 +1,25 @@
+name: build-reference-mag
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 1 * *'   # 每月 1 號
+  push:
+    branches: ['claude/**']
+    paths: ['core/score_mag.py', 'core/metrics.py', 'scripts/build_reference_mag.py', '.github/workflows/build_reference_mag.yml']
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install pandas numpy pyarrow
+      - name: 幅度實驗基準分佈（83 檔、現行＋v2＋幅度特徵；不動其他 reference）
+        run: python scripts/build_reference_mag.py
+      - name: commit
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add data/reference_mag.parquet data/reference_mag.json
+          git diff --cached --quiet || (git commit -m "Update mag reference distribution" && git pull --rebase -q origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}")

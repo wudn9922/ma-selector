@@ -27,6 +27,8 @@ jobs:
         run: python tests/test_ma_kind.py
       - name: selector v2（實驗；production 逐位元組不變）
         run: python tests/test_selector_v2.py
+      - name: 突破幅度實驗（w_mag=0 與原分數表逐位元組相同；metrics 舊欄位不變）
+        run: python tests/test_magnitude.py
       - name: 股票層級排名（display-only；production 檔案逐位元組不變）
         run: python tests/test_standardize.py
       - name: 封存批次測試（加入 rescue 前的 worktree）＋凍結檔案未變
