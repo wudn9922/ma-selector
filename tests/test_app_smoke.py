@@ -104,4 +104,47 @@ check(any('atlas/?page=chart&tf=1D&symbol=2330.TW' in m.value for m in aq.markdo
 aq.sidebar.text_input[0].set_value('MSFT').run(); check(aq.query_params.get('ticker') in ('MSFT', ['MSFT']), f'換代號後網址跟著更新：{aq.query_params.get("ticker")}')
 ab = AppTest.from_file(str(ROOT / 'app.py'), default_timeout=180); ab.query_params['ticker'] = '<script>'; ab.run()
 check(not ab.exception and ab.sidebar.text_input[0].value == 'AAPL', '不合法的 ?ticker= → 預設 AAPL')
+# ── 實驗選線 v2（預設關閉；勾選後並列顯示；v2 基準不存在時只顯示說明）──
+from core import score_v2, select_v2
+def v2_box(a): return [c for c in a.sidebar.checkbox if c.label == '顯示實驗選線 v2']
+def v2_exp(a): return [e for e in a.expander if e.label == '實驗選線 v2（尚未驗證，僅供比較）']
+os.environ['MA_SELECTOR_REF_V2'] = str(Path(tempfile.mkdtemp()) / 'missing_reference_v2.parquet')   # 強制「沒有 v2 基準」（不論 data/reference_v2.parquet 是否已存在）
+av = AppTest.from_file(str(ROOT / 'app.py'), default_timeout=180).run()
+check(len(v2_box(av)) == 1 and v2_box(av)[0].value is False, '側邊欄有「顯示實驗選線 v2」，預設不勾')
+check(not av.exception and not av.error and not v2_exp(av) and not any('v2' in str(m.label) for m in av.metric), '預設不勾：沒有 v2 區塊、現行輸出照舊')
+v2_off_tables = [list(t.value.columns) for t in av.dataframe]; v2_off_metrics = [(m.label, m.value) for m in av.metric]; v2_off_charts = len(av.get('vega_lite_chart'))
+v2_box(av)[0].set_value(True).run()
+check(not av.exception and not av.error and not av.warning, '勾選 v2 但沒有 v2 基準：沒有例外／錯誤／警告')
+check(any('v2 基準分佈尚未建立' in i.value for i in av.info) and len(v2_exp(av)) == 1, '沒有 v2 基準：顯示 st.info 說明（在 v2 區塊內）')
+check([list(t.value.columns) for t in av.dataframe] == v2_off_tables and [(m.label, m.value) for m in av.metric] == v2_off_metrics, '沒有 v2 基準：其餘表格與指標和未勾選時完全相同')
+# 建一個暫時的 v2 基準（6 檔合成股；不寫入 data/）
+v2_ref = Path(tempfile.mkdtemp()) / 'reference_v2.parquet'
+pd.concat([score_v2.make_features_v2(metrics.compute_metrics(data.normalize(synth(sd)))).assign(ticker=f'T{sd}') for sd in range(1, 7)]).to_parquet(v2_ref)
+os.environ['MA_SELECTOR_REF_V2'] = str(v2_ref)
+av = AppTest.from_file(str(ROOT / 'app.py'), default_timeout=180).run()
+check(not av.exception and not v2_exp(av) and [list(t.value.columns) for t in av.dataframe] == v2_off_tables, '有 v2 基準但沒勾：不顯示 v2、其餘不變')
+v2_box(av)[0].set_value(True).run()
+check(not av.exception and not av.error and not av.warning and not av.info, '勾選 v2（有基準）：沒有例外／錯誤／警告／說明')
+check(len(v2_exp(av)) == 1, '出現「實驗選線 v2（尚未驗證，僅供比較）」區塊')
+tv = [t for t in av.dataframe if '分數_2y' in t.value.columns or '分數_3y' in t.value.columns]
+check(len(tv) in (2, 3) and sum('分數_2y' in t.value.columns for t in tv) >= 1 and sum('分數_3y' in t.value.columns for t in tv) == 1, f'v2 候選表：短期（含放寬時 2 張）＋中期 {len(tv)} 張')
+sc = [t for t in tv if '分數_2y' in t.value.columns][0].value; mc = [t for t in tv if '分數_3y' in t.value.columns][0].value
+check(list(sc.columns) == ['', '均線', '分數_2y', '分數_1y', '反手報酬', '反手報酬_1y', '反手回撤', '反手勝率', '反手筆數'], f'短期 v2 欄位：{list(sc.columns)}')
+check(list(mc.columns) == ['', '均線', '分數_3y', '反手報酬', '反手回撤', '反手勝率', '反手筆數'], f'中期 v2 欄位：{list(mc.columns)}')
+check((sc[''] == '★ 第一條').sum() == 1 and (mc[''] == '★').sum() == 1 and str(sc['反手報酬'].iloc[0]).endswith('%'), '第一條／中期 final 有 ★，報酬為百分比格式')
+# 與直接呼叫 select_v2 比對（同一檔合成股、同一基準）
+dfa = data.normalize(synth(int(hashlib.md5('AAPL'.encode()).hexdigest(), 16) % 10000)); Ma = metrics.compute_metrics(dfa); wsd = {'短': score.WS['短'], '長': score.WS['長']}
+Ra = sel.select(dfa, score.score_table(Ma, pd.read_parquet(ROOT / 'data/reference.parquet'), wsd)); V = select_v2.select_v2(dfa, Ma, pd.read_parquet(v2_ref), ws=wsd, gap=sel.GAP, kind='SMA', long_result=Ra['長期'])
+txt = ' '.join(m.value for m in av.markdown); s1, s2 = V['短期']['final1'], V['短期']['final2']
+check(f"第一條 SMA{s1}" in txt and (f"第二條 SMA{s2}" in txt if s2 is not None else '找不到第二條' in txt) and f"v2：SMA{V['中期']['final']}" in txt and f"v2：SMA{V['長期']['final']}" in txt, f'摘要與 select_v2 相同：短 {s1}/{s2}、中 {V["中期"]["final"]}、長 {V["長期"]["final"]}')
+cap = ' '.join(c.value for c in av.caption); check(f"SMA{Ra['短期']['final']}" in cap and f"SMA{Ra['中期']['final']}" in cap and f"現行：SMA{Ra['長期']['final']}" in cap, '旁邊列出現行選線的短／中／長 final')
+check(sorted(int(x) for x in sc['均線']) == sorted(c['均線'] for c in V['短期']['cands']) and sorted(int(x) for x in mc['均線']) == sorted(c['均線'] for c in V['中期']['cands']), 'v2 候選表的均線與 select_v2 相同')
+vm = {m.label: m.value for m in av.metric}; su = V['suitability']
+check(vm['v2 短期適合度（2 年最高分）'] == f"{su['short_2y']:.1f} / 100" and vm['v2 短期（1 年最高分）'] == f"{su['short_1y']:.1f} / 100" and vm['v2 中期（3 年最高分）'] == f"{su['mid_3y']:.1f} / 100", '適合度指標（2y／1y／3y 最高分）與 select_v2 相同')
+check(len(av.get('vega_lite_chart')) == v2_off_charts + 1, f'v2 分數曲線圖多 1 張（{v2_off_charts} → {v2_off_charts + 1}）')
+check([m.value for m in av.metric if m.label == '短期最後選擇'] == [f"SMA{Ra['短期']['final']}"], '勾選 v2 後，現行「短期最後選擇」不變')
+gv = [s for s in av.sidebar.slider if '候選門檻' in s.label][0]; gv.set_value(5).run(); check(not av.exception and not av.error, '勾選 v2 後調 gap=5 沒有例外')
+av.sidebar.text_input[0].set_value('MSFT').run(); check(not av.exception and not av.error and len(v2_exp(av)) == 1, '勾選 v2 後換代號沒有例外')
+kr = [r for r in av.sidebar.radio if r.label == '均線類型'][0]; kr.set_value('EMA').run()
+check(not av.exception and any('只支援 SMA' in i.value for i in av.info), '勾選 v2 且選 EMA：只顯示「只支援 SMA」說明')
 print('ALL PASS')

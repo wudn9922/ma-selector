@@ -4,6 +4,7 @@ from urllib.parse import quote
 from pathlib import Path
 import numpy as np, pandas as pd, streamlit as st
 from core import data, metrics, score, select as sel, backtest as bt, charts, rawstats
+from core import score_v2, select_v2
 from core.ma import moving_average
 
 st.set_page_config(page_title="均線選參數", layout="wide")
@@ -12,7 +13,8 @@ ATLAS_CHART = "https://wudn9922.github.io/my-stock-screener/atlas/?page=chart&tf
 def query_ticker():   # 網址 ?ticker=2330.TW（Atlas「在 ma-selector 查看詳情」連過來）；不合法就用 AAPL
     q = str(st.query_params.get("ticker", "")).strip().upper()
     return q if re.fullmatch(r"[A-Z0-9^][A-Z0-9.\-]{0,31}", q) else "AAPL"
-def ref_path(kind):   # SMA：data/reference.parquet；EMA：data/reference_ema.parquet（環境變數 MA_SELECTOR_REF_EMA 可覆寫，測試用）
+def ref_path(kind):   # SMA：data/reference.parquet；EMA：data/reference_ema.parquet（環境變數 MA_SELECTOR_REF_EMA 可覆寫，測試用）；V2（實驗選線 v2）：data/reference_v2.parquet（MA_SELECTOR_REF_V2 可覆寫，測試用）
+    if kind == 'V2': return Path(os.environ.get('MA_SELECTOR_REF_V2') or ROOT / 'data' / 'reference_v2.parquet')
     if kind == 'EMA': return Path(os.environ.get('MA_SELECTOR_REF_EMA') or ROOT / 'data' / 'reference_ema.parquet')
     return ROOT / 'data' / 'reference.parquet'
 
@@ -29,6 +31,12 @@ def load_ref(kind):
     return _read_ref(str(f), f.stat().st_mtime)
 @st.cache_data(show_spinner="候選均線回測中…")
 def calc_select(tk, last, n, ws_key, gap, kind, _df, _S): return sel.select(_df, _S, gap=gap, kind=kind)   # 選參數用多空反手（events_v22）的回測
+@st.cache_data(show_spinner="實驗選線 v2 計算中…")
+def calc_select_v2(tk, last, n, ws_key, gap, ref_key, _df, _M, _ref, _ws, _long):   # 實驗選線 v2（只支援 SMA）；ref_key＝v2 基準檔的 mtime，檔案換了就重算
+    out = select_v2.select_v2(_df, _M, _ref, ws=_ws, gap=gap, kind='SMA', long_result=_long)
+    T = score_v2.score_table_v2(_M, _ref, _ws).sort_values('period')
+    curve = pd.DataFrame({f'分數_{y}（平滑）': sel.smooth(T[f'分數_{y}'].to_numpy()) for y in ('1y', '2y', '3y')}, index=pd.Index(T['period'].to_numpy(), name='均線週期'))
+    return out, curve
 @st.cache_data(show_spinner="畫圖中…")
 def render(tk, last, n, p, title, kind, _df): return charts.chart_png(_df, p, title, kind=kind)
 
@@ -50,6 +58,7 @@ with st.sidebar:
         ws_l = {k: st.slider(k, 0, 100, int(v * 100), key='l' + k) for k, v in score.WS['長'].items()}
         st.caption("中期＝短、長兩組權重平均（看近 2 年）")
     gap = st.slider("候選門檻：與最高分差距 ≤（分）", 3, 30, sel.GAP, 1, help="分數與該區間最高分相差在此範圍內的均線才列為候選（彼此至少差 3、最多 5 條）；預設 15")
+    show_v2 = st.checkbox("顯示實驗選線 v2", False, help="實驗功能（尚未驗證）：短期 SMA15–45 用近 2 年選 2 條、中期 SMA46–70 用近 3 年選 1 條，長期沿用現行；與現行選線並列比較，不取代現行結果。只支援 SMA，需要 data/reference_v2.parquet。")
     st.caption(f"基準：{len((meta or {}).get('tickers', []))} 檔，資料到 {(meta or {}).get('asof', '?')}")
 # ── 均線類型與基準分佈（EMA 基準不存在就退回只顯示 SMA）──
 KINDS = {"SMA": ["SMA"], "EMA": ["EMA"], "SMA＋EMA 並列": ["SMA", "EMA"]}[kind_choice]
@@ -76,6 +85,17 @@ ws_key = json.dumps(ws, sort_keys=True); M, S, R, SUIT = {}, {}, {}, {}
 for k in KINDS:
     M[k] = calc_metrics(tk, last, N, k, df); S[k] = score.score_table(M[k], REFS[k], ws)
     R[k] = calc_select(tk, last, N, ws_key, gap, k, df, S[k]); SUIT[k] = sel.suitability(S[k])
+
+# ── 實驗選線 v2（勾選才算；只支援 SMA；基準 data/reference_v2.parquet 不存在就跳過）──
+V2, V2_NOTE = None, None
+if show_v2:
+    if 'SMA' not in KINDS: V2_NOTE = ('info', "實驗選線 v2 只支援 SMA，請把均線類型改成 SMA（或 SMA＋EMA 並列）。")
+    else:
+        ref_v2, _meta_v2 = load_ref('V2')
+        if ref_v2 is None: V2_NOTE = ('info', "v2 基準分佈尚未建立（data/reference_v2.parquet）。請到 GitHub → Actions → build-reference-v2 → Run workflow 產生，或在本機執行 `python scripts/build_reference_v2.py`。目前不顯示實驗選線 v2。")
+        else:
+            try: V2 = calc_select_v2(tk, last, N, ws_key, gap, str(ref_path('V2').stat().st_mtime), df, M['SMA'], ref_v2, ws, R['SMA']['長期'])
+            except Exception as e: V2_NOTE = ('warning', f"實驗選線 v2 計算失敗：{e}")
 
 if tk and st.query_params.get("ticker") != tk: st.query_params["ticker"] = tk   # 網址跟著代號，方便分享
 st.markdown(f"**{tk}**　<span style='font-size:0.85rem;color:gray'>資料到 {last}（{N} 根）</span>　[在 Atlas 看圖表 ↗]({ATLAS_CHART}{quote(tk)})", unsafe_allow_html=True)
@@ -120,6 +140,39 @@ with tab1:
                 st.caption(RAW_NOTE)
         with st.expander("全部均線的分數" + (f"（{k}）" if len(KINDS) > 1 else "")):
             st.dataframe(Sk.round(1), hide_index=True, width='stretch')
+
+    if show_v2:
+        with st.expander("實驗選線 v2（尚未驗證，僅供比較）", expanded=True):
+            if V2 is None: getattr(st, V2_NOTE[0])(V2_NOTE[1])
+            else:
+                v2, curve = V2; sh, md, lg, su = v2['短期'], v2['中期'], v2['長期'], v2['suitability']; cur = R['SMA']
+                st.caption("實驗：短期 SMA15–45 用近 2 年（參考近 1 年）選 2 條；中期 SMA46–70 用近 3 年選 1 條；長期同現行。分數＝短期公式（你調的權重同樣套用）對 v2 基準分佈（data/reference_v2.parquet）的百分位；"
+                           "候選、規則 B、短期 rescue 與現行相同，第二條需與第一條週期比例 ≥1.5。規則只在舊的短期 15–33／近 1 年驗證過，v2 尚未驗證，現行選線不受影響。")
+                s2 = '找不到第二條' if sh['final2'] is None else f"SMA{sh['final2']}" + ('（放寬候選）' if sh['second_source'] == 'relaxed' else '')
+                a1, a2, a3 = st.columns(3)
+                a1.markdown(f"**短期（SMA15–45，近 2 年）**\n\nv2：第一條 SMA{sh['final1']}、第二條 {s2}"); a1.caption(f"現行（SMA15–33，近 1 年）：SMA{cur['短期']['final']}")
+                a2.markdown(f"**中期（SMA46–70，近 3 年）**\n\nv2：SMA{md['final']}"); a2.caption(f"現行（SMA34–45，近 2 年）：SMA{cur['中期']['final']}")
+                a3.markdown(f"**長期（SMA46–110，近 3 年）**\n\nv2：SMA{lg['final']}（同現行）"); a3.caption(f"現行：SMA{cur['長期']['final']}")
+                b1, b2, b3 = st.columns(3)
+                b1.metric("v2 短期適合度（2 年最高分）", f"{su['short_2y']:.1f} / 100"); b2.metric("v2 短期（1 年最高分）", f"{su['short_1y']:.1f} / 100"); b3.metric("v2 中期（3 年最高分）", f"{su['mid_3y']:.1f} / 100")
+                def v2_rows(cs, cols, stars):
+                    rows = [{'': stars.get(c['均線'], ''), **{k_: c[k_] for k_ in cols}} for c in cs]
+                    for r_ in rows:
+                        for k_ in ('反手報酬', '反手報酬_1y', '反手回撤'):
+                            if k_ in r_: r_[k_] = pct(r_[k_])
+                        r_['反手勝率'] = f"{r_['反手勝率']*100:.0f}%" if r_['反手勝率'] == r_['反手勝率'] else '—'
+                    return pd.DataFrame(rows)
+                SC = ['均線', '分數_2y', '分數_1y', '反手報酬', '反手報酬_1y', '反手回撤', '反手勝率', '反手筆數']; stars = {sh['final1']: '★ 第一條'}
+                if sh['final2'] is not None: stars[sh['final2']] = '★ 第二條'
+                st.markdown("**短期候選（近 2 年決定；反手報酬為近 2 年，_1y 為近 1 年參考）**")
+                st.dataframe(v2_rows(sh['cands'], SC, stars), hide_index=True, width='stretch')
+                if sh.get('relaxed'):
+                    st.markdown("**短期放寬候選**　（候選內沒有與第一條週期比例 ≥1.5 者，改從區間內分數達門檻的週期找）")
+                    st.dataframe(v2_rows(sh['relaxed'], SC, {sh['final2']: '★ 第二條'} if sh['second_source'] == 'relaxed' else {}), hide_index=True, width='stretch')
+                st.markdown("**中期候選（近 3 年決定）**")
+                st.dataframe(v2_rows(md['cands'], ['均線', '分數_3y', '反手報酬', '反手回撤', '反手勝率', '反手筆數'], {md['final']: '★'}), hide_index=True, width='stretch')
+                st.markdown("**平滑後分數 vs 均線週期（SMA15–110；v2 短期看 15–45 的 1y／2y、中期看 46–70 的 3y）**")
+                st.line_chart(curve)
 
 with st.sidebar:
     k = st.radio("檢視均線類型", KINDS, horizontal=True) if len(KINDS) > 1 else KINDS[0]
