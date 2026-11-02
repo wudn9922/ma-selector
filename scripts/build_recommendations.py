@@ -9,14 +9,17 @@ from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from core import data
+from core import data, standardize
 from core.recommend import recommend, VERSION
 ROOT = Path(__file__).resolve().parents[1]; SAFE = re.compile(r'^[A-Z0-9][A-Z0-9.\-]{0,31}$')
-_REF = _META = _BARS = None
+_REF = _META = _BARS = _BESTS = _REF_V2 = _BESTS_V2 = None
 
 def _init(bars_dir):
-    global _REF, _META, _BARS
+    global _REF, _META, _BARS, _BESTS, _REF_V2, _BESTS_V2
     f = ROOT / 'data' / 'reference.parquet'; _REF = pd.read_parquet(f); _META = json.loads(f.with_suffix('.json').read_text()); _BARS = Path(bars_dir) if bars_dir else None
+    _BESTS = standardize.ref_stock_bests(_REF)                      # 股票層級排名用：基準每檔的區間最高分（每個 worker 算一次）
+    f2 = ROOT / 'data' / 'reference_v2.parquet'                     # 近2年分數＋實驗選線 v2；基準不存在就不輸出這些欄位
+    if f2.exists(): _REF_V2 = pd.read_parquet(f2); _BESTS_V2 = standardize.ref_stock_bests_v2(_REF_V2)
 
 def _bars(tk):
     if _BARS and (_BARS / f'{tk}.csv').exists(): return data.load(_BARS / f'{tk}.csv')
@@ -28,7 +31,7 @@ def _bars(tk):
 
 def work(tk):
     try:
-        r = recommend(_bars(tk), _REF, tk, reference_asof=_META.get('asof'))
+        r = recommend(_bars(tk), _REF, tk, reference_asof=_META.get('asof'), ref_bests=_BESTS, ref_v2=_REF_V2, ref_bests_v2=_BESTS_V2)
         return tk, r, None if r else '資料不足'
     except Exception as e: return tk, None, f'{type(e).__name__}: {e}'[:200]
 
@@ -61,7 +64,8 @@ def main(argv=None):
         if not f.exists(): continue
         r = json.loads(f.read_text()); symbols.append(dict(ticker=tk, asof=r['asof'], final={g['key']: g['final'] for g in r['ranges']}, fresh=tk in results))
     ref_asof = json.loads((ROOT / 'data' / 'reference.json').read_text()).get('asof')
-    index = dict(version=VERSION, kind='SMA', generatedAt=dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'), referenceAsof=ref_asof,
+    v2_meta = ROOT / 'data' / 'reference_v2.json'; ref_v2_asof = json.loads(v2_meta.read_text()).get('asof') if v2_meta.exists() else None
+    index = dict(version=VERSION, kind='SMA', generatedAt=dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'), referenceAsof=ref_asof, referenceV2Asof=ref_v2_asof,
                  requested=len(tks), updated=len(results), symbols=symbols, failed=[dict(ticker=k, reason=v) for k, v in sorted(errors.items())])
     (out / 'index.json').write_text(json.dumps(index, ensure_ascii=False, separators=(',', ':')))
     print(f'寫入 {out}：更新 {len(results)}、沿用舊檔 {len(symbols) - len(results)}、失敗 {len(errors)}（{time.time() - t0:.0f}s）')
