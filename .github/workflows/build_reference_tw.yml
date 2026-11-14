@@ -1,0 +1,33 @@
+name: build-reference-tw
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4 1 * *'   # 每月 1 號（比美股池晚 1 小時）
+permissions:
+  contents: write
+concurrency:               # 與其他 build-reference 共用一組，避免同時 push 互相蓋掉
+  group: build-reference
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install pandas numpy pyarrow
+      - name: 台股基準分佈（TICKERS_TW 100 檔；成功率 < 80% 會失敗且不寫檔）
+        run: python scripts/build_reference.py --market tw
+      - name: 台股 v2 基準分佈
+        run: python scripts/build_reference_v2.py --market tw
+      - name: commit
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add data/reference_tw.parquet data/reference_tw.json data/reference_tw_v2.parquet data/reference_tw_v2.json
+          if git diff --cached --quiet; then echo "no changes"; exit 0; fi
+          git commit -m "Update Taiwan reference distribution"
+          for i in 1 2 3; do
+            if git pull --rebase -q origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}"; then exit 0; fi
+            echo "push 失敗，第 $i 次，稍後重試"; git rebase --abort 2>/dev/null || true; sleep $((i * 10))
+          done
+          echo "push 3 次都失敗" >&2; exit 1
