@@ -19,6 +19,7 @@
   - 抓不到或資料不足（< 376 根）的股票沿用上一次的檔案；成功率 < 50% 時不寫檔。資料不足 866 根的標記 `limited`（中長期視窗不足，僅供參考）。
   - 測試：`tests/test_recommend.py`（與 `select()` 結果逐項相同、批次腳本行為）。
   - JSON VERSION 2（只多欄位，現行欄位不變）：每個區間的 `rank`（股票層級排名，同網頁 `standardize`）、短中期候選的 `score2y`（近2年分數(參考)）、`v2`（實驗選線 v2：短期 final1／final2、中期、長期、適合度與排名；**尚未驗證，只顯示**）。需要 `data/reference_v2.parquet`，不存在就不輸出 `score2y`／`v2`。
+  - JSON VERSION 3（只多欄位，VERSION 2 的欄位名稱與意義不變）：市場成本、基準池、unsuitable、hysteresis 相關欄位，見下方「市場成本、台股基準池、unsuitable、hysteresis」。
 
 ## Production selector
 **Score**（`core/score.py`、`core/select.py`）：每項特徵只對基準中**同一條均線週期**的 83 個值算百分位（`pct_mode='period'`）；短期 15–33、中期 34–45、長期 46–110 **各自**做 3 點平滑（`smooth_mode='range'`，兩端補自己，不跨公式邊界）。股票層級排名（`core/standardize.py`）與實驗 v2 的百分位同樣用同週期。
@@ -27,7 +28,7 @@
 
 **Candidate**：與區間最高（平滑後）結構分數相差 ≤ **gap = 15**（預設；網頁側邊欄可調 3–30）、彼此至少差 3、最多 5 條。
 
-**Backtest**：`events_v22` 多空反手（SAR reversal）——一直有持倉，碰到反向邊界就出場並反手，影線假突破當天收盤出清，成本 0.1%。短期看近 1 年、中期近 2 年、長期近 3 年。
+**Backtest**：`events_v22` 多空反手（SAR reversal）——一直有持倉，碰到反向邊界就出場並反手，影線假突破當天收盤出清，成本＝每筆來回成本（美股 0.1%、台股 0.585%，見下方；`cost=` 參數預設 0.1%）。短期看近 1 年、中期近 2 年、長期近 3 年。
 
 **Final**：
 1. 找 `best_sar_return`；finalists ＝ 反手報酬 ≥ `best_sar_return − 5 個百分點`。
@@ -51,6 +52,23 @@
 （舊規則「finalists 直接取最小均線」會系統性偏向短均線，已停用；診斷見 `experiments/final_rules/`。）
 
 候選表另附只做多的簡單／複雜報酬當參考；網頁「回測」分頁仍是**只做多**，沒有改。
+
+## 市場成本、台股基準池、unsuitable、hysteresis（JSON VERSION 3）
+- **市場成本**（`core/market.py`）：`market_of(ticker)`＝`.TW`／`.TWO` → `'TW'`，其餘 `'US'`。`COSTS`＝每筆**來回**成本：TW **0.585%**（牌告手續費 0.1425%×2＋賣出證交稅 0.3%，不含券商折扣，對有折扣的人偏保守）、US 0.1%（舊值）。
+  `events(..., cost=)`、`sar_stats(..., cost=)`、`select(..., cost=)`、`select_v2(..., cost=)` 都有 `cost` 參數，**預設 0.001＝舊行為**（LEGACY、凍結腳本、既有測試逐位元組相同）；`recommend()` 依代號市場傳入，網頁也是（回測分頁的成本預設跟著市場，可自行改）。
+  成本只影響交易報酬（反手報酬、只做多簡單／複雜報酬）；候選、分數、`metrics.py` 特徵與基準檔都**與成本無關**（`events()` 的成本只出現在 `trades`，`metrics` 丟掉它）。測試：`tests/test_market_cost.py`。
+- **台股基準池**：`data/reference_tw.parquet`／`reference_tw_v2.parquet`（`scripts/build_reference.py --market tw`、`build_reference_v2.py --market tw`，`TICKERS_TW` 100 檔，由 GitHub Actions 建）。`.TW`／`.TWO` 的股票：檔案存在就對台股池算百分位與排名，**不存在就退回美股檔（同過去）**；SMA 與 v2 各自判斷（`core/market.py::pick_pool`）。實際用的池記在 JSON 的 `referencePool`（v2 區塊另記 `v2.referencePool`），網頁說明列也會寫出（退回時會註明）。EMA 沒有台股池，所有市場共用 `reference_ema.parquet`。批次腳本每個 worker 每個池只載入一次。
+- **unsuitable**：每個區間，若候選中最高的多空反手報酬（用該市場的成本）≤ 0 → `unsuitable=true`（連最好的候選在近 1／2／3 年回測都賠錢）。**不改選哪一條**，只是旗標；網頁在該區間顯示警告。
+- **Hysteresis（只有批次 `scripts/build_recommendations.py`；網頁無狀態，不使用，顯示當下算的）**：`recommend(..., prev=上一次發佈的 JSON)`。令 f＝這次算出的 final、p0＝上次的 final，下列**全部**成立才沿用 p0，否則用 f：
+  1. 上次檔案與這次的設定簽章相同（`scoring`、`referencePool`、`adjusted`、`costPct`、`kind`）——方法一改，第一次不會被舊選擇綁住；
+  2. p0 在區間內且 p0 ≠ f；
+  3. p0 的平滑結構分 ≥ 區間最高 − gap（仍是候選等級）；
+  4. p0 的反手報酬 ≥ 候選最高 − 5 個百分點（仍是規則 B 的 finalist）；
+  5. f 的結構分 − p0 的結構分 < `HYST_POINTS = 5.0`（`core/recommend.py`；沒有為了讓數字好看而調整）。
+
+  輸出：`final`（沿用時＝p0）、`computedFinal`（＝f）、`held`、`previousFinal`（上次的 final，沒有就 null）；沿用的 p0 不在候選裡時補進 `candidates`（附自己的分數與回測），所以 `final` 一定在 `candidates` 裡。v2 區塊不套用。批次腳本讀 `<out>/<ticker>.json` 當 prev（讀不了就當沒有）。
+  動機：固定基準下，資料少 21 根，短／中／長期的 final 有 46%／30%／32% 會改變。三次月更模擬的證據：`experiments/hysteresis/report.md`。
+- **JSON VERSION 3**（只多欄位）：頂層 `market`（TW／US）、`costPct`（來回成本，%，例如 0.585）、`referencePool`（TW／US）、`adjusted`（價格是否已還原股利，取自 `df.attrs['adjusted']`；從 `--bars-dir` 的 CSV 讀入時 attrs 會遺失而是 false）、`scoring`（例如 `period+range`，由 `score.PCT_MODE`＋`select.SMOOTH_MODE` 組成）；每個區間 `unsuitable`、`held`、`previousFinal`、`computedFinal`。`index.json`：`version: 3`、`scoring`、`costPct`（各市場）、`hystPoints`、`referenceAsofTW`，每檔另有 `market`、`referencePool`、`unsuitable`、`held`（各區間）。測試：`tests/test_recommend.py`（拿掉新欄位後與 VERSION 2 輸出逐項相同）、`tests/test_hysteresis.py`（每個條件單獨測）。
 
 ## SMA／EMA 選擇（EMA 為實驗功能）
 - 網頁側邊欄「均線類型」可選：SMA（預設，與原本完全相同）、EMA、SMA＋EMA 並列。並列時兩者各自有一組候選與最後選擇，分開顯示，不放在同一個池子裡互相比較（兩者分數的基準分佈不同）。

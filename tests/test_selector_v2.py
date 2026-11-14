@@ -165,10 +165,35 @@ def test_rescue_scope_and_mid():
     check(c['分數_1y'] == 41.3 and c['分數_2y'] == 60.0 and c['結構分'] == 60.0 and c['反手報酬_1y'] == .123 and c['反手報酬'] == .5, '候選：分數_1y 四捨五入到 0.1、結構分未四捨五入、反手報酬＝2y 視窗、反手報酬_1y＝1y 視窗')
 
 def test_build_reference_v2_script():
+    """原本斷言 scripts/build_reference.py 與 474d8f6 逐位元組相同；該腳本後來加了 --market（台股池），原始碼不再相同，改檢查行為不變：
+    US 的 SMA／EMA 仍是同一份名單、同樣的輸出路徑、同樣的 parquet／json 格式；v2 仍在自己的腳本（不混進 build_reference）"""
+    import contextlib, hashlib, io, json, tempfile
+    import build_reference as br, build_reference_v2 as b2
+    from core import universe
     old = subprocess.run(['git', 'show', '474d8f6:scripts/build_reference.py'], cwd=ROOT, capture_output=True, text=True).stdout
-    check(old and (ROOT / 'scripts/build_reference.py').read_text() == old, '現行 scripts/build_reference.py 與 474d8f6 完全相同（v2 用獨立腳本）')
+    check("TICKERS" in old and "'data/reference.parquet' if kind == 'SMA' else f'data/reference_{kind.lower()}.parquet'" in old, '舊腳本（474d8f6）的名單與輸出路徑規則可讀到（比對基準）')
+    # 1) 名單與路徑：US 的 SMA／EMA 與舊腳本相同；不給 market ＝ us
+    for kind, path in (('SMA', 'data/reference.parquet'), ('EMA', 'data/reference_ema.parquet')):
+        check(br.resolve('us', kind) == (list(universe.TICKERS), path) and br.default_out(kind) == path and br.resolve(kind=kind) == br.resolve('us', kind), f'build_reference US/{kind}：同一份 83 檔名單、輸出 {path}')
+    check(br.resolve('us', 'SMA', 'x/y.parquet')[1] == 'x/y.parquet' and len(universe.TICKERS) == 83, '--out 仍可覆寫；名單仍是 83 檔')
+    # 2) 寫檔格式：縮小名單、假的 fetch_yahoo（合成資料），跑 main；欄位＝score.make_features 加 ticker，json 鍵與舊版相同（SMA：asof／tickers／n；EMA 多 kind；US 沒有 market 鍵）
+    tk = ['AAA', 'BBB', 'CCC', 'DDD', 'EEE']
+    def fake(t, *a, **k): return data.normalize(synth(int(hashlib.md5(t.encode()).hexdigest(), 16) % 10000))
+    o = (data.fetch_yahoo, br.TICKERS, br.time.sleep); data.fetch_yahoo = fake; br.TICKERS = tk; br.time.sleep = lambda x: None
+    try:
+        for kind in ('SMA', 'EMA'):
+            with tempfile.TemporaryDirectory() as d:
+                out = Path(d) / 'ref.parquet'
+                with contextlib.redirect_stdout(io.StringIO()): br.main(['--data-dir', str(Path(d) / 'c'), '--out', str(out), '--kind', kind])
+                R = pd.read_parquet(out); meta = json.loads(out.with_suffix('.json').read_text()); F = score.make_features(metrics.compute_metrics(fake('AAA'), kind=kind)); F.insert(0, 'ticker', 'AAA')
+                check(list(R.columns) == list(F.columns) and R[R.ticker == 'AAA'].reset_index(drop=True).equals(F) and len(R) == 5 * 96, f'{kind}：parquet 欄位與內容＝ticker＋make_features（5 檔 × 96 條）')
+                check(list(meta) == (['asof', 'tickers', 'n'] if kind == 'SMA' else ['asof', 'tickers', 'n', 'kind']) and meta['tickers'] == tk and meta['n'] == len(R) and meta.get('kind', 'SMA') == kind, f'{kind}：json 鍵與舊格式相同 {list(meta)}')
+    finally: data.fetch_yahoo, br.TICKERS, br.time.sleep = o
+    # 3) v2 仍在自己的腳本：路徑、json version、特徵函式、只用 SMA；build_reference.py 完全不碰 v2
+    check(b2.resolve('us')[0] == list(universe.TICKERS) and b2.resolve('us')[1] == 'data/reference_v2.parquet' and b2.default_out() == 'data/reference_v2.parquet', 'build_reference_v2：US 名單與 data/reference_v2.parquet')
     src = (ROOT / 'scripts/build_reference_v2.py').read_text()
-    check("'data/reference_v2.parquet'" in src and "version='v2'" in src and 'make_features_v2' in src and 'kind' not in src.split('import', 1)[1].replace('compute_metrics(df)', ''), 'build_reference_v2：輸出路徑、json version、make_features_v2、只用 SMA')
+    check("version='v2'" in src and 'make_features_v2' in src and 'kind' not in src.split('import', 1)[1].replace('compute_metrics(df)', ''), 'build_reference_v2：json version、make_features_v2、只用 SMA')
+    check('v2' not in (ROOT / 'scripts/build_reference.py').read_text().replace('--market', ''), 'build_reference.py 沒有 v2（v2 用獨立腳本）')
 
 if __name__ == '__main__':
     for k, v in list(globals().items()):

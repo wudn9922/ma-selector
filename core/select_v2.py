@@ -4,7 +4,7 @@ production 的 select.py／score.py 不動；這裡只借用 select.smooth／sar
 final1＝規則 B（反手報酬距最佳 ≤5pp 的 finalists 取未四捨五入結構分最高；完全同分取短）＋短期 STRUCTURAL_RESCUE_10PT_10PP（門檻不變，只用在短期 final1）；中期只用規則 B
 final2（只有短期）：與 final1 週期比例 ≥1.5 → 先從其餘候選套規則 B；沒有則放寬到區間內所有達門檻的週期（彼此差 >2、最多 5 條）；仍沒有 → None"""
 import numpy as np
-from . import select as sel
+from . import select as sel, events as ev
 from .data import wilder_atr
 from .ma import moving_average
 from .score_v2 import score_table_v2
@@ -34,11 +34,13 @@ def pick(P, Ss, lo, hi, gap, ok=lambda p: True):
         if len(out) == 5: break
     return out, float(best)
 
-def select_v2(df, M, ref_v2, ws=None, gap=sel.GAP, kind='SMA', long_result=None, pct_mode=PCT_MODE):
+def select_v2(df, M, ref_v2, ws=None, gap=sel.GAP, kind='SMA', long_result=None, pct_mode=PCT_MODE, cost=ev.COST):
     # pct_mode 同 score_v2.score_table_v2（預設同週期百分位；'pooled'＝舊版）；平滑仍是整條（單一公式，沒有公式邊界）
+    # cost＝反手回測的每筆來回成本（同 select.select；預設 0.1%＝舊行為，預設時不傳給 sar_stats）
+    skw = {} if cost == ev.COST else dict(cost=cost)
     O, H, L, C = (df[k].to_numpy(float) for k in ('open', 'high', 'low', 'close')); atr = wilder_atr(df); N = len(C)
     T = score_table_v2(M, ref_v2, ws, pct_mode); S = {y: smoothed_v2(T, y) for y in ('1y', '2y', '3y')}; at = {y: dict(zip(P.tolist(), s.tolist())) for y, (P, s) in S.items()}
-    def sar(p, W): return sel.sar_stats(O, H, L, C, atr, moving_average(df.close, p, kind), max(N - W, 0))
+    def sar(p, W): return sel.sar_stats(O, H, L, C, atr, moving_average(df.close, p, kind), max(N - W, 0), **skw)
     def cand(p, y, W, short):
         a = sar(p, W); c = {'均線': p, f'分數_{y}': round(at[y][p], 1), '結構分': at[y][p]}
         if short: c['分數_1y'] = round(at['1y'][p], 1)

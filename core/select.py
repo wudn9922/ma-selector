@@ -22,6 +22,7 @@ GAP = 15                                   # 候選：與最高分差距上限�
 SMOOTH_MODES = ('range', 'whole')
 SMOOTH_MODE = 'range'                      # production 預設：區間內平滑；舊版＝'whole'
 LEGACY = dict(gap=15, method='bt', longonly=True, smooth_mode='whole')   # 研究版 v22 的設定（只供 regression 使用；分數表要搭配 pct_mode='pooled'）
+SAR_PP = 0.05                              # 規則 B：反手報酬距最佳 ≤ 5 個百分點者為 finalists
 RESCUE_POINTS, RESCUE_SAR_PP = 10.0, 0.10        # STRUCTURAL_RESCUE_10PT_10PP：結構分優勢 10.0 分、反手報酬差距 10 個百分點（凍結；只用於短期）
 
 def smooth(s): return np.convolve(np.r_[s[0], s, s[-1]], np.ones(3) / 3, 'valid')
@@ -37,10 +38,10 @@ def smoothed_scores(S, smooth_mode=SMOOTH_MODE):
         if m.any(): out[m] = smooth(s[m])
     return P, out
 
-def sar_stats(O, H, L, C, atr, ma, lo):
+def sar_stats(O, H, L, C, atr, ma, lo, cost=ev.COST):
     """多空反手（events_v22）：回傳 dict(報酬, 回撤, 勝率, 筆數)。
-    報酬＝視窗內（出場日 ≥ lo）各筆淨報酬（已扣成本）複利；回撤＝逐日盤後市值（持倉中按收盤估值）的最大回撤。"""
-    N = len(C); _b, _w, _r, plog, trades = ev.events(O, H, L, C, ma, atr)
+    報酬＝視窗內（出場日 ≥ lo）各筆淨報酬（已扣成本 cost，預設 0.1%）複利；回撤＝逐日盤後市值（持倉中按收盤估值）的最大回撤。"""
+    N = len(C); _b, _w, _r, plog, trades = ev.events(O, H, L, C, ma, atr, cost=cost)
     ep = {(a, b, sg): e for a, b, sg, e, _x, _k in plog}; tr = sorted([t for t in trades if t[1] >= lo], key=lambda t: (t[0], t[1]))
     eq = np.ones(N); cap = 1.; last = lo
     for tin, tout, sg, r, _k in tr:
@@ -61,8 +62,10 @@ def structural_rescue(cands, finalists, final):
     c3 = sb['反手報酬'] >= best_sar - RESCUE_SAR_PP                                  # 反手報酬 ≥ 最佳 − 10pp
     return sb if (c1 and c2 and c3) else final
 
-def select(df, S, gap=GAP, method='sar', longonly=True, final_rule='structural', kind='SMA', smooth_mode=SMOOTH_MODE):
+def select(df, S, gap=GAP, method='sar', longonly=True, final_rule='structural', kind='SMA', smooth_mode=SMOOTH_MODE, cost=ev.COST):
     # kind 只換均線序列（SMA／EMA），規則 B 與短期 rescue 兩種都一樣；smooth_mode 見 smoothed_scores
+    # cost＝每筆來回成本（比例），同時用在只做多回測與反手回測；預設 0.1%＝舊行為（各市場的成本見 core/market.py）。成本只改報酬，不改分數、候選
+    skw = {} if cost == ev.COST else dict(cost=cost)   # 預設成本不傳給 sar_stats（與既有呼叫／monkeypatch 完全相容）
     O, H, L, C, V = (df[k].to_numpy(float) for k in ('open', 'high', 'low', 'close', 'volume')); atr = wilder_atr(df); N = len(C)
     P, Ss = smoothed_scores(S, smooth_mode); out = {}
     for nm, lo, hi, W in RANGES:
@@ -72,16 +75,16 @@ def select(df, S, gap=GAP, method='sar', longonly=True, final_rule='structural',
             if sm[i] < best - gap: break
             if all(abs(pm[i] - c['均線']) > 2 for c in cands):
                 ma = moving_average(df.close, int(pm[i]), kind); lo_ = max(N - W, 0)
-                s1, _ = bt.run(O, H, L, C, V, ma, atr, lo=lo_, mode='simple', longonly=longonly)
-                s2, _ = bt.run(O, H, L, C, V, ma, atr, lo=lo_, mode='complex', longonly=longonly)
+                s1, _ = bt.run(O, H, L, C, V, ma, atr, lo=lo_, mode='simple', longonly=longonly, cost=cost)
+                s2, _ = bt.run(O, H, L, C, V, ma, atr, lo=lo_, mode='complex', longonly=longonly, cost=cost)
                 c = {'均線': int(pm[i]), '分數': round(float(sm[i]), 1), '結構分': float(sm[i]), '簡單報酬': s1['總報酬'], '簡單回撤': s1['最大回撤'], '複雜報酬': s2['總報酬'], '複雜回撤': s2['最大回撤']}
                 if method == 'sar':
-                    a = sar_stats(O, H, L, C, atr, ma, lo_); c.update({'反手報酬': a['報酬'], '反手回撤': a['回撤'], '反手勝率': a['勝率'], '反手筆數': a['筆數']})
+                    a = sar_stats(O, H, L, C, atr, ma, lo_, **skw); c.update({'反手報酬': a['報酬'], '反手回撤': a['回撤'], '反手勝率': a['勝率'], '反手筆數': a['筆數']})
                 cands.append(c)
             if len(cands) == 5: break
         for c in cands: c['回測平均'] = c['反手報酬'] if method == 'sar' else (c['簡單報酬'] + c['複雜報酬']) / 2   # 選參數依據
         bestbt = max(c['回測平均'] for c in cands)
-        finalists = [c for c in cands if c['回測平均'] >= bestbt - 0.05]
+        finalists = [c for c in cands if c['回測平均'] >= bestbt - SAR_PP]
         if method == 'sar' and final_rule == 'structural': final = min(finalists, key=lambda c: (-c['結構分'], c['均線']))   # 規則 B：結構分數最高；完全相同才取較短
         else: final = min(finalists, key=lambda c: c['均線'])                                                            # 舊規則：取最小均線
         if method == 'sar' and final_rule == 'structural' and nm == '短期': final = structural_rescue(cands, finalists, final)   # 只有短期：STRUCTURAL_RESCUE_10PT_10PP
