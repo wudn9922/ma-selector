@@ -49,7 +49,7 @@ def one(tk):
     meta = json.loads((RAW / tk / 'meta.json').read_text(encoding='utf-8'))
     df = data.normalize(pd.read_csv(io.BytesIO(blob), float_precision='round_trip'), meta['asof'])
     ref = pd.read_parquet(io.BytesIO(sealed_reference()))                     # 封存時的 reference（不是每月重建後的 HEAD 版本）
-    S = score.score_table(metrics.compute_metrics(df), ref); R = sel.select(df, S); R0 = prev_select().select(df, S)
+    S = score.score_table(metrics.compute_metrics(df), ref, pct_mode='pooled'); R = sel.select(df, S, smooth_mode='whole'); R0 = prev_select().select(df, S)   # 封存時的分數（pooled＋whole）
     return tk, (clean(R), clean(R0))
 
 def main():

@@ -100,7 +100,7 @@ def main():
     # 新（core/）流程
     with ProcessPoolExecutor(4) as ex: newM = dict(ex.map(R.new_ticker, tks))
     ref = pd.concat([score.make_features(M).assign(ticker=tk) for tk, M in newM.items()], ignore_index=True); dfs = {tk: data.normalize(pd.read_csv(f'data_v/{tk}.csv'), a.asof) for tk in tks}
-    new_sel = {tk: sel.select(dfs[tk], score.score_table(newM[tk], ref), **sel.LEGACY) for tk in tks}; print('新流程完成', flush=True)
+    new_sel = {tk: sel.select(dfs[tk], score.score_table(newM[tk], ref, pct_mode='pooled'), **sel.LEGACY) for tk in tks}; print('新流程完成', flush=True)
     cur_old, cur_new = cur_from(old_sel), cur_from(new_sel)
     L = []; P = lambda *x: L.append(' '.join(str(i) for i in x))
     P(f'# Snapshot regression（B）：原始 選均線_v22.csv vs 目前輸出（asof={a.asof}，{len(tks)} 檔）\n')
@@ -119,7 +119,7 @@ def main():
     for t in range(4):
         sc, sf, n = hr(snap, t); cc, cf, _ = hr(cur_new, t); P(f'| ±{t} | {sc}/{n} | {sf}/{n} | {cc}/{n} | {cf}/{n} |')
     P('\n交接文件 46/61、17/61 ＝ snapshot 的 ±2；目前輸出 ±2 為 47/61、18/61。\n')
-    prod = cur_from({tk: sel.select(dfs[tk], score.score_table(newM[tk], ref)) for tk in tks})   # 目前 production 設定（gap=sel.GAP、反手回測、規則 B）
+    prod = cur_from({tk: sel.select(dfs[tk], score.score_table(newM[tk], ref, pct_mode='pooled'), smooth_mode='whole') for tk in tks})   # 凍結時的 production 設定（gap=sel.GAP、反手回測、規則 B；舊版分數 pooled＋whole，保持可重現）
     P(f'### 目前 production 設定（候選門檻 {sel.GAP} 分、反手回測、最後選擇＝規則 B：結構分數最高）的短期命中率（資訊用；上表為 LEGACY＝研究版設定 gap=15、只做多）\n\n| tolerance | candidate | final |\n|---|---|---|')
     for t in range(4):
         cc, cf, n = hr(prod, t); P(f'| ±{t} | {cc}/{n} | {cf}/{n} |')
@@ -211,7 +211,7 @@ def main():
         Dref = Dold.copy(); refF = score.make_features(Dref).assign(ticker=Dref.ticker.to_numpy()); Ma = Dold[Dold.ticker == 'ACN'].sort_values('period').reset_index(drop=True)
         cols = {'突破': ('A_raw@252', 'A_raw_n@252'), '二日': ('A_d2@252', 'A_d2_n@252'), '回測': ('A_rt@252', 'A_rt_n@252')}
         def evaluate(M):
-            Sx = score.score_table(M, refF); s_ = fs.smooth(Sx['分數'].to_numpy()); return greedy(Sx['period'].to_numpy(), s_), Sx
+            Sx = score.score_table(M, refF, pct_mode='pooled'); s_ = fs.smooth(Sx['分數'].to_numpy()); return greedy(Sx['period'].to_numpy(), s_), Sx
         (base_c, _), _ = evaluate(Ma); target = [x[0] for x in snap[('ACN', '短期')]['cands']]; P(f'今天的候選 {base_c}；snapshot 候選 {target}\n')
         perts = []
         for p in [x for x in range(15, 35)]:

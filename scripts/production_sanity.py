@@ -32,10 +32,10 @@ def main():
     ref = pd.concat([score.make_features(M).assign(ticker=tk) for tk, M in newM.items()], ignore_index=True); dfs = {tk: data.normalize(pd.read_csv(f'data_v/{tk}.csv'), a.asof) for tk in tks}
     prod, rows, bad, prev_diff, trig = {}, [], [], [], []; PREV = prev_select()
     for tk in tks:
-        Sx = score.score_table(newM[tk], ref); P_, Ss = sel.smoothed_scores(Sx); smo = dict(zip(P_, Ss))
-        prod[tk] = sel.select(dfs[tk], Sx)                                                     # production 預設（gap=sel.GAP、反手、規則 B＋短期 rescue）
+        Sx = score.score_table(newM[tk], ref, pct_mode='pooled'); P_, Ss = sel.smoothed_scores(Sx, 'whole'); smo = dict(zip(P_, Ss))   # 凍結時的分數（全池百分位＋整條平滑），保持可重現
+        prod[tk] = sel.select(dfs[tk], Sx, smooth_mode='whole')                               # production 規則（gap=sel.GAP、反手、規則 B＋短期 rescue）
         before = PREV.select(dfs[tk], Sx)                                                      # 改動前的 production（同一份資料與分數表）
-        old = sel.select(dfs[tk], Sx, final_rule='min_period')['短期']                          # 同一批候選，只為取得候選清單
+        old = sel.select(dfs[tk], Sx, final_rule='min_period', smooth_mode='whole')['短期']                          # 同一批候選，只為取得候選清單
         c = [dict(period=x['均線'], s=float(smo[x['均線']]), r=x['反手報酬']) for x in prod[tk]['短期']['cands']]
         ruleB = fr.pick('B_STRUCTURAL_TIEBREAK', c); ev = RR.evaluate(c); indep = ev['rescue_final']
         if ev['current_final'] != ruleB or indep != prod[tk]['短期']['final'] or [x['均線'] for x in old['cands']] != [x['均線'] for x in prod[tk]['短期']['cands']]: bad.append(tk)

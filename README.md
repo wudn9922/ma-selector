@@ -21,6 +21,10 @@
   - JSON VERSION 2（只多欄位，現行欄位不變）：每個區間的 `rank`（股票層級排名，同網頁 `standardize`）、短中期候選的 `score2y`（近2年分數(參考)）、`v2`（實驗選線 v2：短期 final1／final2、中期、長期、適合度與排名；**尚未驗證，只顯示**）。需要 `data/reference_v2.parquet`，不存在就不輸出 `score2y`／`v2`。
 
 ## Production selector
+**Score**（`core/score.py`、`core/select.py`）：每項特徵只對基準中**同一條均線週期**的 83 個值算百分位（`pct_mode='period'`）；短期 15–33、中期 34–45、長期 46–110 **各自**做 3 點平滑（`smooth_mode='range'`，兩端補自己，不跨公式邊界）。股票層級排名（`core/standardize.py`）與實驗 v2 的百分位同樣用同週期。
+- 舊版（全部週期混在一起算百分位 `pct_mode='pooled'`＋15–110 整條平滑 `smooth_mode='whole'`）只保留給 regression／凍結證據重現（`core.select.LEGACY` 釘在 `whole`）。長均線穿越少，混在一起比會讓長均線分數機械性偏高（基準池平均長期分數 MA46 46.3 → MA110 64.8）。
+- 比較與限制：`experiments/period_percentile/report.md`（人工線命中率**尚未**用新版重跑）。
+
 **Candidate**：與區間最高（平滑後）結構分數相差 ≤ **gap = 15**（預設；網頁側邊欄可調 3–30）、彼此至少差 3、最多 5 條。
 
 **Backtest**：`events_v22` 多空反手（SAR reversal）——一直有持倉，碰到反向邊界就出場並反手，影線假突破當天收盤出清，成本 0.1%。短期看近 1 年、中期近 2 年、長期近 3 年。
@@ -58,7 +62,7 @@
 - 判定圖與回測分頁：並列模式下可在側邊欄「檢視均線類型」切換要看 SMA 或 EMA 的哪一條。
 
 ## 糾結／穿插、BOX、回測進場價、原始統計（網頁新增功能；production selector 完全沒改）
-- **糾結／穿插已經參與均線選擇**：`core/tangle.py` 的糾結次數（`tg4_*`）與穿插日（`qday_*`）由 `core/metrics.py` 計算，`core/score.py` 轉成 percentile（`p穿插_*`）後依權重進分數（短期：突破、二日、回測、雜訊、糾結/穿插；長期：快敗 50%＋糾結/穿插 50%；中期取短、長平均）。本次權重、公式、percentile 都沒動。候選表的欄位改名為「糾結/穿插百分位(1y/2y/3y)」——它是相對於 83 檔基準池的 percentile score，**不是發生機率**。
+- **糾結／穿插已經參與均線選擇**：`core/tangle.py` 的糾結次數（`tg4_*`）與穿插日（`qday_*`）由 `core/metrics.py` 計算，`core/score.py` 轉成 percentile（`p穿插_*`）後依權重進分數（短期：突破、二日、回測、雜訊、糾結/穿插；長期：快敗 50%＋糾結/穿插 50%；中期取短、長平均）。權重、公式沒動；percentile 後來改成對同週期基準（見 Production selector）。候選表的欄位改名為「糾結/穿插百分位(1y/2y/3y)」——它是相對於 83 檔基準池的 percentile score，**不是發生機率**。
 - **BOX（箱型）尚未整合**：Current repository contains active tangle detection but no executable BOX-boundary implementation. Therefore this change does not implement BOX selection or breakout. BOX integration skipped because current repo has no authoritative executable BOX implementation（沒有新增任何 placeholder 評分，也沒有把交接文件提到、但 repo 裡不存在的程式搬回來）。
 - **回測進場價（網頁「回測」分頁，`core/backtest.py::run(entry_mode=...)`）**：
   - `gap_open`＝「跳空用開盤價（現行，預設）」：多單成交價 `max(開盤, 上緣)`、空單 `min(開盤, 下緣)`。與改動前逐位元組相同（測試對照改動前的 `core/backtest.py`）。
@@ -69,12 +73,14 @@
 - 測試：`tests/test_backtest_entry_modes.py`、`tests/test_rawstats.py`、`tests/test_app_smoke.py`（擴充，只新增檢查）。
 
 ## Regression
+- 下列腳本與 `tests/` 中「與歷史輸出逐位元組相同」的檢查都明確指定舊版分數（`score_table(..., pct_mode='pooled')`＋`smooth_mode='whole'`／`LEGACY`），不隨 production 預設改動。
 - A（`scripts/regression.py`）：重建的 research 舊實作 vs core，使用 `core.select.LEGACY`（gap=15、只做多簡單＋複雜取平均、最小均線）——不隨 production 規則改動。
 - B（`scripts/snapshot_regression.py`）：原始 `regression/baselines/選均線_v22.csv`（immutable，SHA-256 見 `SHA256SUMS`）vs LEGACY 輸出；另附 production 設定的命中率供參考。
 - `scripts/production_sanity.py`：用診斷時相同的資料與基準（asof 2026-09-24、83 檔自身分佈）檢查 production 選擇與規則 B＋rescue 的獨立計算一致，且與加入 rescue 前的 select 逐檔相同（開發集觸發 0/83）。
 - `scripts/fresh_rescue_replay.py`：用 fresh validation 100 封存的 bars（不抓 Yahoo）重跑 production；只能有 PG 22→25、FDX 18→21 兩個改變。
 - `tests/test_select_rescue.py`：rescue 的 C1／C2／C3 邊界、同分取短、只套短期、LEGACY 不變。
 - `tests/test_ma_kind.py`：`kind='SMA'`（預設）時 metrics／select／charts 與加入 EMA 前逐位元組相同；EMA 的遞迴公式與手算一致。
+- `tests/test_period_percentile.py`：同週期／鄰近週期／全池百分位都等於手算、區間內平滑不跨 33/34、45/46、production 預設＝新版、基準檔格式不變。
 
 ## 實驗選線 v2（附加顯示，不取代現行）
 - 網頁側邊欄勾選「顯示實驗選線 v2」才會顯示（預設不勾）；只支援 SMA；現行選線結果完全不變。

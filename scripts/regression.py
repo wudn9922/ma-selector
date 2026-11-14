@@ -39,7 +39,7 @@ def fetch_one(a):
     else:
         err = None
         for k in range(4):
-            try: df = data.normalize(data.fetch_yahoo(tk), asof); break
+            try: df = data.normalize(data.fetch_yahoo(tk, adjust=False) if 'adjust' in data.fetch_yahoo.__code__.co_varnames else data.fetch_yahoo(tk), asof); break   # 未還原股利（凍結證據的口徑）
             except Exception as e: err = e; time.sleep(2 * (k + 1))
         else: return tk, str(err)
     df.drop(columns='date').to_csv(Path(wd) / 'data_v' / f'{tk}.csv', index=False); return tk, None
@@ -126,7 +126,7 @@ def main():
     if a.inject_bug: score.WS['短']['突破'] += .05          # 自我測試用：故意偏離
     with ProcessPoolExecutor(4) as ex: newM = dict(ex.map(new_ticker, tks))
     ref = pd.concat([score.make_features(M).assign(ticker=tk) for tk, M in newM.items()], ignore_index=True)
-    S = {tk: score.score_table(M, ref) for tk, M in newM.items()}; new_sel = {}
+    S = {tk: score.score_table(M, ref, pct_mode='pooled') for tk, M in newM.items()}; new_sel = {}   # 舊版分數（全池百分位）＋ LEGACY（整條平滑）：與 frozen 研究版比對
     dfs = {tk: data.normalize(pd.read_csv(f'data_v/{tk}.csv'), a.asof) for tk in tks}
     for tk in tks: new_sel[tk] = sel.select(dfs[tk], S[tk], **sel.LEGACY)
     print(f'新流程完成 {time.time()-t0:.0f}s', flush=True)
@@ -161,7 +161,7 @@ def main():
     for tk, p1, p2, ge in PAIRS:
         if tk not in S: pw.append(dict(ticker=tk, period_a=p1, period_b=p2, classification='DATA_DIFFERENCE', note='no data')); led.add('pairwise', tk, 'DATA_DIFFERENCE'); continue
         og = Dold[Dold.ticker == tk].set_index('period')['分數']; ng = S[tk].set_index('period')['分數']
-        osm = dict(zip(og.index, fs.smooth(og.to_numpy()))); nsm = dict(zip(*sel.smoothed_scores(S[tk])))
+        osm = dict(zip(og.index, fs.smooth(og.to_numpy()))); nsm = dict(zip(*sel.smoothed_scores(S[tk], 'whole')))
         rel_ = (lambda x, y: x >= y) if ge else (lambda x, y: x > y)
         res = dict(old=rel_(og[p1], og[p2]), new=rel_(ng[p1], ng[p2]), old_s=rel_(osm[p1], osm[p2]), new_s=rel_(nsm[p1], nsm[p2]))
         cs = [scalar_cls(float(x), float(y))[0] for x, y in ((og[p1], ng[p1]), (og[p2], ng[p2]), (osm[p1], nsm[p1]), (osm[p2], nsm[p2]))]

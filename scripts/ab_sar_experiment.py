@@ -54,9 +54,9 @@ def main():
     ref = pd.concat([score.make_features(M).assign(ticker=tk) for tk, M in newM.items()], ignore_index=True); dfs = {tk: data.normalize(pd.read_csv(f'data_v/{tk}.csv'), a.asof) for tk in tks}
     A_sel, B_sel, cand_rows, per_rows, cf_rows = {}, {}, [], [], []
     for tk in tks:
-        Sx = score.score_table(newM[tk], ref)
-        A_sel[tk] = sel.select(dfs[tk], Sx, gap=GAP, method='bt', longonly=True)['短期']          # A：Legacy
-        B_sel[tk] = sel.select(dfs[tk], Sx, gap=GAP, method='sar', final_rule='min_period')['短期']                      # B：只換最後選擇的回測
+        Sx = score.score_table(newM[tk], ref, pct_mode='pooled')                                  # 凍結時的分數（pooled＋whole）
+        A_sel[tk] = sel.select(dfs[tk], Sx, gap=GAP, method='bt', longonly=True, smooth_mode='whole')['短期']          # A：Legacy
+        B_sel[tk] = sel.select(dfs[tk], Sx, gap=GAP, method='sar', final_rule='min_period', smooth_mode='whole')['短期']                      # B：只換最後選擇的回測
     print('選擇完成', flush=True)
     # 候選必須相同
     mism = [tk for tk in tks if [c['均線'] for c in A_sel[tk]['cands']] != [c['均線'] for c in B_sel[tk]['cands']]]

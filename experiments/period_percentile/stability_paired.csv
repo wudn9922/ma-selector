@@ -1,0 +1,13 @@
+new,cut,range,both,old_only,new_only,neither
+NEW_period,21,短期,35,15,15,43
+NEW_period,21,中期,21,17,11,59
+NEW_period,21,長期,23,19,12,54
+NEW_period,63,短期,61,15,6,26
+NEW_period,63,中期,40,14,21,33
+NEW_period,63,長期,39,21,16,32
+NEW_band,21,短期,34,16,16,42
+NEW_band,21,中期,22,16,8,62
+NEW_band,21,長期,25,17,10,56
+NEW_band,63,短期,64,12,9,23
+NEW_band,63,中期,42,12,18,36
+NEW_band,63,長期,42,18,12,36

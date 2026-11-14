@@ -1,5 +1,5 @@
 """選均線流程（final_select）：讀分數表，不讀 pkl
-1) 每個區間分數前後各一條平均（平滑）  2) 候選＝與最高分差 ≤ gap（預設 15，網頁可調）、彼此差 ≥3、最多 5 條
+1) 每個區間分數前後各一條平均（平滑；smooth_mode='range'＝三個區間各自平滑、兩端補自己，不跨 33/34、45/46 的公式邊界）  2) 候選＝與最高分差 ≤ gap（預設 15，網頁可調）、彼此差 ≥3、最多 5 條
 3) 候選跑回測（短期近1年、中期近2年、長期近3年）
 4) 最後選擇（production：method='sar'）：反手報酬距最佳 ≤5 個百分點者為 finalists → 取「未四捨五入的結構分數」最高者；
    結構分數完全相同才取較短的均線。（舊規則 final_rule='min_period'：finalists 直接取最小均線，只供舊診斷與 LEGACY 使用）
@@ -10,7 +10,8 @@
 影線假突破當天收盤出清；扣成本 0.1%。只有這一種策略，「回測平均」＝該報酬（只用來決定 finalists，最後仍看結構分數）。這樣長期下跌的股票也不會因只做多而失真。
 候選表另附只做多的簡單／複雜報酬當參考（網頁回測分頁也仍是只做多）。
 kind（SMA／EMA）只換均線序列，規則 B、rescue 與其餘流程完全相同。
-舊版（研究版 v22）＝ LEGACY（gap=15、method='bt'：回測引擎只做多、簡單＋複雜取平均），regression 用它與 frozen 研究版比對。
+舊版（研究版 v22）＝ LEGACY（gap=15、method='bt'：回測引擎只做多、簡單＋複雜取平均、整條平滑），regression 用它與 frozen 研究版比對。
+舊版分數＝score_table(..., pct_mode='pooled')＋smooth_mode='whole'（15–110 整條一起平滑，會跨公式邊界）；只供 regression／凍結證據重現。
 """
 import numpy as np, pandas as pd
 from . import backtest as bt, events as ev
@@ -18,13 +19,23 @@ from .data import wilder_atr
 from .ma import moving_average
 RANGES = (('短期', 15, 33, 252), ('中期', 34, 45, 504), ('長期', 46, 110, 756))
 GAP = 15                                   # 候選：與最高分差距上限（網頁可調 3–30）
-LEGACY = dict(gap=15, method='bt', longonly=True)   # 研究版 v22 的設定（只供 regression 使用）
+SMOOTH_MODES = ('range', 'whole')
+SMOOTH_MODE = 'range'                      # production 預設：區間內平滑；舊版＝'whole'
+LEGACY = dict(gap=15, method='bt', longonly=True, smooth_mode='whole')   # 研究版 v22 的設定（只供 regression 使用；分數表要搭配 pct_mode='pooled'）
 RESCUE_POINTS, RESCUE_SAR_PP = 10.0, 0.10        # STRUCTURAL_RESCUE_10PT_10PP：結構分優勢 10.0 分、反手報酬差距 10 個百分點（凍結；只用於短期）
 
 def smooth(s): return np.convolve(np.r_[s[0], s, s[-1]], np.ones(3) / 3, 'valid')
 
-def smoothed_scores(S):
-    S = S.sort_values('period'); return S['period'].to_numpy(), smooth(S['分數'].to_numpy())
+def smoothed_scores(S, smooth_mode=SMOOTH_MODE):
+    """→ (periods, 平滑後分數)。'range'：短／中／長各自平滑（分數是分段公式，不跨區間混合）；'whole'：15–110 整條（舊版）"""
+    S = S.sort_values('period'); P = S['period'].to_numpy(); s = S['分數'].to_numpy()
+    if smooth_mode == 'whole': return P, smooth(s)
+    if smooth_mode not in SMOOTH_MODES: raise ValueError(f'smooth_mode 必須是 {SMOOTH_MODES}，得到 {smooth_mode!r}')
+    out = np.full(len(s), np.nan)
+    for _nm, lo, hi, _W in RANGES:
+        m = (P >= lo) & (P <= hi)
+        if m.any(): out[m] = smooth(s[m])
+    return P, out
 
 def sar_stats(O, H, L, C, atr, ma, lo):
     """多空反手（events_v22）：回傳 dict(報酬, 回撤, 勝率, 筆數)。
@@ -50,10 +61,10 @@ def structural_rescue(cands, finalists, final):
     c3 = sb['反手報酬'] >= best_sar - RESCUE_SAR_PP                                  # 反手報酬 ≥ 最佳 − 10pp
     return sb if (c1 and c2 and c3) else final
 
-def select(df, S, gap=GAP, method='sar', longonly=True, final_rule='structural', kind='SMA'):
-    # kind 只換均線序列（SMA／EMA），規則 B 與短期 rescue 兩種都一樣
+def select(df, S, gap=GAP, method='sar', longonly=True, final_rule='structural', kind='SMA', smooth_mode=SMOOTH_MODE):
+    # kind 只換均線序列（SMA／EMA），規則 B 與短期 rescue 兩種都一樣；smooth_mode 見 smoothed_scores
     O, H, L, C, V = (df[k].to_numpy(float) for k in ('open', 'high', 'low', 'close', 'volume')); atr = wilder_atr(df); N = len(C)
-    P, Ss = smoothed_scores(S); out = {}
+    P, Ss = smoothed_scores(S, smooth_mode); out = {}
     for nm, lo, hi, W in RANGES:
         m = (P >= lo) & (P <= hi); pm, sm = P[m], Ss[m]
         order = np.argsort(-sm); best = sm[order[0]]; cands = []
@@ -77,7 +88,7 @@ def select(df, S, gap=GAP, method='sar', longonly=True, final_rule='structural',
         out[nm] = dict(final=final['均線'], cands=cands, best=round(float(best), 1))
     return out
 
-def suitability(S):
+def suitability(S, smooth_mode=SMOOTH_MODE):
     """股票適合度＝短期最高分（平滑後）；另列長期最高分"""
-    P, Ss = smoothed_scores(S)
+    P, Ss = smoothed_scores(S, smooth_mode)
     return float(Ss[(P >= 15) & (P <= 33)].max()), float(Ss[P >= 46].max())
