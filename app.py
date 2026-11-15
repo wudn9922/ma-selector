@@ -3,7 +3,7 @@ import datetime as dt, json, os, re
 from urllib.parse import quote
 from pathlib import Path
 import numpy as np, pandas as pd, streamlit as st
-from core import data, metrics, score, select as sel, backtest as bt, charts, rawstats
+from core import data, metrics, score, select as sel, backtest as bt, charts, rawstats, market
 from core import score_v2, select_v2, standardize
 from core.ma import moving_average
 
@@ -13,10 +13,12 @@ ATLAS_CHART = "https://wudn9922.github.io/my-stock-screener/atlas/?page=chart&tf
 def query_ticker():   # 網址 ?ticker=2330.TW（Atlas「在 ma-selector 查看詳情」連過來）；不合法就用 AAPL
     q = str(st.query_params.get("ticker", "")).strip().upper()
     return q if re.fullmatch(r"[A-Z0-9^][A-Z0-9.\-]{0,31}", q) else "AAPL"
-def ref_path(kind):   # SMA：data/reference.parquet；EMA：data/reference_ema.parquet（環境變數 MA_SELECTOR_REF_EMA 可覆寫，測試用）；V2（實驗選線 v2）：data/reference_v2.parquet（MA_SELECTOR_REF_V2 可覆寫，測試用）
-    if kind == 'V2': return Path(os.environ.get('MA_SELECTOR_REF_V2') or ROOT / 'data' / 'reference_v2.parquet')
+def ref_path(kind, mkt='US'):   # SMA：data/reference.parquet；EMA：data/reference_ema.parquet（環境變數 MA_SELECTOR_REF_EMA 可覆寫，測試用；沒有台股 EMA 池，所有市場共用）；V2（實驗選線 v2）：data/reference_v2.parquet（MA_SELECTOR_REF_V2 可覆寫，測試用）
+    # 台股（mkt='TW'）的 SMA／V2：data/reference_tw(_v2).parquet 存在就用，否則退回上面的美股檔（core/market.py::pick_pool）
+    _p, sma, v2, _p2 = market.pick_pool(mkt, ROOT)
+    if kind == 'V2': return Path(os.environ.get('MA_SELECTOR_REF_V2') or v2)
     if kind == 'EMA': return Path(os.environ.get('MA_SELECTOR_REF_EMA') or ROOT / 'data' / 'reference_ema.parquet')
-    return ROOT / 'data' / 'reference.parquet'
+    return sma
 
 @st.cache_data(ttl=6 * 3600, show_spinner="抓取資料中…")
 def fetch(tk, day): return data.fetch_yahoo(tk)          # day 只當 cache key：每天重抓
@@ -25,15 +27,15 @@ def calc_metrics(tk, last, n, kind, _df): return metrics.compute_metrics(_df, ki
 @st.cache_data
 def _read_ref(path, mtime):   # path、mtime 只當 cache key：檔案換了就重讀
     f = Path(path); meta = f.with_suffix('.json'); return pd.read_parquet(f), (json.loads(meta.read_text()) if meta.exists() else {})
-def load_ref(kind):
-    f = ref_path(kind)
+def load_ref(kind, mkt='US'):
+    f = ref_path(kind, mkt)
     if not f.exists(): return None, None
     return _read_ref(str(f), f.stat().st_mtime)
 @st.cache_data(show_spinner="候選均線回測中…")
-def calc_select(tk, last, n, ws_key, gap, kind, _df, _S): return sel.select(_df, _S, gap=gap, kind=kind)   # 選參數用多空反手（events_v22）的回測
+def calc_select(tk, last, n, ws_key, gap, kind, cost, _df, _S): return sel.select(_df, _S, gap=gap, kind=kind, cost=cost)   # 選參數用多空反手（events_v22）的回測；cost＝市場的來回成本（也是 cache key）
 @st.cache_data(show_spinner="實驗選線 v2 計算中…")
-def calc_select_v2(tk, last, n, ws_key, gap, ref_key, _df, _M, _ref, _ws, _long):   # 實驗選線 v2（只支援 SMA）；ref_key＝v2 基準檔的 mtime，檔案換了就重算
-    out = select_v2.select_v2(_df, _M, _ref, ws=_ws, gap=gap, kind='SMA', long_result=_long)
+def calc_select_v2(tk, last, n, ws_key, gap, ref_key, cost, _df, _M, _ref, _ws, _long):   # 實驗選線 v2（只支援 SMA）；ref_key＝v2 基準檔的 mtime，檔案換了就重算
+    out = select_v2.select_v2(_df, _M, _ref, ws=_ws, gap=gap, kind='SMA', long_result=_long, cost=cost)
     T = score_v2.score_table_v2(_M, _ref, _ws).sort_values('period')
     curve = pd.DataFrame({f'分數_{y}（平滑）': sel.smooth(T[f'分數_{y}'].to_numpy()) for y in ('1y', '2y', '3y')}, index=pd.Index(T['period'].to_numpy(), name='均線週期'))
     return out, curve
@@ -61,6 +63,8 @@ if ref is None:
 # ── 側邊欄 ──
 with st.sidebar:
     tk = st.text_input("股票代號", query_ticker()).strip().upper()
+    MKT = market.market_of(tk); COST = market.COSTS[MKT]; POOL = market.pick_pool(MKT, ROOT)[0]   # 市場 → 回測來回成本、SMA 基準池（台股池不存在就是 'US'）
+    if POOL == 'TW': ref, meta = load_ref('SMA', 'TW')
     kind_choice = st.radio("均線類型", ["SMA", "EMA", "SMA＋EMA 並列"], index=0, horizontal=True,
                            help="EMA 使用自己的 83 檔基準分佈（data/reference_ema.parquet）計算分數。選參數的規則（規則 B、短期 rescue）只在 SMA 上驗證過，EMA 結果屬於實驗性質。")
     up = st.file_uploader("（抓不到時）上傳日K CSV：time,open,high,low,close,volume", type='csv')
@@ -97,27 +101,29 @@ if N < 756 + 110: st.warning(f"資料只有 {N} 根（約 {N/252:.1f} 年），�
 ws_key = json.dumps(ws, sort_keys=True); M, S, R, SUIT = {}, {}, {}, {}
 for k in KINDS:
     M[k] = calc_metrics(tk, last, N, k, df); S[k] = score.score_table(M[k], REFS[k], ws)
-    R[k] = calc_select(tk, last, N, ws_key, gap, k, df, S[k]); SUIT[k] = sel.suitability(S[k])
+    R[k] = calc_select(tk, last, N, ws_key, gap, k, COST, df, S[k]); SUIT[k] = sel.suitability(S[k])
 
 # ── 實驗選線 v2（勾選才算；只支援 SMA；基準 data/reference_v2.parquet 不存在就跳過）──
 V2, V2_NOTE = None, None
 if show_v2:
     if 'SMA' not in KINDS: V2_NOTE = ('info', "實驗選線 v2 只支援 SMA，請把均線類型改成 SMA（或 SMA＋EMA 並列）。")
     else:
-        ref_v2, _meta_v2 = load_ref('V2')
+        ref_v2, _meta_v2 = load_ref('V2', MKT)
         if ref_v2 is None: V2_NOTE = ('info', "v2 基準分佈尚未建立（data/reference_v2.parquet）。請到 GitHub → Actions → build-reference-v2 → Run workflow 產生，或在本機執行 `python scripts/build_reference_v2.py`。目前不顯示實驗選線 v2。")
         else:
-            try: V2 = calc_select_v2(tk, last, N, ws_key, gap, str(ref_path('V2').stat().st_mtime), df, M['SMA'], ref_v2, ws, R['SMA']['長期'])
+            try: V2 = calc_select_v2(tk, last, N, ws_key, gap, str(ref_path('V2', MKT).stat().st_mtime), COST, df, M['SMA'], ref_v2, ws, R['SMA']['長期'])
             except Exception as e: V2_NOTE = ('warning', f"實驗選線 v2 計算失敗：{e}")
 
 SC2Y = None   # 近2年分數(參考)：只給 SMA；reference_v2 不存在或失敗就不顯示這欄
 if 'SMA' in KINDS:
     try:
-        _r2, _ = load_ref('V2')
-        if _r2 is not None: SC2Y = calc_score2y(tk, last, N, ws_key, str(ref_path('V2').stat().st_mtime), M['SMA'], _r2, ws)
+        _r2, _ = load_ref('V2', MKT)
+        if _r2 is not None: SC2Y = calc_score2y(tk, last, N, ws_key, str(ref_path('V2', MKT).stat().st_mtime), M['SMA'], _r2, ws)
     except Exception: SC2Y = None
 if tk and st.query_params.get("ticker") != tk: st.query_params["ticker"] = tk   # 網址跟著代號，方便分享
 st.markdown(f"**{tk}**　<span style='font-size:0.85rem;color:gray'>資料到 {last}（{N} 根）</span>　[在 Atlas 看圖表 ↗]({ATLAS_CHART}{quote(tk)})", unsafe_allow_html=True)
+st.caption(f"回測成本：每筆來回 {COST*100:.3g}%（{'台股：牌告手續費 0.1425%×2＋賣出證交稅 0.3%，不含券商折扣' if MKT == 'TW' else '美股'}）｜基準池：{'台股' if POOL == 'TW' else '美股'}"
+           f"{'（找不到台股基準 data/reference_tw.parquet，退回美股基準）' if MKT == 'TW' and POOL == 'US' else ''}｜價格：{'已還原股利' if df.attrs.get('adjusted') else '未還原股利（或無法確認）'}")
 for k in KINDS:
     sfx = f"（{k}）" if len(KINDS) > 1 else ""; suit_s, suit_l = SUIT[k]
     c1, c2, c3, c4 = st.columns(4)
@@ -135,7 +141,7 @@ RAW_NOTE = ("成功率＝成功次數／已判定次數（括號內 n＝已判�
 ENTRY_LABELS = ["跳空用開盤價（現行）", "固定均線門檻價"]; ENTRY_MODE = {ENTRY_LABELS[0]: 'gap_open', ENTRY_LABELS[1]: 'fixed_band'}
 tab1, tab2, tab3 = st.tabs(["候選與選擇", "判定圖", "回測"])
 with tab1:
-    st.caption(f"分數＝各項指標在 83 檔基準中的百分位加權；候選＝與最高分差 ≤{gap}、彼此差 ≥3、最多 5 條；選參數依據＝**多空反手**模擬（events_v22：一直有持倉，碰到反向邊界就反手，扣成本 0.1%）的報酬；"
+    st.caption(f"分數＝各項指標在 83 檔基準中的百分位加權；候選＝與最高分差 ≤{gap}、彼此差 ≥3、最多 5 條；選參數依據＝**多空反手**模擬（events_v22：一直有持倉，碰到反向邊界就反手，扣市場成本）的報酬；"
                "最後選擇（★）：反手報酬距最佳 ≤5 個百分點者為 finalists，取結構分數（未四捨五入）最高者；完全相同才取較短的均線。短期另有固定的低頻 safeguard：結構分第一若被 5pp 排除、但結構分比上述選擇高 ≥10 分且反手報酬距最佳 ≤10 個百分點，改選它。只做多的簡單／複雜報酬僅供參考（「回測」分頁也是只做多）。")
     st.caption("**百分位欄位**（突破、二日、回測、雜訊、糾結/穿插百分位、快敗百分位）是「相對於 83 檔基準池（reference pool）的 percentile score」，**不是發生機率**；"
                "糾結（tangle.py 的糾結次數與穿插日）已經是均線評分的一部分。實際的成功率／比率／年化頻率在每個區段下方的「原始機率／比率」展開表。BOX（箱型）尚未整合：目前 repo 沒有可執行的正式 BOX 實作。")
@@ -146,6 +152,8 @@ with tab1:
         Sk, Rk, Mik = S[k], R[k], Mi[k]
         for nm, lo, hi, W in sel.RANGES:
             r = Rk[nm]; st.markdown(f"**{nm}（{k}{lo}–{hi}，回測看近 {W//252} 年）**　最後選擇：{k}{r['final']}")
+            if max(c['反手報酬'] for c in r['cands']) <= 0:   # 用醒目的彩色文字而不是 st.warning：測試用的合成股常有這種區間，而 smoke test 把 st.warning 當成異常
+                st.markdown(f":orange[**⚠ {nm}：扣掉成本（來回 {COST*100:.3g}%）後，所有候選的多空反手報酬都 ≤ 0（最高 {pct(max(c['反手報酬'] for c in r['cands']))}）——這檔股票在這個區間沒有找到賺錢的均線，最後選擇僅供參考。**]")
             rows = []
             for c in r['cands']:
                 g = Sk[Sk.period == c['均線']].iloc[0]
@@ -212,7 +220,7 @@ with tab2:
     st.caption("近兩年 4 段（每段半年）由舊到新。雜訊區固定為 v22 規則（前日MA +1%／−1.5%）；回測分頁可以調整回測用的雜訊區。")
     def bt_line(nm, W):
         arr = [df[k].to_numpy(float) for k in ('open', 'high', 'low', 'close', 'volume')]; ma_ = moving_average(df.close, p, k); atr_ = data.wilder_atr(df)
-        sar = sel.sar_stats(*arr[:4], atr_, ma_, N - W)['報酬']; lo_ = {m: bt.run(*arr, ma_, atr_, lo=N - W, mode=m)[0]['總報酬'] for m in ('simple', 'complex')}
+        sar = sel.sar_stats(*arr[:4], atr_, ma_, N - W, cost=COST)['報酬']; lo_ = {m: bt.run(*arr, ma_, atr_, lo=N - W, mode=m, cost=COST)[0]['總報酬'] for m in ('simple', 'complex')}
         return f"{nm} 反手 {pct(sar)}　只做多 簡{pct(lo_['simple'])}/複{pct(lo_['complex'])}"
     title = (f"{tk} {k}{p}｜分數 短{g['分數_短']:.0f} 中{g['分數_中']:.0f} 長{g['分數_長']:.0f}｜"
              f"突破{g['p突破']:.0f} 二日{g['p二日']:.0f} 回測{g['p回測']:.0f} 雜訊{g['p雜訊']:.0f} 穿插1y/2y/3y {g['p穿插_1y']:.0f}/{g['p穿插_2y']:.0f}/{g['p穿插_3y']:.0f} 快敗2y/3y {g['p快敗_2y']:.0f}/{g['p快敗_3y']:.0f}\n"
@@ -229,7 +237,7 @@ with tab3:
     mode = a1.radio("策略", ["簡單", "複雜"], horizontal=True); yrs = a1.radio("期間", ["近 1 年", "近 2 年"], horizontal=True)
     entry_lbl = a1.radio("進場價", ENTRY_LABELS, horizontal=True, help="只改「成交價」，訊號、停損、停利、早退都不變。跳空用開盤價（現行）：開盤已跳過上緣時，以開盤價成交；固定均線門檻價：一律以前日均線×(1＋上緣%)成交（空單：前日均線×(1－下緣%)），不因跳空改成開盤價。")
     x = a2.number_input("雜訊區上緣 %", 0.0, 5.0, 1.0, 0.1); c = a2.number_input("雜訊區下緣 %", 0.0, 5.0, 1.5, 0.1)
-    cost = a3.number_input("單邊成本 %", 0.0, 1.0, 0.1, 0.05); tp = a3.number_input("停利門檻 %（複雜）", 1.0, 10.0, 3.0, 0.5)
+    cost = a3.number_input("每筆來回成本 %", 0.0, 1.0, round(COST * 100, 4), 0.005, format="%.3f", key=f"cost_{MKT}", help="預設＝這檔所屬市場的成本（台股 0.585、美股 0.1），可自行調整。"); tp = a3.number_input("停利門檻 %（複雜）", 1.0, 10.0, 3.0, 0.5)
     kw = {}
     if mode == "複雜":
         b1, b2, b3 = st.columns(3)
@@ -250,4 +258,4 @@ with tab3:
         T['未平倉'] = T.get('open', False) if 'open' in T else False
         st.dataframe(T[['進場日', '出場日', '類型', '報酬', '持有天數', '未平倉']], hide_index=True, width='stretch')
     else: st.info("這段期間沒有交易")
-    st.caption("回測只做多；每筆以全額複利，成本為單邊。研究版預設值：雜訊區 +1%／−1.5%、成本 0.1%、停利 3%。")
+    st.caption("回測只做多；每筆以全額複利，成本為每筆來回成本（預設依市場：台股 0.585%、美股 0.1%）。研究版預設值：雜訊區 +1%／−1.5%、停利 3%。")

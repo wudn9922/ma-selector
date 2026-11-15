@@ -1,0 +1,11 @@
+83 [96]
+OLD 代理候選 vs regression old_candidates（研究版 final_select）：94/94 相同（集合相同 94）
+短期 ±2 OLD cand 47/61  top 22/61  mean#cands 3.82
+短期 ±2 NEW_period cand 48/61  top 23/61  mean#cands 3.69
+短期 ±2 NEW_band cand 48/61  top 23/61  mean#cands 3.67
+中期 ±2 OLD cand 20/24  top 12/24  mean#cands 3.04
+中期 ±2 NEW_period cand 20/24  top 13/24  mean#cands 2.79
+中期 ±2 NEW_band cand 20/24  top 13/24  mean#cands 2.75
+長期 ±5 OLD cand 16/33  top 9/33  mean#cands 4.85
+長期 ±5 NEW_period cand 17/33  top 9/33  mean#cands 4.61
+長期 ±5 NEW_band cand 17/33  top 7/33  mean#cands 4.52

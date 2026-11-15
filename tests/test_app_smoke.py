@@ -189,4 +189,29 @@ ap = AppTest.from_file(str(ROOT / 'app.py'), default_timeout=180).run(); kind_ra
 cp = rank_caps(ap); check(not ap.exception and not ap.error and len(cp) == 6 and [c[0] for c in cp] == ['短期（SMA）', '中期（SMA）', '長期（SMA）', '短期（EMA）', '中期（EMA）', '長期（EMA）'], f'並列：SMA、EMA 各 3 句排名：{[c[0] for c in cp]}')
 check(got(cp[:3]) == got(caps) and got(cp[3:]) == [(round(be[c], 1), pc0(Be, c, be[c]), 6) for c in ('短期', '中期', '長期')], f'EMA 對自己的 EMA 基準排名（n=6），SMA 對 83 檔：{got(cp[3:])}')
 check(len([c for c in ap.caption if HELP in c.value]) == 1, '並列模式說明 caption 只出現一次')
+# ── 市場成本、基準池、還原股利說明；全部候選報酬 ≤ 0 的警告（只新增檢查）──
+from core import market
+def cap_line(a): return [c.value for c in a.caption if c.value.startswith('回測成本')]
+def cost_input(a): return [n for n in a.number_input if n.label == '每筆來回成本 %']
+a_us = AppTest.from_file(str(ROOT / 'app.py'), default_timeout=180).run()
+check(len(cap_line(a_us)) == 1 and '每筆來回 0.1%' in cap_line(a_us)[0] and '基準池：美股' in cap_line(a_us)[0] and '未還原股利' in cap_line(a_us)[0] and 'EMA' not in cap_line(a_us)[0], f'美股：說明列 {cap_line(a_us)}')
+check(len(cost_input(a_us)) == 1 and abs(cost_input(a_us)[0].value - 0.1) < 1e-9, '美股：回測分頁的成本預設 0.1%')
+a_tw = AppTest.from_file(str(ROOT / 'app.py'), default_timeout=180); a_tw.query_params['ticker'] = '2330.TW'; a_tw.run()
+has_tw = (ROOT / 'data' / 'reference_tw.parquet').exists(); line = cap_line(a_tw)
+check(not a_tw.exception and len(line) == 1 and '每筆來回 0.585%' in line[0] and '證交稅' in line[0] and ('基準池：台股' if has_tw else '基準池：美股（找不到台股基準') in line[0], f'台股：說明列（成本 0.585%、基準池{"台股" if has_tw else "退回美股"}）{line}')
+check(len(cost_input(a_tw)) == 1 and abs(cost_input(a_tw)[0].value - 0.585) < 1e-9, '台股：回測分頁的成本預設 0.585%')
+dtw = data.normalize(synth(int(hashlib.md5('2330.TW'.encode()).hexdigest(), 16) % 10000))
+Rtw = sel.select(dtw, score.score_table(metrics.compute_metrics(dtw), pd.read_parquet(ROOT / 'data' / ('reference_tw.parquet' if has_tw else 'reference.parquet'))), cost=market.COSTS['TW'])
+check(any(f"最後選擇：SMA{Rtw['短期']['final']}" in m.value for m in a_tw.markdown), f"台股：選擇用台股成本計算（短期 SMA{Rtw['短期']['final']}）")
+_orig_select = sel.select
+def _all_losing(*a, **k):
+    R_ = _orig_select(*a, **k)
+    for nm in R_:
+        for c in R_[nm]['cands']: c['反手報酬'] = -abs(c['反手報酬']) - 0.01
+    return R_
+sel.select = _all_losing
+try: a_lose = AppTest.from_file(str(ROOT / 'app.py'), default_timeout=180); a_lose.query_params['ticker'] = 'LOSS'; a_lose.run()
+finally: sel.select = _orig_select
+warn = [m.value for m in a_lose.markdown if '所有候選的多空反手報酬都 ≤ 0' in m.value]
+check(not a_lose.exception and len(warn) == 3 and all('⚠' in w for w in warn), f'三個區間候選報酬都 ≤ 0 → 各顯示一則醒目警告（{len(warn)} 則）')
 print('ALL PASS')

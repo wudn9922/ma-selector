@@ -1,5 +1,5 @@
 """均線種類 kind（SMA／EMA）的測試（合成資料）
-1) SMA 預設與 kind='SMA' 對改動前（OLD_COMMIT）的 metrics／select／charts 逐位元組相同
+1) SMA 預設與 kind='SMA' 對改動前（OLD_COMMIT）的 metrics／select／charts 逐位元組相同（select 比對時明確指定舊版平滑 smooth_mode='whole'；新版區間內平滑另測 kind 預設＝SMA）
 2) EMA 與手寫迴圈一致（alpha=2/(p+1)、種子＝第一根收盤、前 p-1 根 NaN）
 3) EMA 管線能跑：compute_metrics／select／chart_png；非法 kind → ValueError；build_reference 的輸出路徑 helper
 用法：python tests/test_ma_kind.py"""
@@ -33,8 +33,10 @@ def test_sma_select_identical():
     for seed in SEEDS:
         df = stock(seed); S = S_of(OLD_M.compute_metrics(df))
         for nm, kw in (('預設', dict()), ('LEGACY', sel.LEGACY), ('min_period', dict(final_rule='min_period'))):
-            o = OLD_S.select(df, S, **kw)
-            check(sel.select(df, S, **kw) == o and sel.select(df, S, kind='SMA', **kw) == o, f'seed {seed}：select({nm}) 預設與 kind=SMA 對舊版 =='); n += 1
+            kw = dict(kw, smooth_mode='whole'); o = OLD_S.select(df, S, **{k: v for k, v in kw.items() if k != 'smooth_mode'})   # 舊版 select 只有整條平滑
+            check(sel.select(df, S, **kw) == o and sel.select(df, S, kind='SMA', **kw) == o, f'seed {seed}：select({nm}，smooth_mode=whole) 預設與 kind=SMA 對舊版 =='); n += 1
+            kn = {k: v for k, v in kw.items() if k != 'smooth_mode'}; a = sel.select(df, S, **kn)
+            check(a == sel.select(df, S, kind='SMA', **kn) == sel.select(df, S, smooth_mode='range', **kn), f'seed {seed}：select({nm}，production 區間內平滑) 預設＝kind=SMA')
     check(n == 9, f'共 {n} 組 select 比對')
 
 def test_sma_chart_identical():

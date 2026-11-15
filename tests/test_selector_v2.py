@@ -1,6 +1,6 @@
 """實驗選線 v2（experiments/selector_v2/SPEC.md）的測試（合成資料）
 1) metrics：既有欄位對改動前（OLD_COMMIT）逐位元組相同（值＋欄位順序）；新增的 @756 欄位存在且等於手算
-2) production 不變：score.score_table／select.select 對舊版（OLD_COMMIT）結果完全相同
+2) 舊版可重現：score.score_table(pct_mode='pooled')／select.select(smooth_mode='whole') 對舊版（OLD_COMMIT）結果完全相同；新版預設對「含 @756 的 M／只含舊欄位的 M」也相同
 3) score_v2：1y 特徵與 分數_1y 等於現行 production（同一個合成基準池）
 4) select_v2：合成股票的不變量；monkeypatch 平滑分數與 sar_stats 精確控制 final2 的三種來源（候選內／放寬／找不到）、規則 B、短期 rescue、中期無 rescue
 用法：python tests/test_selector_v2.py"""
@@ -53,11 +53,13 @@ def test_756_matches_hand():
 def test_production_unchanged():
     for seed in SEEDS:
         df = stock(seed); Mo = old_M_of(seed); S0 = OLD_SC.score_table(Mo, REF)
-        S1 = score.score_table(M_of(seed), REF); S2 = score.score_table(Mo, REF)
-        check(S1.equals(S0) and S2.equals(S0) and list(S1.columns) == list(S0.columns), f'seed {seed}：score_table（含 @756 的 M／只含舊欄位的 M）對舊版 DataFrame.equals')
+        S1 = score.score_table(M_of(seed), REF, pct_mode='pooled'); S2 = score.score_table(Mo, REF, pct_mode='pooled')
+        check(S1.equals(S0) and S2.equals(S0) and list(S1.columns) == list(S0.columns), f'seed {seed}：score_table(pooled)（含 @756 的 M／只含舊欄位的 M）對舊版 DataFrame.equals')
         check(score.make_features(M_of(seed)).equals(OLD_SC.make_features(Mo)), f'seed {seed}：make_features 對舊版相同')
-        o = OLD_S.select(df, S0); check(sel.select(df, S1) == o, f'seed {seed}：select.select(df, score_table(M, ref)) 對舊版 ==')
-        check(sel.suitability(S1) == OLD_S.suitability(S0), f'seed {seed}：suitability 對舊版相同')
+        o = OLD_S.select(df, S0); check(sel.select(df, S1, smooth_mode='whole') == o, f'seed {seed}：select.select(df, score_table(M, ref, pooled), whole) 對舊版 ==')
+        check(sel.suitability(S1, 'whole') == OLD_S.suitability(S0), f'seed {seed}：suitability(whole) 對舊版相同')
+        N1, N2 = score.score_table(M_of(seed), REF), score.score_table(Mo, REF)   # 新版預設：@756 欄位不影響分數
+        check(N1.equals(N2) and list(N1.columns) == list(S0.columns) and sel.select(df, N1) == sel.select(df, N2), f'seed {seed}：新版預設 score_table／select（含 @756 的 M ＝ 只含舊欄位的 M）')
 
 def test_score_v2_matches_production_1y():
     rv, rp = ref_v2(); seed = 11; M = M_of(seed)
@@ -67,11 +69,14 @@ def test_score_v2_matches_production_1y():
     for ws in (None, {'短': {'突破': 1, '二日': 2, '回測': 3, '雜訊': 4, '穿插': 5}, '長': {'快敗': .5, '穿插': .5}}):
         T, S = sv2.score_table_v2(M, rv, ws), score.score_table(M, rp, ws)
         check(np.array_equal(T['分數_1y'].to_numpy(), S['分數_短'].to_numpy()) and T.period.equals(S.period), f'分數_1y ＝ score_table 的 分數_短（ws={"預設" if ws is None else "自訂"}，同一個基準池）')
-    T = sv2.score_table_v2(M, rv); wn = score.normalize_ws(score.WS)['短']; i = 10; R = {c: np.sort(rv[c].to_numpy(float)) for c in sv2.FEATS_V2}; F = sv2.make_features_v2(M)
-    for y in ('2y', '3y'):
-        pc = lambda c: score.pct_vs(R[c], F[c].to_numpy(float)[i:i + 1])[0]
-        exp = sum(wn[k] * pc(f'{k}_{y}') for k in ('突破', '二日', '回測', '雜訊')) + wn['穿插'] * (pc(f'tg_{y}') + pc(f'qd_{y}')) / 2
-        check(abs(T[f'分數_{y}'].iloc[i] - exp) < 1e-9 and 0 <= T[f'分數_{y}'].min() and T[f'分數_{y}'].max() <= 100, f'分數_{y} 等於手算（週期 {T.period.iloc[i]}）')
+    wn = score.normalize_ws(score.WS)['短']; i = 10; F = sv2.make_features_v2(M); per = int(F.period.iloc[i])
+    for pm, rows in (('pooled', np.ones(len(rv), bool)), ('period', (rv.period == per).to_numpy())):   # 手算：舊版對全池、新版只對同週期的基準列
+        T = sv2.score_table_v2(M, rv, pct_mode=pm); R = {c: np.sort(rv[c].to_numpy(float)[rows]) for c in sv2.FEATS_V2}
+        for y in ('2y', '3y'):
+            pc = lambda c: score.pct_vs(R[c], F[c].to_numpy(float)[i:i + 1])[0]
+            exp = sum(wn[k] * pc(f'{k}_{y}') for k in ('突破', '二日', '回測', '雜訊')) + wn['穿插'] * (pc(f'tg_{y}') + pc(f'qd_{y}')) / 2
+            check(abs(T[f'分數_{y}'].iloc[i] - exp) < 1e-9 and 0 <= T[f'分數_{y}'].min() and T[f'分數_{y}'].max() <= 100, f'分數_{y}（pct_mode={pm}）等於手算（週期 {per}）')
+    T = sv2.score_table_v2(M, rv); check(T.equals(sv2.score_table_v2(M, rv, pct_mode='period')), 'score_table_v2 預設＝pct_mode=period')
     check({'分數_1y', '分數_2y', '分數_3y'} <= set(T.columns) and all(f'p{k}_{y}' in T.columns for k in ('突破', '二日', '回測', '雜訊', '穿插') for y in ('1y', '2y', '3y')), 'score_table_v2 欄位：三個分數＋各視窗成分百分位')
 
 def test_select_v2_invariants():
@@ -116,7 +121,7 @@ def run(s2=None, r2=None, s3=None, r3=None, s1=None, r1=None, **kw):
     def fake_sar(O, H, L, C, atr, ma, lo):
         p = int(np.isnan(ma).sum()) + 1; W = N - lo; calls.add((p, W)); d = {252: r1 if r1 is not None else r2, 504: r2, 756: r3}[W]
         return dict(報酬=float((d or {}).get(p, 0.)), 回撤=-0.1, 勝率=0.5, 筆數=10)
-    o = (sv.smoothed_v2, sv.score_table_v2, sel.sar_stats); sv.smoothed_v2, sv.score_table_v2, sel.sar_stats = fake_smoothed, (lambda M, r, ws=None: None), fake_sar
+    o = (sv.smoothed_v2, sv.score_table_v2, sel.sar_stats); sv.smoothed_v2, sv.score_table_v2, sel.sar_stats = fake_smoothed, (lambda M, r, ws=None, pct_mode=None: None), fake_sar
     try: return sv.select_v2(DF, None, None, **kw), calls
     finally: sv.smoothed_v2, sv.score_table_v2, sel.sar_stats = o
 
@@ -160,10 +165,35 @@ def test_rescue_scope_and_mid():
     check(c['分數_1y'] == 41.3 and c['分數_2y'] == 60.0 and c['結構分'] == 60.0 and c['反手報酬_1y'] == .123 and c['反手報酬'] == .5, '候選：分數_1y 四捨五入到 0.1、結構分未四捨五入、反手報酬＝2y 視窗、反手報酬_1y＝1y 視窗')
 
 def test_build_reference_v2_script():
+    """原本斷言 scripts/build_reference.py 與 474d8f6 逐位元組相同；該腳本後來加了 --market（台股池），原始碼不再相同，改檢查行為不變：
+    US 的 SMA／EMA 仍是同一份名單、同樣的輸出路徑、同樣的 parquet／json 格式；v2 仍在自己的腳本（不混進 build_reference）"""
+    import contextlib, hashlib, io, json, tempfile
+    import build_reference as br, build_reference_v2 as b2
+    from core import universe
     old = subprocess.run(['git', 'show', '474d8f6:scripts/build_reference.py'], cwd=ROOT, capture_output=True, text=True).stdout
-    check(old and (ROOT / 'scripts/build_reference.py').read_text() == old, '現行 scripts/build_reference.py 與 474d8f6 完全相同（v2 用獨立腳本）')
+    check("TICKERS" in old and "'data/reference.parquet' if kind == 'SMA' else f'data/reference_{kind.lower()}.parquet'" in old, '舊腳本（474d8f6）的名單與輸出路徑規則可讀到（比對基準）')
+    # 1) 名單與路徑：US 的 SMA／EMA 與舊腳本相同；不給 market ＝ us
+    for kind, path in (('SMA', 'data/reference.parquet'), ('EMA', 'data/reference_ema.parquet')):
+        check(br.resolve('us', kind) == (list(universe.TICKERS), path) and br.default_out(kind) == path and br.resolve(kind=kind) == br.resolve('us', kind), f'build_reference US/{kind}：同一份 83 檔名單、輸出 {path}')
+    check(br.resolve('us', 'SMA', 'x/y.parquet')[1] == 'x/y.parquet' and len(universe.TICKERS) == 83, '--out 仍可覆寫；名單仍是 83 檔')
+    # 2) 寫檔格式：縮小名單、假的 fetch_yahoo（合成資料），跑 main；欄位＝score.make_features 加 ticker，json 鍵與舊版相同（SMA：asof／tickers／n；EMA 多 kind；US 沒有 market 鍵）
+    tk = ['AAA', 'BBB', 'CCC', 'DDD', 'EEE']
+    def fake(t, *a, **k): return data.normalize(synth(int(hashlib.md5(t.encode()).hexdigest(), 16) % 10000))
+    o = (data.fetch_yahoo, br.TICKERS, br.time.sleep); data.fetch_yahoo = fake; br.TICKERS = tk; br.time.sleep = lambda x: None
+    try:
+        for kind in ('SMA', 'EMA'):
+            with tempfile.TemporaryDirectory() as d:
+                out = Path(d) / 'ref.parquet'
+                with contextlib.redirect_stdout(io.StringIO()): br.main(['--data-dir', str(Path(d) / 'c'), '--out', str(out), '--kind', kind])
+                R = pd.read_parquet(out); meta = json.loads(out.with_suffix('.json').read_text()); F = score.make_features(metrics.compute_metrics(fake('AAA'), kind=kind)); F.insert(0, 'ticker', 'AAA')
+                check(list(R.columns) == list(F.columns) and R[R.ticker == 'AAA'].reset_index(drop=True).equals(F) and len(R) == 5 * 96, f'{kind}：parquet 欄位與內容＝ticker＋make_features（5 檔 × 96 條）')
+                check(list(meta) == (['asof', 'tickers', 'n'] if kind == 'SMA' else ['asof', 'tickers', 'n', 'kind']) and meta['tickers'] == tk and meta['n'] == len(R) and meta.get('kind', 'SMA') == kind, f'{kind}：json 鍵與舊格式相同 {list(meta)}')
+    finally: data.fetch_yahoo, br.TICKERS, br.time.sleep = o
+    # 3) v2 仍在自己的腳本：路徑、json version、特徵函式、只用 SMA；build_reference.py 完全不碰 v2
+    check(b2.resolve('us')[0] == list(universe.TICKERS) and b2.resolve('us')[1] == 'data/reference_v2.parquet' and b2.default_out() == 'data/reference_v2.parquet', 'build_reference_v2：US 名單與 data/reference_v2.parquet')
     src = (ROOT / 'scripts/build_reference_v2.py').read_text()
-    check("'data/reference_v2.parquet'" in src and "version='v2'" in src and 'make_features_v2' in src and 'kind' not in src.split('import', 1)[1].replace('compute_metrics(df)', ''), 'build_reference_v2：輸出路徑、json version、make_features_v2、只用 SMA')
+    check("version='v2'" in src and 'make_features_v2' in src and 'kind' not in src.split('import', 1)[1].replace('compute_metrics(df)', ''), 'build_reference_v2：json version、make_features_v2、只用 SMA')
+    check('v2' not in (ROOT / 'scripts/build_reference.py').read_text().replace('--market', ''), 'build_reference.py 沒有 v2（v2 用獨立腳本）')
 
 if __name__ == '__main__':
     for k, v in list(globals().items()):

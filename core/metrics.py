@@ -1,4 +1,6 @@
-"""每條均線（15–110）的指標＝metrics_v22（事件）＋ tangle_v4（糾結）＋ extra_metrics（穿插日、快速失敗）"""
+"""每條均線（15–110）的指標＝metrics_v22（事件）＋ tangle_v4（糾結）＋ extra_metrics（穿插日、快速失敗）
+tg4_*／qday_* 的「每年」頻率，分母是視窗內糾結判斷真正能算的 K 棒數（t>=1 且前一日均線、ATR 都有值，與 tangle.qualify 的略過條件一致），
+不是名目視窗 W；上市較短或均線暖機期（前 period 根）不足 W 根時，才不會被低估而顯得太乾淨。視窗完全可評估時 eff==W，算式與數值不變。"""
 import numpy as np, pandas as pd
 from . import events as ev, tangle as t4
 from .data import wilder_atr
@@ -27,10 +29,12 @@ def period_metrics(O, H, L, C, atr, ma):
         if s:
             if last and s != last: xs.append(t)
             last = s
+    ok = ~np.isnan(mp) & ~np.isnan(atr); ok[:1] = False                              # 可評估的 K 棒（同 tangle.qualify：t>=1 且 mp、atr 非 NaN）
     for nm, W in YEARS:
         lo = max(N - W, 0)
-        r[f'tg4_{nm}'] = sum(1 for _a, e, _h, _l in spans if e >= lo) * 252 / W      # 糾結次數（每年）
-        r[f'qday_{nm}'] = q[lo:].sum() * 252 / W                                     # 穿插日（每年）
+        eff = max(int(ok[lo:].sum()), 1)                                             # 視窗內實際可評估的棒數（完整視窗時 == W；至少 1，避免除以 0／NaN）
+        r[f'tg4_{nm}'] = sum(1 for _a, e, _h, _l in spans if e >= lo) * 252 / eff    # 糾結次數（每年）
+        r[f'qday_{nm}'] = q[lo:].sum() * 252 / eff                                   # 穿插日（每年）
         xw = [t for t in xs if t >= lo]
         quick = [1 for i, t in enumerate(xs) if t >= lo and i + 1 < len(xs) and xs[i + 1] - t <= 5]
         r[f'quickfail_{nm}'] = len(quick) / len(xw) if xw else 0.                     # 明顯穿越後 5 天內又穿回的比例

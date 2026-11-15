@@ -2,12 +2,15 @@ name: build-reference-v2
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 3 1 * *'   # 每月 1 號
+    - cron: '40 3 1 * *'   # 每月 1 號
   push:
     branches: ['claude/**']
     paths: ['core/score_v2.py', 'core/metrics.py', 'scripts/build_reference_v2.py', '.github/workflows/build_reference_v2.yml']
 permissions:
   contents: write
+concurrency:
+  group: build-reference
+  cancel-in-progress: false
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,4 +25,21 @@ jobs:
         run: |
           git config user.name "github-actions"; git config user.email "actions@github.com"
           git add data/reference_v2.parquet data/reference_v2.json
-          git diff --cached --quiet || (git commit -m "Update v2 reference distribution" && git pull --rebase -q origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}")
+          git diff --cached --quiet && { echo "No changes to commit"; exit 0; }
+          git commit -m "Update v2 reference distribution"
+          for attempt in 1 2 3; do
+            git pull --rebase -q origin "${GITHUB_REF_NAME}"
+            if git push origin "HEAD:${GITHUB_REF_NAME}"; then exit 0; fi
+            echo "push failed (attempt ${attempt}), retrying"
+            sleep $((attempt * 15))
+          done
+          exit 1
+      - name: Notify failure
+        if: failure()
+        env:
+          DISCORD_WEBHOOK_URL1: ${{ secrets.DISCORD_WEBHOOK_URL1 }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK_URL1" ]; then echo "No webhook configured"; exit 0; fi
+          curl -sS -X POST -H 'Content-Type: application/json' \
+            -d "{\"content\":\"ma-selector ${GITHUB_WORKFLOW} 失敗：${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"}" \
+            "$DISCORD_WEBHOOK_URL1" || true

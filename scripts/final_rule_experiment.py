@@ -45,8 +45,8 @@ def main():
     ref = pd.concat([score.make_features(M).assign(ticker=tk) for tk, M in newM.items()], ignore_index=True); dfs = {tk: data.normalize(pd.read_csv(f'data_v/{tk}.csv'), a.asof) for tk in tks}
     cands, prod_final, bt_sets, sets_bad, prod_bad = {}, {}, {}, [], []
     for tk in tks:
-        Sx = score.score_table(newM[tk], ref); P_, Ss = sel.smoothed_scores(Sx); sm = dict(zip(P_, Ss))
-        r_sar = sel.select(dfs[tk], Sx, gap=GAP, method='sar', final_rule='min_period')['短期']; r_bt = sel.select(dfs[tk], Sx, gap=GAP, method='bt', longonly=True)['短期']
+        Sx = score.score_table(newM[tk], ref, pct_mode='pooled'); P_, Ss = sel.smoothed_scores(Sx, 'whole'); sm = dict(zip(P_, Ss))   # 凍結時的分數（pooled＋whole）
+        r_sar = sel.select(dfs[tk], Sx, gap=GAP, method='sar', final_rule='min_period', smooth_mode='whole')['短期']; r_bt = sel.select(dfs[tk], Sx, gap=GAP, method='bt', longonly=True, smooth_mode='whole')['短期']
         cands[tk] = [dict(period=c['均線'], s=float(sm[c['均線']]), r=c['反手報酬'], n=c['反手筆數']) for c in r_sar['cands']]; prod_final[tk] = r_sar['final']
         if [c['均線'] for c in r_sar['cands']] != [c['均線'] for c in r_bt['cands']]: sets_bad.append(tk)
     print('候選完成', flush=True)

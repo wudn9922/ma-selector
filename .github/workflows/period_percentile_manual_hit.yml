@@ -1,0 +1,36 @@
+name: period-percentile-manual-hit
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths: ['experiments/period_percentile/manual_hit.py', '.github/workflows/period_percentile_manual_hit.yml']
+permissions:
+  contents: write
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install pandas numpy matplotlib pyarrow
+      - name: 人工線命中率 OLD vs NEW（83 檔，asof 2026-09-24，基準＝這批股票自己，未還原股利）
+        run: python experiments/period_percentile/manual_hit.py --asof 2026-09-24 --out experiments/period_percentile/manual_hit
+      - if: always()
+        run: test -f experiments/period_percentile/manual_hit/manual_hit.md && cat experiments/period_percentile/manual_hit/manual_hit.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: commit report
+        if: always()
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add experiments/period_percentile/manual_hit
+          git diff --cached --quiet && { echo "No changes to commit"; exit 0; }
+          git commit -m "Human-line hit rate: pooled vs same-period scoring"
+          for attempt in 1 2 3; do
+            git pull --rebase -q origin "${GITHUB_REF_NAME}"
+            if git push origin "HEAD:${GITHUB_REF_NAME}"; then exit 0; fi
+            echo "push failed (attempt ${attempt}), retrying"
+            sleep $((attempt * 15))
+          done
+          exit 1

@@ -130,8 +130,8 @@ def main():
     # ── 候選（production 設定；final_rule 只影響 final，候選相同）──
     cands, prod_final, arrs = {}, {}, {}
     for tk in tks:
-        Sx = score.score_table(newM[tk], ref); P_, Ss = sel.smoothed_scores(Sx); sm = dict(zip(P_, Ss)); df = dfs[tk]
-        r = sel.select(df, Sx, gap=GAP, method='sar')['短期']                                                   # production 規則 B
+        Sx = score.score_table(newM[tk], ref, pct_mode='pooled'); P_, Ss = sel.smoothed_scores(Sx, 'whole'); sm = dict(zip(P_, Ss)); df = dfs[tk]   # 凍結時的分數（pooled＋whole）
+        r = sel.select(df, Sx, gap=GAP, method='sar', smooth_mode='whole')['短期']                                                   # production 規則 B
         cands[tk] = [dict(period=c['均線'], s=float(c['結構分']), r=c['反手報酬'], n=c['反手筆數'], mdd=c['反手回撤']) for c in r['cands']]; prod_final[tk] = r['final']
         assert all(c['s'] == float(sm[c['period']]) for c in cands[tk])
         arrs[tk] = tuple(df[k].to_numpy(float) for k in ('open', 'high', 'low', 'close')) + (data.wilder_atr(df), df.close)

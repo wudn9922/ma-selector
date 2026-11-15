@@ -11,7 +11,7 @@
 突破事件成功／失敗：進場後碰到反向邊界前先到 +3%＝成功；同天都碰＝失敗
 回測（持有同方向或空手時記錄；持有反方向時不記）：同 v21（換邊後曾收盤>上緣且整根K線最低>均線+0.1ATR，或同側≥5天；
   碰均線容差 0.1ATR；反彈K線；等進場；只有碰到反向邊界算失敗；每次回測後要再離開雜訊區一次）
-每筆交易成本 0.1%
+每筆交易成本 0.1%（COST；events(..., cost=) 可指定，台股來回約 0.585%，見 core/market.py；成本只影響 trades 的報酬；brk／wick／rts／plog 與成本無關）
 回傳：brk（突破事件）、wick（假突破）、rts（回測事件）、plog（持倉區間：進場日,出場日,方向,進場價,出場價,類型）、trades
 """
 import numpy as np
@@ -24,7 +24,7 @@ def race(H, L, start, up, tgt, stop):
         if ht: return 1, k
         if hs: return 0, k
     return -1, None
-def events(O, H, L, C, ma, atr, x=.01, c=.015, tg=.03):
+def events(O, H, L, C, ma, atr, x=.01, c=.015, tg=.03, cost=COST):   # cost＝每筆來回成本（比例）；預設 COST＝舊行為
     N = len(C); mp = np.r_[np.nan, ma[:-1]]; U = mp * (1 + x); Lb = mp * (1 - c)
     brk, wick, rts, plog, trades = [], [], [], [], []
     pos = 0; tin = -1; ep = 0.; kind = 'B'; vis = 0; since = 0
@@ -32,7 +32,7 @@ def events(O, H, L, C, ma, atr, x=.01, c=.015, tg=.03):
     lastreal = 0; falseflat = False; rt = None
     def close_pos(t, xp):
         nonlocal pos
-        plog.append((tin, t, pos, ep, xp, kind)); trades.append((tin, t, pos, (xp / ep - 1) * pos - COST, kind)); pos = 0
+        plog.append((tin, t, pos, ep, xp, kind)); trades.append((tin, t, pos, (xp / ep - 1) * pos - cost, kind)); pos = 0
     for t in range(1, N):
         if np.isnan(mp[t]) or np.isnan(atr[t]): continue
         sv = SV * atr[t]; up = H[t] >= U[t]; dn = L[t] <= Lb[t]
@@ -49,7 +49,7 @@ def events(O, H, L, C, ma, atr, x=.01, c=.015, tg=.03):
             ok = (C[t] > ma[t] + sv) if sg == 1 else (C[t] < ma[t] - sv)
             if not ok:
                 wick.append(dict(t=t, up=sg == 1))
-                trades.append((t, t, sg, (C[t] / e - 1) * sg - COST, 'F')); falseflat = True; rt = None
+                trades.append((t, t, sg, (C[t] / e - 1) * sg - cost, 'F')); falseflat = True; rt = None
             else:
                 isR = falseflat and sg == lastreal
                 r, k = race(H, L, t, sg == 1, e * (1 + tg * sg), Lb if sg == 1 else U)
@@ -90,7 +90,7 @@ def events(O, H, L, C, ma, atr, x=.01, c=.015, tg=.03):
             hold = (C[t] >= ma[t] - sv) if sg == 1 else (C[t] <= ma[t] + sv)
             if touch and hold: rt = (sg, t, None); dep[sg] = False; need[sg] = True; used5 = True
     if pos != 0:
-        plog.append((tin, N - 1, pos, ep, C[-1], kind)); trades.append((tin, N - 1, pos, (C[-1] / ep - 1) * pos - COST, kind))
+        plog.append((tin, N - 1, pos, ep, C[-1], kind)); trades.append((tin, N - 1, pos, (C[-1] / ep - 1) * pos - cost, kind))
     return brk, wick, rts, plog, trades
 def summary(trades, N, W):
     tr = [x for x in trades if x[1] >= N - W]; r = np.array([x[3] for x in tr]) if tr else np.array([])

@@ -19,7 +19,7 @@ TOLD = 2                                          # 命中＝距離 ≤2
 def run_one(a):
     tk, asof, ref, ref2 = a
     df = data.normalize(pd.read_csv(f'data_v/{tk}.csv'), asof); M = M_ALL[tk]
-    S = score.score_table(M, ref); P = sel.select(df, S); V = select_v2(df, M, ref2, long_result=P['長期'])
+    S = score.score_table(M, ref, pct_mode='pooled'); P = sel.select(df, S, smooth_mode='whole'); V = select_v2(df, M, ref2, long_result=P['長期'], pct_mode='pooled')   # 凍結時的分數（pooled＋whole）
     return tk, P, V
 
 def near(x, labels): return min(abs(x - u) for u in labels) if (x is not None and labels) else np.nan

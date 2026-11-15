@@ -1,6 +1,7 @@
 """STRUCTURAL_RESCUE_10PT_10PP（production，只用於短期）的單元測試。
 用合成股價跑真正的 core.select.select()；只把「平滑結構分」與「反手報酬」換成指定值（monkeypatch smoothed_scores／sar_stats），以精確控制 C1／C2／C3 邊界。
-另外與改動前的 core/select.py（git PREV_COMMIT）逐位元組比較：LEGACY、min_period、中期／長期、以及不觸發 rescue 的短期都必須完全相同。
+另外與改動前的 core/select.py（git PREV_COMMIT）逐位元組比較：LEGACY、min_period、中期／長期、以及不觸發 rescue 的短期都必須完全相同（真實流程比對時明確指定舊版 smooth_mode='whole'；
+新版預設（區間內平滑）另外檢查：短期 final ＝ 獨立算的規則 B，或符合 C1／C2／C3 的 rescue；中長期＝規則 B）。
 用法：python tests/test_select_rescue.py"""
 import subprocess, sys, types
 from pathlib import Path
@@ -20,9 +21,10 @@ PREV = prev_module()
 def run(scores, sars, mod=sel, **kw):
     """scores／sars：{period: 值}。沒列出的週期結構分＝0（不會成為候選）、反手報酬＝0。回傳 select() 結果。"""
     sm = np.array([float(scores.get(int(p), 0.)) for p in PERIODS])
-    def fake_smoothed(S): return PERIODS.copy(), sm.copy()
+    def fake_smoothed(S, *a, **k): return PERIODS.copy(), sm.copy()
     def fake_sar(O, H, L, C, atr, ma, lo):
         p = int(np.isnan(ma).sum()) + 1; return dict(報酬=float(sars.get(p, 0.)), 回撤=-0.1, 勝率=0.5, 筆數=10)
+    if mod is PREV: kw = {k: v for k, v in kw.items() if k != 'smooth_mode'}   # 改動前的 select 沒有 smooth_mode（平滑分數已被 patch，模式不影響）
     o1, o2 = mod.smoothed_scores, mod.sar_stats; mod.smoothed_scores, mod.sar_stats = fake_smoothed, fake_sar
     try: return mod.select(DF, None, **kw)
     finally: mod.smoothed_scores, mod.sar_stats = o1, o2
@@ -83,20 +85,30 @@ def test_legacy_and_other_paths_unchanged():
             check(run(sc, sr, **kw) == run(sc, sr, PREV, **kw), f'{kw}：與改動前 select 完全相同')
         a, b = run(sc, sr), run(sc, sr, PREV)
         check(a['中期'] == b['中期'] and a['長期'] == b['長期'] and a['短期']['cands'] == b['短期']['cands'], 'production：中期／長期整組與短期候選與改動前完全相同（只有短期 final 可能被 rescue）')
-    assert sel.LEGACY == dict(gap=15, method='bt', longonly=True) and sel.GAP == 15 and sel.RESCUE_POINTS == 10.0 and sel.RESCUE_SAR_PP == 0.10
+    assert sel.LEGACY == dict(gap=15, method='bt', longonly=True, smooth_mode='whole') and sel.GAP == 15 and sel.RESCUE_POINTS == 10.0 and sel.RESCUE_SAR_PP == 0.10
 
 def test_real_pipeline_vs_prev():
     """不 patch：合成股價＋repo 的 reference.parquet，真正跑 metrics／score／select；LEGACY 與 min_period 逐位元組相同；production 只有短期 final 可能不同，且不同時必須符合 C1／C2／C3。"""
-    ref = pd.read_parquet(ROOT / 'data' / 'reference.parquet'); n_diff = 0
+    ref = pd.read_parquet(ROOT / 'data' / 'reference.parquet'); n_diff = 0; n_new = 0
+    nolg = lambda kw: {k: v for k, v in kw.items() if k != 'smooth_mode'}
     for seed in (3, 11, 29, 41, 57, 88):
-        df = data.normalize(synth(seed)); S = score.score_table(metrics.compute_metrics(df), ref)
-        for kw in (sel.LEGACY, dict(final_rule='min_period')): assert sel.select(df, S, **kw) == PREV.select(df, S, **kw)
-        a, b = sel.select(df, S), PREV.select(df, S)
+        df = data.normalize(synth(seed)); M = metrics.compute_metrics(df); S = score.score_table(M, ref, pct_mode='pooled')
+        for kw in (sel.LEGACY, dict(final_rule='min_period', smooth_mode='whole')): assert sel.select(df, S, **kw) == PREV.select(df, S, **nolg(kw))
+        a, b = sel.select(df, S, smooth_mode='whole'), PREV.select(df, S)
         assert a['中期'] == b['中期'] and a['長期'] == b['長期'] and a['短期']['cands'] == b['短期']['cands']
         if a['短期']['final'] != b['短期']['final']:
             n_diff += 1; c = a['短期']['cands']; best = max(x['反手報酬'] for x in c); sb = min(c, key=lambda x: (-x['結構分'], x['均線'])); f = next(x for x in c if x['均線'] == b['短期']['final'])
             assert a['短期']['final'] == sb['均線'] and sb['反手報酬'] < best - 0.05 and sb['結構分'] >= f['結構分'] + 10 and sb['反手報酬'] >= best - 0.10
-    check(True, f'真實流程（6 檔合成股價）：LEGACY／min_period 逐位元組相同；production 只在 rescue 條件成立時改短期 final（本次 {n_diff} 檔）')
+        # 新版預設（同週期百分位＋區間內平滑）：rescue 只在短期、且只在 C1／C2／C3 成立時改變規則 B；結構分＝區間內平滑分數
+        Sn = score.score_table(M, ref); Pn, Ssn = sel.smoothed_scores(Sn); sm = dict(zip(Pn.tolist(), Ssn.tolist())); a = sel.select(df, Sn)
+        for nm, *_ in sel.RANGES:
+            c = a[nm]['cands']; best = max(x['反手報酬'] for x in c); fin = [x for x in c if x['反手報酬'] >= best - 0.05]; rb = min(fin, key=lambda x: (-x['結構分'], x['均線']))
+            assert all(x['結構分'] == sm[x['均線']] for x in c)
+            if a[nm]['final'] != rb['均線']:
+                sb = min(c, key=lambda x: (-x['結構分'], x['均線'])); n_new += 1
+                assert nm == '短期' and a[nm]['final'] == sb['均線'] and sb['反手報酬'] < best - 0.05 and sb['結構分'] >= rb['結構分'] + 10 and sb['反手報酬'] >= best - 0.10
+    check(True, f'真實流程（6 檔合成股價）：LEGACY／min_period（pooled＋whole）逐位元組相同；production 只在 rescue 條件成立時改短期 final（舊版分數 {n_diff} 檔）')
+    check(True, f'真實流程（6 檔合成股價，新版預設 period＋range）：中長期＝規則 B、短期＝規則 B 或符合 C1／C2／C3 的 rescue（rescue {n_new} 檔）')
 
 if __name__ == '__main__':
     for n, f in list(globals().items()):
