@@ -5,8 +5,11 @@
   --bars-dir：從該目錄讀 <ticker>.csv（time/date,open,high,low,close,volume），沒有才抓 Yahoo 5 年日K
 抓不到或資料不足的股票保留上一次的檔案；成功率 < --min-success（預設 50%）時不寫任何檔案並以錯誤結束。
 市場：.TW／.TWO 用台股成本（來回 0.585%）與台股基準池 data/reference_tw(_v2).parquet（檔案不存在就退回美股檔，記在 referencePool）；其餘用美股（0.1%、美股基準）。
-hysteresis：讀 --out 裡該檔現有的 <ticker>.json 當 prev（讀不了就當沒有），規則見 core/recommend.py::_hold；設定簽章（scoring／referencePool／adjusted／costPct／kind）不同時不沿用。"""
-import argparse, datetime as dt, json, os, re, sys, time
+hysteresis：讀 --out 裡該檔現有的 <ticker>.json 當 prev（讀不了就當沒有），規則見 core/recommend.py::_hold；設定簽章（scoring／referencePool／adjusted／costPct／kind）不同時不沿用。
+分批（全市場約 7,000 檔時用）：--shard K/N 只重算 crc32(代號) % N == K 的股票，再加上還沒有輸出檔的股票（最多 --max-missing 檔，-1＝全部）；
+其餘股票沿用現有檔案，index.json 仍列出清單內所有有檔案的股票。每月輪一個 K → 每檔每 N 個月更新一次。
+--tickers-file：一行一個代號（# 開頭與空行略過）；--no-prune：不刪除清單外的舊檔（清單不完整時用）。"""
+import argparse, datetime as dt, json, os, re, sys, time, zlib
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 import pandas as pd
@@ -57,26 +60,49 @@ def work(tk):
 def tickers_from(a):
     tks = list(a.tickers or [])
     if a.from_dir: tks += [p.stem for p in Path(a.from_dir).glob('*.csv')]
+    if a.tickers_file: tks += [l.strip() for l in Path(a.tickers_file).read_text(encoding='utf-8').splitlines() if l.strip() and not l.lstrip().startswith('#')]
     tks = sorted({t.strip().upper() for t in tks if SAFE.match(t.strip().upper())})
     return tks[:a.limit] if a.limit else tks
+
+def shard_of(tk, n): return zlib.crc32(tk.encode()) % n          # 固定的分批（與執行順序、清單內容無關）
+
+def parse_shard(v):
+    """'K/N' → (K, N)；'all' 或 None → None"""
+    if v in (None, '', 'all'): return None
+    k, n = (int(x) for x in str(v).split('/'))
+    if not (n >= 1 and 0 <= k < n): raise ValueError(f'--shard 必須是 K/N 且 0 ≤ K < N，得到 {v!r}')
+    return k, n
+
+def plan(tks, out, shard, max_missing):
+    """→ (這次要算的代號, 分批資訊 dict)。shard=None → 全部"""
+    if shard is None: return tks, dict(shard=None, shards=1, inShard=len(tks), missingAdded=0, missingLeft=0)
+    k, n = shard; mine = [t for t in tks if shard_of(t, n) == k]; mset = set(mine)
+    missing = [t for t in tks if t not in mset and not (out / f'{t}.json').exists()]
+    add = missing if max_missing < 0 else missing[:max_missing]; aset = set(add)
+    return [t for t in tks if t in mset or t in aset], dict(shard=k, shards=n, inShard=len(mine), missingAdded=len(add), missingLeft=len(missing) - len(add))
 
 def main(argv=None):
     ap = argparse.ArgumentParser(); ap.add_argument('--tickers', nargs='*'); ap.add_argument('--from-dir'); ap.add_argument('--out', default='out/recommendations')
     ap.add_argument('--bars-dir'); ap.add_argument('--workers', type=int, default=os.cpu_count() or 1); ap.add_argument('--limit', type=int); ap.add_argument('--min-success', type=float, default=0.5)
+    ap.add_argument('--tickers-file'); ap.add_argument('--shard'); ap.add_argument('--max-missing', type=int, default=-1); ap.add_argument('--no-prune', action='store_true')
     a = ap.parse_args(argv); tks = tickers_from(a)
-    if not tks: sys.exit('沒有股票清單（--tickers 或 --from-dir）')
+    if not tks: sys.exit('沒有股票清單（--tickers、--tickers-file 或 --from-dir）')
+    out = Path(a.out); todo, batch = plan(tks, out, parse_shard(a.shard), a.max_missing)
+    print(f'清單 {len(tks)} 檔；這次重算 {len(todo)} 檔（分批 {batch}）', flush=True)
     t0 = time.time(); results = {}; errors = {}
-    with ProcessPoolExecutor(max(1, a.workers), initializer=_init, initargs=(a.bars_dir, a.out)) as ex:
-        for i, (tk, r, err) in enumerate(ex.map(work, tks, chunksize=4), 1):
-            if r: results[tk] = r
-            else: errors[tk] = err
-            if i % 50 == 0 or i == len(tks): print(f'{i}/{len(tks)} 成功 {len(results)} 失敗 {len(errors)}（{time.time() - t0:.0f}s）', flush=True)
-    if len(results) < a.min_success * len(tks): sys.exit(f'成功 {len(results)}/{len(tks)} 低於 {a.min_success:.0%}，不寫檔')
-    out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
+    if todo:
+        with ProcessPoolExecutor(max(1, a.workers), initializer=_init, initargs=(a.bars_dir, a.out)) as ex:
+            for i, (tk, r, err) in enumerate(ex.map(work, todo, chunksize=4), 1):
+                if r: results[tk] = r
+                else: errors[tk] = err
+                if i % 50 == 0 or i == len(todo): print(f'{i}/{len(todo)} 成功 {len(results)} 失敗 {len(errors)}（{time.time() - t0:.0f}s）', flush=True)
+    if len(results) < a.min_success * len(todo): sys.exit(f'成功 {len(results)}/{len(todo)} 低於 {a.min_success:.0%}，不寫檔')
+    out.mkdir(parents=True, exist_ok=True)
     for tk, r in results.items(): (out / f'{tk}.json').write_text(json.dumps(r, ensure_ascii=False, separators=(',', ':')))
     keep = set(tks)
-    for f in out.glob('*.json'):                                       # 不在清單內的舊檔刪掉（index.json 除外）
-        if f.name != 'index.json' and f.stem not in keep: f.unlink()
+    if not a.no_prune:
+        for f in out.glob('*.json'):                                   # 不在清單內的舊檔刪掉（index.json 除外）
+            if f.name != 'index.json' and f.stem not in keep: f.unlink()
     symbols = []
     for tk in tks:                                                     # 失敗的股票沿用上一次的檔案（若有）
         f = out / f'{tk}.json'
@@ -87,7 +113,7 @@ def main(argv=None):
     asof = lambda name: json.loads((ROOT / 'data' / name).read_text()).get('asof') if (ROOT / 'data' / name).exists() else None
     index = dict(version=VERSION, kind='SMA', generatedAt=dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'), referenceAsof=asof('reference.json'), referenceAsofTW=asof('reference_tw.json'),
                  referenceV2Asof=asof('reference_v2.json'), costPct={m: round(c * 100, 4) for m, c in market.COSTS.items()}, scoring=scoring_id(), hystPoints=HYST_POINTS,
-                 requested=len(tks), updated=len(results), symbols=symbols, failed=[dict(ticker=k, reason=v) for k, v in sorted(errors.items())])
+                 requested=len(tks), processed=len(todo), updated=len(results), refresh=batch, symbols=symbols, failed=[dict(ticker=k, reason=v) for k, v in sorted(errors.items())])
     (out / 'index.json').write_text(json.dumps(index, ensure_ascii=False, separators=(',', ':')))
     print(f'寫入 {out}：更新 {len(results)}、沿用舊檔 {len(symbols) - len(results)}、失敗 {len(errors)}（{time.time() - t0:.0f}s）')
 

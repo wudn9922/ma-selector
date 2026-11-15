@@ -110,6 +110,8 @@ def _bars_dir(d, tickers, cut=0, rename=None):
     for tk in tickers:
         df = pd.read_csv(RAW / tk / 'bars.csv'); (df.iloc[:len(df) - cut] if cut else df).to_csv(d / f"{(rename or {}).get(tk, tk)}.csv", index=False)
 def _read(out, tk): return json.loads((out / f'{tk}.json').read_text())
+def _tw_asof():
+    f = ROOT / 'data' / 'reference_tw.json'; return json.loads(f.read_text()).get('asof') if f.exists() else None   # 台股基準檔建好後才有值
 def _fin(r): return [g['final'] for g in r['ranges']]
 
 def test_batch_hysteresis_end_to_end():
@@ -136,7 +138,7 @@ def test_batch_hysteresis_end_to_end():
             check(all(a['best'] == b['best'] and a['candidates'][:len([c for c in b['candidates']])] == b['candidates'] for a, b in zip(r3[tk]['ranges'], c0[tk]['ranges'])) and r3[tk]['suitability'] == c0[tk]['suitability'], f'{tk}：候選、分數、適合度與對照組相同（held 時只在尾端多一條舊 final）')
         print(f'# 三次月更共 {held_n} 個區間沿用了舊 final')
         idx = json.loads((out / 'index.json').read_text()); s = {x['ticker']: x for x in idx['symbols']}
-        check(idx['version'] == 3 and idx['kind'] == 'SMA' and idx['scoring'] == 'period+range' and idx['costPct'] == {'TW': 0.585, 'US': 0.1} and idx['hystPoints'] == 5.0 and idx['referenceAsofTW'] is None and idx['updated'] == len(TK), f"index.json：version 3、scoring、costPct、hystPoints（保留原有鍵）")
+        check(idx['version'] == 3 and idx['kind'] == 'SMA' and idx['scoring'] == 'period+range' and idx['costPct'] == {'TW': 0.585, 'US': 0.1} and idx['hystPoints'] == 5.0 and idx['referenceAsofTW'] == _tw_asof() and idx['updated'] == len(TK), f"index.json：version 3、scoring、costPct、hystPoints（保留原有鍵）")
         check(all(s[tk]['final'] == dict(zip(('short', 'medium', 'long'), _fin(r3[tk]))) and s[tk]['market'] == 'US' and s[tk]['referencePool'] == 'US' and s[tk]['fresh'] and set(s[tk]['held']) == {'short', 'medium', 'long'} == set(s[tk]['unsuitable'])
                   and s[tk]['held'] == {g['key']: g['held'] for g in r3[tk]['ranges']} for tk in TK), 'index.json 的 symbols：final／market／referencePool／held／unsuitable')
         check(set(idx) >= {'version', 'kind', 'generatedAt', 'referenceAsof', 'referenceV2Asof', 'requested', 'updated', 'symbols', 'failed'}, '保留原本的 index.json 鍵')
@@ -144,7 +146,12 @@ def test_batch_hysteresis_end_to_end():
 def test_batch_taiwan_ticker_cost_and_pool_fallback():
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp); _bars_dir(tmp / 'b', ['ADM'], 0, {'ADM': '2330.TW'}); _bars_dir(tmp / 'b', ['ADM'], 0, {'ADM': 'ADM'}); out = tmp / 'out'
-        br.main(['--tickers', '2330.TW', 'ADM', '--bars-dir', str(tmp / 'b'), '--out', str(out), '--workers', '1']); tw, us = _read(out, '2330.TW'), _read(out, 'ADM')
+        (tmp / 'data').mkdir()                                       # 只放美股基準（repo 的 data/ 已有台股檔，這裡要測「沒有台股檔」）
+        for n in ('reference.parquet', 'reference.json', 'reference_v2.parquet', 'reference_v2.json'): shutil.copy(ROOT / 'data' / n, tmp / 'data' / n)
+        old_root = br.ROOT; br.ROOT = tmp
+        try: br.main(['--tickers', '2330.TW', 'ADM', '--bars-dir', str(tmp / 'b'), '--out', str(out), '--workers', '1'])
+        finally: br.ROOT = old_root
+        tw, us = _read(out, '2330.TW'), _read(out, 'ADM')
         check((tw['market'], tw['costPct'], tw['referencePool']) == ('TW', 0.585, 'US') and (us['market'], us['costPct'], us['referencePool']) == ('US', 0.1, 'US'), '沒有台股基準檔：.TW 用台股成本、退回美股池（referencePool US）；美股不變')
         check(all(a['best'] == b['best'] for a, b in zip(tw['ranges'], us['ranges'])) and all(y['sarReturn'] < x['sarReturn'] for a, b in zip(us['ranges'], tw['ranges']) for x, y in zip(a['candidates'], b['candidates'])), '同一份資料：分數相同、台股反手報酬較低')
 

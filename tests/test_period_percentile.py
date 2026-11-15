@@ -53,7 +53,8 @@ def test_reference_self_flat():
     check(P.loc[110, 'p穿插_1y'] - P.loc[15, 'p穿插_1y'] > 40 and P.loc[110, '分數'] - P.loc[46, '分數'] > 15,
           f"pooled（舊版）：平均穿插百分位 MA15 {P.loc[15, 'p穿插_1y']:.1f} → MA110 {P.loc[110, 'p穿插_1y']:.1f}；長期平均分數 MA46 {P.loc[46, '分數']:.1f} → MA110 {P.loc[110, '分數']:.1f}（差距 > gap 15）")
     B = sd.scores_from_features(REF, REF, pct_mode='band').groupby('period')['分數'].mean()
-    check(B.max() - B.min() < 3, f'band：基準池平均分數全部週期在 {B.min():.1f}–{B.max():.1f}（近乎平）')
+    bs, ps = B.max() - B.min(), P['分數'].max() - P['分數'].min()   # 絕對值會隨每月重建的基準浮動（2.7→3.4），所以和 pooled 的週期趨勢比
+    check(bs < ps / 4, f'band：基準池平均分數全部週期在 {B.min():.1f}–{B.max():.1f}（範圍 {bs:.1f}，不到 pooled {ps:.1f} 的四分之一）')
 
 def test_range_smoothing():
     S = score.score_table(M_of(29), REF); S = S.sort_values('period'); s = S['分數'].to_numpy(); P = S['period'].to_numpy()
