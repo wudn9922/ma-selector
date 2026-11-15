@@ -15,7 +15,9 @@
 ## 與 Atlas（my-stock-screener）整合
 - **連結**：網頁支援 `?ticker=2330.TW` 預填代號（換代號時網址跟著更新）；標題列有「在 Atlas 看圖表 ↗」連回 `wudn9922.github.io/my-stock-screener/atlas/?page=chart&symbol=…`。Atlas 圖表的「建議均線」卡片也連到這裡看詳情。
 - **建議均線 JSON**：`core/recommend.py` 把 production 選擇（SMA、預設權重、gap 15、規則 B＋短期 rescue；**與網頁預設完全相同，規則沒有改**）整理成 JSON；`scripts/build_recommendations.py` 批次產生每檔 `<ticker>.json`＋`index.json`。
-  - 由 my-stock-screener 的 workflow `ma-recommendations.yml` 每月 2 日 checkout 本 repo 執行，股票清單＝其 `data/*.csv`（全台股＋S&P 500），輸出到 `docs/report/ma-selector/`，Atlas 圖表直接讀。
+  - 由 my-stock-screener 的 workflow `ma-recommendations.yml` 每月 2 日 checkout 本 repo 執行，股票清單＝台美股全市場（其 `docs/report/universe.json` 的 full 名單，約 7,200 檔）＋`data/*.csv`，輸出到 `docs/report/ma-selector/`，Atlas 圖表直接讀。
+  - **分批**：全市場一次跑太久、Yahoo 請求太多，所以每月只重算三分之一（`--shard K/3`，K＝依月份輪流，分批＝`crc32(代號) % 3`，與清單內容無關），每檔每 3 個月更新一次；還沒有檔案的股票（新股、第一次納入）每次最多另外補 `--max-missing` 檔（workflow 設 1,500）。其餘股票沿用現有檔案，`index.json` 的 `refresh` 記錄這次的分批。
+  - 全市場名單不完整（universe.json 缺市場或不是 full）時 workflow 加 `--no-prune`，不刪除清單外的舊檔。
   - 抓不到或資料不足（< 376 根）的股票沿用上一次的檔案；成功率 < 50% 時不寫檔。資料不足 866 根的標記 `limited`（中長期視窗不足，僅供參考）。
   - 測試：`tests/test_recommend.py`（與 `select()` 結果逐項相同、批次腳本行為）。
   - JSON VERSION 2（只多欄位，現行欄位不變）：每個區間的 `rank`（股票層級排名，同網頁 `standardize`）、短中期候選的 `score2y`（近2年分數(參考)）、`v2`（實驗選線 v2：短期 final1／final2、中期、長期、適合度與排名；**尚未驗證，只顯示**）。需要 `data/reference_v2.parquet`，不存在就不輸出 `score2y`／`v2`。
