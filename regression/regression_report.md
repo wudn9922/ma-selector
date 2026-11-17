@@ -33,7 +33,7 @@ DATA_FETCH_FAILURE: 0
 
 - research/events_v22.py（85635cb25b7b）vs core/events.py（2105c5af5693）：不同（backtest 只多 return_eq 選用參數，見 git diff）
 - research/tangle_v4.py（ae26c08c2e1a）vs core/tangle.py（ae26c08c2e1a）：位元組相同
-- research/bt_engine_v1.py（a72854765579）vs core/backtest.py（45505ceb94dc）：不同（backtest 只多 return_eq 選用參數，見 git diff）
+- research/bt_engine_v1.py（a72854765579）vs core/backtest.py（25e1d7d24ded）：不同（backtest 只多 return_eq 選用參數，見 git diff）
 - research/events_v22.py 與首次上傳 commit 4728067 的原檔：相同
 - research/tangle_v4.py 與首次上傳 commit 4728067 的原檔：相同
 - research/bt_engine_v1.py 與首次上傳 commit 4728067 的原檔：相同
