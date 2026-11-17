@@ -84,7 +84,9 @@ def test_rank_pct():
 def old_module(name, commit='474d8f6'):
     import types
     src = subprocess.run(['git', 'show', f'{commit}:core/{name}.py'], cwd=ROOT, capture_output=True, check=True).stdout.decode()
-    m = types.ModuleType(f'core._{name}_474'); m.__package__ = 'core'; exec(compile(src, f'core/{name}.py@{commit}', 'exec'), m.__dict__); return m
+    m = types.ModuleType(f'core._{name}_474'); m.__package__ = 'core'; exec(compile(src, f'core/{name}.py@{commit}', 'exec'), m.__dict__)
+    if name == 'select': m.bt = old_module('backtest')
+    return m
 
 def test_production_unchanged():
     # 原本是「score.py／select.py 與 474d8f6 逐位元組相同」；加入 pct_mode／smooth_mode 後檔案依設計已不同 →
@@ -99,7 +101,7 @@ def test_production_unchanged():
             P0, s0 = OL.smoothed_scores(B); P1, s1 = sel.smoothed_scores(A, 'whole'); check(np.array_equal(P0, P1) and s0.tobytes() == s1.tobytes(), f'seed {seed}（{nm}）：smoothed_scores(whole) 與 474d8f6 逐位元組相同')
         S0 = OS.score_table(M, REF)
         for nm, kw in (('production 規則', dict()), ('LEGACY', dict(gap=15, method='bt', longonly=True)), ('min_period', dict(final_rule='min_period'))):
-            new_kw = dict(sel.LEGACY) if nm == 'LEGACY' else dict(kw, smooth_mode='whole')
+            new_kw = dict(sel.LEGACY) if nm == 'LEGACY' else dict(kw, smooth_mode='whole', window_mode='legacy_exit')
             o = OL.select(df, S0, **kw); a = sel.select(df, score.score_table(M, REF, pct_mode='pooled'), **new_kw)
             check(a == o, f'seed {seed}：select({nm}，pooled＋whole) 與 474d8f6 相同')   # 474d8f6 的 select.py 已含短期 rescue（＝改動前 HEAD）
     # 新版 production 預設＝同週期百分位＋區間內平滑（同一組 API，結果與明確指定新模式相同）

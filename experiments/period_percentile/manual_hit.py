@@ -1,6 +1,6 @@
 """同週期百分位＋區間內平滑：開發集 83 檔人工線命中率（OLD vs NEW）。需要連 Yahoo（開發集 bars 沒有封存在 repo）；本機無法連線時只能用 --synthetic 做流程測試。
 條件同 production_sanity／selector_v2 診斷：asof 2026-09-24、基準＝這批股票自己（make_features 後當 reference）。人工標記也被用來開發現行規則 → 只是診斷，不是驗證。
-OLD＝score_table(pct_mode='pooled')＋select(smooth_mode='whole')（改動前的 production）；NEW＝production 預設（pct_mode='period'＋smooth_mode='range'）；BAND＝pct_mode='band'＋range（比較用）
+OLD＝score_table(pct_mode='pooled')＋select(smooth_mode='whole', window_mode='legacy_exit')（改動前的 production）；NEW＝production 預設（pct_mode='period'＋smooth_mode='range'）；BAND＝pct_mode='band'＋range（比較用）
 命中：短期／中期 final 距人工線 ≤2、長期 ≤5（另列 ≤2）；候選命中同容差；15–45 兩條（短期 final＋中期 final）取較近 ≤2（同 diag_report.md 的「現行 兩條」口徑）
 用法：python experiments/period_percentile/manual_hit.py [--asof 2026-09-24] [--out experiments/period_percentile/manual_hit] [--synthetic] [--only A,B]"""
 import argparse, os, sys, tempfile, time
@@ -31,12 +31,12 @@ def adj_metrics(a):
 
 def run_adj(a):
     tk, asof, ref = a; df = data.normalize(pd.read_csv(f'data_adj/{tk}.csv'), asof)
-    return tk, sel.select(df, score.score_table(M_ADJ[tk], ref))                 # production 預設（period＋range）
+    return tk, sel.select(df, score.score_table(M_ADJ[tk], ref), window_mode='legacy_exit')                 # production 預設（period＋range）
 
 def run_one(a):
     tk, asof, ref = a
     df = data.normalize(pd.read_csv(f'data_v/{tk}.csv'), asof); M = M_ALL[tk]
-    return tk, {c: sel.select(df, score.score_table(M, ref, pct_mode=pm), smooth_mode=sm) for c, (pm, sm) in CONFIGS.items()}
+    return tk, {c: sel.select(df, score.score_table(M, ref, pct_mode=pm), smooth_mode=sm, window_mode='legacy_exit') for c, (pm, sm) in CONFIGS.items()}
 
 def near(x, us): return min(abs(x - u) for u in us) if us else np.nan
 

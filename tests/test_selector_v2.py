@@ -1,6 +1,6 @@
 """實驗選線 v2（experiments/selector_v2/SPEC.md）的測試（合成資料）
 1) metrics：既有欄位對改動前（OLD_COMMIT）逐位元組相同（值＋欄位順序）；新增的 @756 欄位存在且等於手算
-2) 舊版可重現：score.score_table(pct_mode='pooled')／select.select(smooth_mode='whole') 對舊版（OLD_COMMIT）結果完全相同；新版預設對「含 @756 的 M／只含舊欄位的 M」也相同
+2) 舊版可重現：score.score_table(pct_mode='pooled')／select.select(smooth_mode='whole', window_mode='legacy_exit') 對舊版（OLD_COMMIT）結果完全相同；新版預設對「含 @756 的 M／只含舊欄位的 M」也相同
 3) score_v2：1y 特徵與 分數_1y 等於現行 production（同一個合成基準池）
 4) select_v2：合成股票的不變量；monkeypatch 平滑分數與 sar_stats 精確控制 final2 的三種來源（候選內／放寬／找不到）、規則 B、短期 rescue、中期無 rescue
 用法：python tests/test_selector_v2.py"""
@@ -15,7 +15,9 @@ from core.ma import moving_average
 OLD_COMMIT = '474d8f6'          # 加入 @756／v2 之前
 def old_module(name):
     src = subprocess.run(['git', 'show', f'{OLD_COMMIT}:core/{name}.py'], cwd=ROOT, capture_output=True, check=True).stdout.decode()
-    m = types.ModuleType(f'core._{name}_old'); m.__package__ = 'core'; m.__file__ = str(ROOT / 'core' / f'{name}.py'); exec(compile(src, f'core/{name}.py@old', 'exec'), m.__dict__); return m
+    m = types.ModuleType(f'core._{name}_old'); m.__package__ = 'core'; m.__file__ = str(ROOT / 'core' / f'{name}.py'); exec(compile(src, f'core/{name}.py@old', 'exec'), m.__dict__)
+    if name == 'select': m.bt = old_module('backtest')
+    return m
 OLD_M, OLD_SC, OLD_S = old_module('metrics'), old_module('score'), old_module('select')
 REF = pd.read_parquet(ROOT / 'data/reference.parquet'); SEEDS = (3, 11, 29); POOL = (101, 102, 103, 104, 105, 106); NEW756 = [f'{k}@756' for k in ('A_raw_n', 'A_raw', 'A_d2_n', 'A_d2', 'A_rt_n', 'A_rt', 'A_wick')]
 def check(cond, msg): print(('PASS ' if cond else 'FAIL ') + msg); assert cond, msg
@@ -56,7 +58,7 @@ def test_production_unchanged():
         S1 = score.score_table(M_of(seed), REF, pct_mode='pooled'); S2 = score.score_table(Mo, REF, pct_mode='pooled')
         check(S1.equals(S0) and S2.equals(S0) and list(S1.columns) == list(S0.columns), f'seed {seed}：score_table(pooled)（含 @756 的 M／只含舊欄位的 M）對舊版 DataFrame.equals')
         check(score.make_features(M_of(seed)).equals(OLD_SC.make_features(Mo)), f'seed {seed}：make_features 對舊版相同')
-        o = OLD_S.select(df, S0); check(sel.select(df, S1, smooth_mode='whole') == o, f'seed {seed}：select.select(df, score_table(M, ref, pooled), whole) 對舊版 ==')
+        o = OLD_S.select(df, S0); check(sel.select(df, S1, smooth_mode='whole', window_mode='legacy_exit') == o, f'seed {seed}：select.select(df, score_table(M, ref, pooled), whole) 對舊版 ==')
         check(sel.suitability(S1, 'whole') == OLD_S.suitability(S0), f'seed {seed}：suitability(whole) 對舊版相同')
         N1, N2 = score.score_table(M_of(seed), REF), score.score_table(Mo, REF)   # 新版預設：@756 欄位不影響分數
         check(N1.equals(N2) and list(N1.columns) == list(S0.columns) and sel.select(df, N1) == sel.select(df, N2), f'seed {seed}：新版預設 score_table／select（含 @756 的 M ＝ 只含舊欄位的 M）')

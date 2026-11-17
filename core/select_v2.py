@@ -34,10 +34,12 @@ def pick(P, Ss, lo, hi, gap, ok=lambda p: True):
         if len(out) == 5: break
     return out, float(best)
 
-def select_v2(df, M, ref_v2, ws=None, gap=sel.GAP, kind='SMA', long_result=None, pct_mode=PCT_MODE, cost=ev.COST):
+def select_v2(df, M, ref_v2, ws=None, gap=sel.GAP, kind='SMA', long_result=None, pct_mode=PCT_MODE, cost=ev.COST, window_mode=sel.WINDOW_MODE):
     # pct_mode 同 score_v2.score_table_v2（預設同週期百分位；'pooled'＝舊版）；平滑仍是整條（單一公式，沒有公式邊界）
     # cost＝反手回測的每筆來回成本（同 select.select；預設 0.1%＝舊行為，預設時不傳給 sar_stats）
+    if window_mode not in sel.WINDOW_MODES: raise ValueError(f'window_mode must be one of {sel.WINDOW_MODES}')
     skw = {} if cost == ev.COST else dict(cost=cost)
+    if window_mode != sel.WINDOW_MODE: skw['window_mode'] = window_mode
     O, H, L, C = (df[k].to_numpy(float) for k in ('open', 'high', 'low', 'close')); atr = wilder_atr(df); N = len(C)
     T = score_table_v2(M, ref_v2, ws, pct_mode); S = {y: smoothed_v2(T, y) for y in ('1y', '2y', '3y')}; at = {y: dict(zip(P.tolist(), s.tolist())) for y, (P, s) in S.items()}
     def sar(p, W): return sel.sar_stats(O, H, L, C, atr, moving_average(df.close, p, kind), max(N - W, 0), **skw)

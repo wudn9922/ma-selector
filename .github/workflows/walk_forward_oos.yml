@@ -1,0 +1,85 @@
+name: walk-forward-oos-research
+on:
+  workflow_dispatch:
+    inputs:
+      tickers:
+        description: '2–30 fixed symbols from one market (reference pool is this panel)'
+        default: 'ADM,ADSK,AES,AMGN,AMT,APD,APH,AXP'
+        required: true
+      asof:
+        description: 'Last included date YYYY-MM-DD'
+        default: '2026-11-13'
+        required: true
+      folds:
+        description: 'Disjoint OOS folds, 1–12'
+        default: '4'
+        required: true
+      test_bars:
+        description: 'Sessions per test fold, 21–252'
+        default: '63'
+        required: true
+      kinds:
+        description: 'MA families'
+        type: choice
+        options: ['SMA', 'EMA', 'SMA,EMA']
+        default: 'SMA,EMA'
+      include_v2:
+        description: 'Include experimental v2 independent lines'
+        type: boolean
+        default: true
+      cost_multiplier:
+        description: 'Market round-trip cost multiplier, 0–5'
+        default: '1'
+        required: true
+      slippage_bps:
+        description: 'Conservative adverse slippage per leg, 0–50 bps'
+        default: '5'
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: walk-forward-oos-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas
+      - name: Deterministic causality and execution tests
+        run: python -m unittest discover -s tests -p test_walk_forward_oos.py
+      - name: Past-only reference and walk-forward execution research
+        env:
+          RESEARCH_TICKERS: ${{ inputs.tickers }}
+          RESEARCH_ASOF: ${{ inputs.asof }}
+          RESEARCH_FOLDS: ${{ inputs.folds }}
+          RESEARCH_TEST_BARS: ${{ inputs.test_bars }}
+          RESEARCH_KINDS: ${{ inputs.kinds }}
+          RESEARCH_V2: ${{ inputs.include_v2 }}
+          RESEARCH_COST_MULTIPLIER: ${{ inputs.cost_multiplier }}
+          RESEARCH_SLIPPAGE_BPS: ${{ inputs.slippage_bps }}
+        run: |
+          extra=()
+          if [ "$RESEARCH_V2" = true ]; then extra+=(--include-v2); fi
+          python scripts/walk_forward_oos.py --source yahoo --range 10y \
+            --tickers "$RESEARCH_TICKERS" --asof "$RESEARCH_ASOF" \
+            --folds "$RESEARCH_FOLDS" --test-bars "$RESEARCH_TEST_BARS" \
+            --kinds "$RESEARCH_KINDS" --cost-multiplier "$RESEARCH_COST_MULTIPLIER" \
+            --slippage-bps "$RESEARCH_SLIPPAGE_BPS" --out experiments/walk_forward/output "${extra[@]}"
+      - name: Add report to job summary
+        if: always()
+        run: |
+          if [ -f experiments/walk_forward/output/report.md ]; then
+            cat experiments/walk_forward/output/report.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: walk-forward-oos-research
+          path: experiments/walk_forward/output/
+          if-no-files-found: warn
+          retention-days: 30

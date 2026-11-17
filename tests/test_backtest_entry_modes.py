@@ -34,7 +34,7 @@ def test_default_unchanged():
                     for retest in (True, False):
                         for kw in (dict(), dict(x=.012, c=.02, cost=.002), dict(x=.0, c=.0), dict(x=.05, c=.05, tp=.05), dict(ex_vol=True, ex_close=False, ex_day2=False), dict(lo=300)):
                             args = dict(mode=mode, longonly=longonly, retest=retest, return_eq=True, **{'lo': 504, **kw})
-                            o = OLD.run(O, H, L, C, V, ma, atr, **args); a = bt.run(O, H, L, C, V, ma, atr, **args); b = bt.run(O, H, L, C, V, ma, atr, entry_mode='gap_open', **args)
+                            o = OLD.run(O, H, L, C, V, ma, atr, **args); a = bt.run(O, H, L, C, V, ma, atr, window_mode='legacy_exit', **args); b = bt.run(O, H, L, C, V, ma, atr, entry_mode='gap_open', window_mode='legacy_exit', **args)
                             assert same(o, a) and same(o, b), (seed, p, mode, longonly, retest, kw); n += 1; trades += len(o[1])
     check(True, f'預設與 gap_open 對改動前 backtest 完全相同（{n} 組設定、{trades} 筆交易；stats、trades、equity 逐位元組相同）')
     check(trades > 200, f'測試涵蓋足夠交易（{trades} 筆）')

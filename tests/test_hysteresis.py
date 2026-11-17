@@ -11,7 +11,7 @@ def check(cond, msg): print(('PASS ' if cond else 'FAIL ') + msg); assert cond, 
 
 REF = pd.read_parquet(ROOT / 'data' / 'reference.parquet'); DF = data.normalize(synth(7)); PERIODS = np.arange(15, 111)
 M0 = metrics.compute_metrics(DF)
-SIG = dict(scoring='period+range', referencePool='US', adjusted=False, costPct=0.1, kind='SMA')
+SIG = dict(scoring='period+range+mark_to_market', windowMode='mark_to_market', referencePool='US', adjusted=False, costPct=0.1, kind='SMA')
 def prev_of(short=None, medium=36, long=80, **over):
     """上一次發佈的 JSON（只含 hysteresis 會讀的欄位）；over 覆寫簽章欄位（None＝刪掉該欄）"""
     sig = {**SIG, **over}; sig = {k: v for k, v in sig.items() if v is not None}
@@ -21,7 +21,7 @@ def run(scores, sars, prev=None, ticker='TEST', **kw):
     """scores／sars：{period: 值}（沒列出＝0）。metrics 用快取（recommend 內每次重算太慢）；回傳 (recommend 結果, sar_stats 被呼叫的週期集合)"""
     sm = np.array([float(scores.get(int(p), 0.)) for p in PERIODS]); calls = []
     def fake_smoothed(S, *a, **k): return PERIODS.copy(), sm.copy()
-    def fake_sar(O, H, L, C, atr, ma, lo, cost=0.001):
+    def fake_sar(O, H, L, C, atr, ma, lo, cost=0.001, window_mode=sel.WINDOW_MODE):
         p = int(np.isnan(ma).sum()) + 1; calls.append(p); return dict(報酬=float(sars.get(p, 0.)), 回撤=-0.1, 勝率=0.5, 筆數=10)
     o = (metrics.compute_metrics, sel.smoothed_scores, sel.sar_stats); metrics.compute_metrics = lambda df, kind='SMA': M0; sel.smoothed_scores, sel.sar_stats = fake_smoothed, fake_sar
     try: return rec.recommend(DF, REF, ticker, prev=prev, **kw), calls
@@ -34,7 +34,7 @@ BASE_S = {20: 60., 24: 58., 30: 52.}; BASE_R = {20: .50, 24: .50, 30: .40}
 def test_no_prev_and_fields():
     r, _ = run(BASE_S, BASE_R); g = short(r)
     check(g['final'] == 20 and g['computedFinal'] == 20 and g['held'] is False and g['previousFinal'] is None, f"沒有 prev：final＝computedFinal＝20、held False、previousFinal None")
-    check(r['version'] == 3 and r['market'] == 'US' and r['costPct'] == 0.1 and r['referencePool'] == 'US' and r['adjusted'] is False and r['scoring'] == 'period+range', 'VERSION 3 頂層欄位')
+    check(r['version'] == 3 and r['market'] == 'US' and r['costPct'] == 0.1 and r['referencePool'] == 'US' and r['adjusted'] is False and r['scoring'] == 'period+range+mark_to_market', 'VERSION 3 頂層欄位')
     for bad in (None, {}, [], 'x', {'ranges': 5}, {'ranges': [None]}, prev_of(short='20'), prev_of(short=True)):
         r2, _ = run(BASE_S, BASE_R, prev=bad); check(short(r2)['held'] is False and short(r2)['previousFinal'] is None and short(r2)['final'] == 20, f'prev 格式不對 {str(bad)[:40]!r} → 當成沒有（不當機、不沿用）')
 
@@ -72,7 +72,7 @@ def test_each_reason_not_to_hold():
 
 def test_signature_mismatch():
     r, _ = run(BASE_S, BASE_R, prev=prev_of(short=24)); check(short(r)['held'], '基準：簽章相同 → 沿用')
-    for k, v in (('scoring', 'pooled+whole'), ('referencePool', 'TW'), ('adjusted', True), ('costPct', 0.585), ('kind', 'EMA')):
+    for k, v in (('windowMode', 'legacy_exit'), ('windowMode', None), ('scoring', 'period+range'), ('scoring', 'pooled+whole'), ('referencePool', 'TW'), ('adjusted', True), ('costPct', 0.585), ('kind', 'EMA')):
         r, _ = run(BASE_S, BASE_R, prev=prev_of(short=24, **{k: v})); g = short(r)
         check(g['final'] == 20 and not g['held'] and g['previousFinal'] == 24 and g['computedFinal'] == 20, f'簽章 {k} 不同（{v!r}）→ 不沿用（第一次換方法就不會被舊選擇綁住），previousFinal 仍記錄')
     for k in SIG:
@@ -80,6 +80,11 @@ def test_signature_mismatch():
     r, _ = run(BASE_S, BASE_R, prev={**prev_of(short=24), 'market': 'TW', 'version': 2}); check(short(r)['held'], '簽章只看 scoring／referencePool／adjusted／costPct／kind（version、market 不影響）')
     r, _ = run(BASE_S, BASE_R, prev=prev_of(short=24, referencePool='TW'), ref_pool='TW'); check(short(r)['held'] and r['referencePool'] == 'TW', 'recommend(ref_pool="TW") 的簽章與舊檔的 TW 一致 → 沿用')
     r, _ = run(BASE_S, BASE_R, prev=prev_of(short=24, costPct=0.585), ticker='2330.TW'); check(short(r)['held'] and r['costPct'] == 0.585 and r['market'] == 'TW', '台股代號：costPct 0.585，與舊檔一致 → 沿用')
+    legacy_prev = prev_of(short=24, scoring='period+range+legacy_exit', windowMode='legacy_exit')
+    r, _ = run(BASE_S, BASE_R, prev=legacy_prev, window_mode='legacy_exit')
+    check(short(r)['held'] and r['scoring'] == 'period+range+legacy_exit' and r['windowMode'] == 'legacy_exit', '明確 legacy_exit 的簽章相同 → 沿用')
+    r, _ = run(BASE_S, BASE_R, prev=prev_of(short=24), window_mode='legacy_exit')
+    check(not short(r)['held'], '從 mark_to_market 換回 legacy_exit 也不沿用不同會計的結果')
 
 def test_p0_not_in_candidates_is_appended():
     # 21 分數 59（與 20 差 1，被間距擋掉）→ 不是候選；沿用它時要補進 candidates，並帶自己的分數與回測

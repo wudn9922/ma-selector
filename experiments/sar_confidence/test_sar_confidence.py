@@ -23,7 +23,7 @@ def test_reconstruction():
         for p in (15, 19, 24, 27, 33):
             ma = close.rolling(p).mean().to_numpy()
             for lo in (len(C) - 252, len(C) - 100, 300):
-                rets, eq, tot = X.sar_daily_returns(O, H, L, C, atr, ma, lo); prod = sel.sar_stats(O, H, L, C, atr, ma, lo)
+                rets, eq, tot = X.sar_daily_returns(O, H, L, C, atr, ma, lo); prod = sel.sar_stats(O, H, L, C, atr, ma, lo, window_mode='legacy_exit')
                 assert len(rets) == len(C) - lo
                 worst = max(worst, abs(X.compound(rets) - prod['報酬']), abs(tot - prod['報酬']))
                 seg = np.r_[1., eq]; assert abs(float((seg / np.maximum.accumulate(seg) - 1).min()) - prod['回撤']) <= 1e-12

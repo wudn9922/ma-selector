@@ -32,6 +32,10 @@
 
 **Backtest**：`events_v22` 多空反手（SAR reversal）——一直有持倉，碰到反向邊界就出場並反手，影線假突破當天收盤出清，成本＝每筆來回成本（美股 0.1%、台股 0.585%，見下方；`cost=` 參數預設 0.1%）。短期看近 1 年、中期近 2 年、長期近 3 年。
 
+視窗計價預設 `window_mode='mark_to_market'`：跨視窗持倉按起點前一根收盤的帳戶市值歸一，只計入視窗內損益；保留原持倉股數、已實現現金與進場價，停損／停利仍依原進場價判斷。報酬與回撤採相同資產曲線，含視窗內出場成本，本金耗盡後不再交易。網頁只做多回測也採此口徑。`window_mode='legacy_exit'` 保留完整舊行為，凍結回歸與歷史重現明確指定此模式。
+
+建議 JSON 只新增 `windowMode` 欄位；`scoring` 為 `period+range+mark_to_market`，因此首次新版更新不沿用舊口徑的遲滯結果。分批與 `--max-missing` 規則不變，尚未輪到更新的舊 JSON 仍可由 Atlas 讀取。
+
 **Final**：
 1. 找 `best_sar_return`；finalists ＝ 反手報酬 ≥ `best_sar_return − 5 個百分點`。
 2. finalists 中取**未四捨五入**的結構分數最高者。
@@ -70,7 +74,7 @@
 
   輸出：`final`（沿用時＝p0）、`computedFinal`（＝f）、`held`、`previousFinal`（上次的 final，沒有就 null）；沿用的 p0 不在候選裡時補進 `candidates`（附自己的分數與回測），所以 `final` 一定在 `candidates` 裡。v2 區塊不套用。批次腳本讀 `<out>/<ticker>.json` 當 prev（讀不了就當沒有）。
   動機：固定基準下，資料少 21 根，短／中／長期的 final 有 46%／30%／32% 會改變。三次月更模擬的證據：`experiments/hysteresis/report.md`。
-- **JSON VERSION 3**（只多欄位）：頂層 `market`（TW／US）、`costPct`（來回成本，%，例如 0.585）、`referencePool`（TW／US）、`adjusted`（價格是否已還原股利，取自 `df.attrs['adjusted']`；從 `--bars-dir` 的 CSV 讀入時 attrs 會遺失而是 false）、`scoring`（例如 `period+range`，由 `score.PCT_MODE`＋`select.SMOOTH_MODE` 組成）；每個區間 `unsuitable`、`held`、`previousFinal`、`computedFinal`。`index.json`：`version: 3`、`scoring`、`costPct`（各市場）、`hystPoints`、`referenceAsofTW`，每檔另有 `market`、`referencePool`、`unsuitable`、`held`（各區間）。測試：`tests/test_recommend.py`（拿掉新欄位後與 VERSION 2 輸出逐項相同）、`tests/test_hysteresis.py`（每個條件單獨測）。
+- **JSON VERSION 3**（只多欄位）：頂層 `market`（TW／US）、`costPct`（來回成本，%，例如 0.585）、`referencePool`（TW／US）、`adjusted`（價格是否已還原股利，取自 `df.attrs['adjusted']`；從 `--bars-dir` 的 CSV 讀入時 attrs 會遺失而是 false）、`scoring`（例如 `period+range+mark_to_market`，由百分位、平滑及視窗計價模式組成）；每個區間 `unsuitable`、`held`、`previousFinal`、`computedFinal`。`index.json`：`version: 3`、`scoring`、`costPct`（各市場）、`hystPoints`、`referenceAsofTW`，每檔另有 `market`、`referencePool`、`unsuitable`、`held`（各區間）。測試：`tests/test_recommend.py`（拿掉新欄位後與 VERSION 2 輸出逐項相同）、`tests/test_hysteresis.py`（每個條件單獨測）。
 
 ## SMA／EMA 選擇（EMA 為實驗功能）
 - 網頁側邊欄「均線類型」可選：SMA（預設，與原本完全相同）、EMA、SMA＋EMA 並列。並列時兩者各自有一組候選與最後選擇，分開顯示，不放在同一個池子裡互相比較（兩者分數的基準分佈不同）。
@@ -113,3 +117,7 @@
 ## 參考欄位（只顯示，不影響選線）
 - **股票層級排名**：這檔的區間最高分（平滑後）在 83 檔基準股票各自的區間最高分中贏過幾 %（現行：短期／中期／長期；v2：短期 2 年、1 年、中期 3 年）。EMA 對 EMA 基準。`core/standardize.py`。
 - **近2年分數(參考)**：現行短期、中期候選表多一欄，同一個短期公式在近 2 年視窗的分數（＝v2 的 分數_2y），讓近 1 年算分的短期與近 2 年算分的中期可以用同一把尺比較。只給 SMA；`data/reference_v2.parquet` 不存在時不顯示。
+
+## 樣本外與成交敏感度研究
+
+[逐期樣本外框架](experiments/walk_forward/README.md) 在每個訓練截止日重建基準池，凍結選線後才評估下一期，另比較固定均線與樂觀／現行／保守成交壓力情境。這些情境不變更正式成交規則。封存試跑只涵蓋截至 2026-09-29 的美股；較大台美股研究由手動 `walk-forward-oos-research` workflow 抓取 Yahoo 並輸出 CSV／Markdown，不自動發布或調參。
