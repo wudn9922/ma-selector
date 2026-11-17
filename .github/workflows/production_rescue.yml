@@ -16,7 +16,9 @@ jobs:
         with: { fetch-depth: 0 }
       - uses: actions/setup-python@v5
         with: { python-version: '3.11' }
-      - run: pip install pandas numpy matplotlib pyarrow
+      - run: pip install pandas numpy matplotlib pyarrow pytest
+      - name: 視窗計價測試（pytest；包含參數化邊界案例）
+        run: python -m pytest -q tests/test_window_accounting.py
       - name: rescue 單元測試
         run: python tests/test_select_rescue.py
       - name: 回測進場價模式／原始統計測試（entry_mode 預設與改動前逐位元組相同）

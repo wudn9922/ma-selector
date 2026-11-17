@@ -270,3 +270,7 @@ def test_select_v2_passes_accounting_to_every_primary_and_reference_window(windo
     assert len(calls) >= 15
     assert set(calls) == {window_mode}
     assert result['短期']['cands'] and result['中期']['cands']
+
+
+if __name__ == "__main__":
+    raise SystemExit(pytest.main([str(Path(__file__).resolve()), "-q"]))
