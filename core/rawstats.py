@@ -1,10 +1,11 @@
 """原始機率／比率／頻率的顯示輔助（只讀 core/metrics.py 已算好的欄位；不重新定義任何指標、不影響 selector／score）。
 percentile（p突破…）是「相對 reference pool 的百分位分數」，不是發生機率；這裡呈現的是實際統計：
   成功率（突破 A_raw、二日 A_d2、回測 A_rt）＝成功次數／已判定次數（附 n）；假突破比例＝A_wick／(A_wick＋A_raw_n)（正向呈現，不用 score.py 取負號後的 feature）
-  糾結次數/年 tg4_*、穿插日/年 qday_* ＝ 年化「頻率」（不是機率）；快敗率 quickfail_* ＝ 比率（附明顯穿越次數）
+  糾結次數/年 tg4_*、穿插日/年 qday_* ＝ 年化「頻率」（不是機率）；快敗率 quickfail_* ＝ 比率（附明顯穿越次數 n；最後 5 根內尚未快敗的穿越尚在觀察，不計入 n，另列「觀察中」）
 分母為 0 或 NaN 一律顯示「— (n=0)」，不顯示 0%。
 """
 import numpy as np
+from .metrics import clear_crossings, quickfail_counts
 SV = 0.10
 YEARS = (('1y', 252), ('2y', 504), ('3y', 756))
 
@@ -15,6 +16,12 @@ def fmt_rate(rate, n, digits=1):
     n = int(n) if _ok(n) else 0
     if n <= 0 or not _ok(rate): return '— (n=0)'
     return f'{rate * 100:.{digits}f}% (n={n})'
+
+def fmt_qf(rate, c):
+    """快敗率：'12.5% (n=8，觀察中 1)'；觀察中為 0 時不附；n=0 → '— (n=0)'（有觀察中則 '— (n=0，觀察中 1)'）"""
+    n, pend = int(c[0]), (int(c[2]) if len(c) > 2 else 0)
+    s = fmt_rate(rate, n)
+    return s[:-1] + f'，觀察中 {pend})' if pend else s
 
 def fmt_freq(x, digits=2):
     """年化頻率（次/年）：'1.50'；NaN → '—'"""
@@ -29,18 +36,9 @@ def wick_ratio(wick, breakouts):
     return (np.nan, 0) if d <= 0 else (wick / d, int(d))
 
 def cross_counts(C, ma, atr, N=None):
-    """快敗率的分母：各年視窗內「明顯穿越」次數 xw 與其中 5 天內又穿回的次數（與 core/metrics.py 的 quickfail 相同的計算；只為了得到 n）。回傳 {'1y': (xw, quick), ...}"""
-    N = len(C); last = 0; xs = []
-    for t in range(N):
-        if np.isnan(ma[t]): continue
-        d = C[t] - ma[t]; s = 1 if d > SV * atr[t] else (-1 if d < -SV * atr[t] else 0)
-        if s:
-            if last and s != last: xs.append(t)
-            last = s
-    out = {}
-    for nm, W in YEARS:
-        lo = max(N - W, 0); xw = [t for t in xs if t >= lo]
-        out[nm] = (len(xw), sum(1 for i, t in enumerate(xs) if t >= lo and i + 1 < len(xs) and xs[i + 1] - t <= 5))
+    """快敗率的分母：各年視窗內計入的明顯穿越次數 n、其中快敗次數 quick、觀察中（未成熟且未定）的次數 pending（與 core/metrics.py 同一套計算）。回傳 {'1y': (n, quick, pending), ...}"""
+    N = len(C); xs = clear_crossings(C, ma, atr); out = {}
+    for nm, W in YEARS: out[nm] = quickfail_counts(xs, max(N - W, 0), N)
     return out
 
 def raw_row(m, cc=None):
@@ -53,6 +51,6 @@ def raw_row(m, cc=None):
     qf = []
     for y, _ in YEARS:
         v = g(f'quickfail_{y}')
-        qf.append(fmt_rate(v, cc[y][0]) if cc else ('—' if not _ok(v) else f'{v * 100:.1f}%'))
+        qf.append(fmt_qf(v, cc[y]) if cc else ('—' if not _ok(v) else f'{v * 100:.1f}%'))
     row['快敗率(1y/2y/3y)'] = ' / '.join(qf)
     return row

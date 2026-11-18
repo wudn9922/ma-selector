@@ -37,8 +37,8 @@ def ref_v2():
 
 def test_metrics_old_columns_identical():
     for seed in SEEDS:
-        o = OLD_M.compute_metrics(stock(seed)); n = M_of(seed); oc = list(o.columns)
-        check(list(n.columns)[:len(oc)] == oc and n[oc].equals(o) and all(tobytes(n[c]) == tobytes(o[c]) for c in oc), f'seed {seed}：既有 {len(oc)} 欄的值（逐位元組）與順序和舊版相同')
+        o = OLD_M.compute_metrics(stock(seed)); n = M_of(seed); oc = list(o.columns); ok = [c for c in oc if not c.startswith('quickfail_')]   # quickfail_* 定義已改（未成熟穿越不計），其餘欄位須與舊版相同
+        check(list(n.columns)[:len(oc)] == oc and n[ok].equals(o[ok]) and all(tobytes(n[c]) == tobytes(o[c]) for c in ok), f'seed {seed}：既有 {len(ok)} 欄（除 quickfail_*）的值（逐位元組）與順序和舊版相同')
         check(list(n.columns)[len(oc):] == NEW756, f'seed {seed}：多出來的欄位正好是 @756 的 7 欄 {NEW756}')
 
 def test_756_matches_hand():

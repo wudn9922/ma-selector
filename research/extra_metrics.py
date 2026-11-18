@@ -23,7 +23,13 @@ for f in sorted(Path('data_v').glob('*.csv')):
             r[f'qday_{nm}']=q[lo:].sum()*252/W                    # 穿插日（每年）
             xw=[t for t in xs if t>=lo]
             r[f'cross_{nm}']=len(xw)*252/W                        # 明顯穿越次數（每年）
-            quick=[1 for i,t in enumerate(xs) if t>=lo and i+1<len(xs) and xs[i+1]-t<=5]
-            r[f'quickfail_{nm}']=len(quick)/len(xw) if xw else 0.  # 突破後 5 天內又穿回去的比例
+            # 只計成熟穿越（t+5<=N-1）＋已確定快敗者；最後 5 根內尚未快敗的穿越結果未定，排除（與 core/metrics.py quickfail_counts 相同）
+            nq=quick=0
+            for i,t in enumerate(xs):
+                if t<lo: continue
+                failed=i+1<len(xs) and xs[i+1]-t<=5
+                if failed: nq+=1; quick+=1
+                elif t+5<=N-1: nq+=1
+            r[f'quickfail_{nm}']=quick/nq if nq else 0.  # 突破後 5 天內又穿回去的比例
         rows.append(r)
 pd.DataFrame(rows).to_pickle('extra_metrics.pkl'); print(len(rows))
