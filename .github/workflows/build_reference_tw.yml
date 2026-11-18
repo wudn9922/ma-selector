@@ -2,7 +2,7 @@ name: build-reference-tw
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 4 1 * *'   # 每月 1 號（比美股池晚 1 小時）
+    - cron: '0 7 1 * *'   # 每月 1 號，台北 15:00（比美股池晚 1 小時、v2 後 20 分鐘）
 permissions:
   contents: write
 concurrency:               # 與其他 build-reference 共用一組，避免同時 push 互相蓋掉

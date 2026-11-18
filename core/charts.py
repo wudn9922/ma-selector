@@ -9,7 +9,7 @@ from . import events as ev, tangle as t4
 from .data import wilder_atr
 from .ma import moving_average
 
-LEG = ('底色＝持倉（淺綠＝多單、淺紅＝空單、空白＝空手：只出現在假突破當天收盤出清之後）；碰到反向邊界＝出場並反手｜▲▼突破進場：綠＝3%先到、紅＝先碰反向雜訊邊界（標日期）、白＝未決｜×＝影線假突破（收盤沒站上，不開倉）｜旁「2」＝二日法則成立\n'
+LEG = ('底色＝持倉（淺綠＝多單、淺紅＝空單、空白＝空手：只出現在假突破當天收盤出清之後）；碰到反向邊界＝出場並反手｜▲▼突破進場：綠＝3%先到、紅＝先碰反向雜訊邊界（標日期）、白＝未決｜×＝影線假突破：觸價進場，收盤未確認，當日收盤出清（計入交易與成本）｜旁「2」＝二日法則成立\n'
        '◆回測（標在碰到均線那天）：綠＝進場後3%先到、紅＝失敗（等待中或進場後先碰反向邊界）、空心＝有效但沒進場、灰＝無效｜紫框＝糾結、紫點＝穿插日｜淺藍底＝雜訊區（前日MA +1%／−1.5%）｜藍色點線＝均線±0.1ATR')
 _CJK = ['Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK SC', 'Noto Sans TC', 'Noto Serif CJK TC', 'Microsoft JhengHei', 'PingFang TC', 'WenQuanYi Zen Hei', 'Arial Unicode MS']
 

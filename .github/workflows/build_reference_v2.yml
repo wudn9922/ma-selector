@@ -2,7 +2,7 @@ name: build-reference-v2
 on:
   workflow_dispatch:
   schedule:
-    - cron: '40 3 1 * *'   # 每月 1 號
+    - cron: '40 6 1 * *'   # 每月 1 號，台北 14:40（EMA 後 20 分鐘）
   push:
     branches: ['claude/**']
     paths: ['core/score_v2.py', 'core/metrics.py', 'scripts/build_reference_v2.py', '.github/workflows/build_reference_v2.yml']
