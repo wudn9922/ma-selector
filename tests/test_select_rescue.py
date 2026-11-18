@@ -15,18 +15,24 @@ PERIODS = np.arange(15, 111)
 
 def prev_module():
     src = subprocess.run(['git', 'show', f'{PREV_COMMIT}:core/select.py'], cwd=ROOT, capture_output=True, check=True).stdout.decode()
-    m = types.ModuleType('core._select_prev'); m.__package__ = 'core'; exec(compile(src, 'core/select.py@prev', 'exec'), m.__dict__); return m
+    m = types.ModuleType('core._select_prev'); m.__package__ = 'core'; exec(compile(src, 'core/select.py@prev', 'exec'), m.__dict__)
+    from functools import partial
+    from core import backtest
+    m.bt = types.SimpleNamespace(run=partial(backtest.run, window_mode='legacy_exit'))
+    return m
 PREV = prev_module()
 
 def run(scores, sars, mod=sel, **kw):
     """scores／sars：{period: 值}。沒列出的週期結構分＝0（不會成為候選）、反手報酬＝0。回傳 select() 結果。"""
     sm = np.array([float(scores.get(int(p), 0.)) for p in PERIODS])
     def fake_smoothed(S, *a, **k): return PERIODS.copy(), sm.copy()
-    def fake_sar(O, H, L, C, atr, ma, lo):
+    def fake_sar(O, H, L, C, atr, ma, lo, **kwargs):
         p = int(np.isnan(ma).sum()) + 1; return dict(報酬=float(sars.get(p, 0.)), 回撤=-0.1, 勝率=0.5, 筆數=10)
-    if mod is PREV: kw = {k: v for k, v in kw.items() if k != 'smooth_mode'}   # 改動前的 select 沒有 smooth_mode（平滑分數已被 patch，模式不影響）
+    if mod is PREV: kw = {k: v for k, v in kw.items() if k not in ('smooth_mode', 'window_mode')}   # 改動前的 select 沒有 smooth_mode（平滑分數已被 patch，模式不影響）
     o1, o2 = mod.smoothed_scores, mod.sar_stats; mod.smoothed_scores, mod.sar_stats = fake_smoothed, fake_sar
-    try: return mod.select(DF, None, **kw)
+    try:
+        kw = dict(kw, window_mode='legacy_exit') if mod is sel else {k: v for k, v in kw.items() if k != 'window_mode'}
+        return mod.select(DF, None, **kw)
     finally: mod.smoothed_scores, mod.sar_stats = o1, o2
 
 def check(cond, msg): print(('PASS ' if cond else 'FAIL ') + msg); assert cond, msg
@@ -85,16 +91,16 @@ def test_legacy_and_other_paths_unchanged():
             check(run(sc, sr, **kw) == run(sc, sr, PREV, **kw), f'{kw}：與改動前 select 完全相同')
         a, b = run(sc, sr), run(sc, sr, PREV)
         check(a['中期'] == b['中期'] and a['長期'] == b['長期'] and a['短期']['cands'] == b['短期']['cands'], 'production：中期／長期整組與短期候選與改動前完全相同（只有短期 final 可能被 rescue）')
-    assert sel.LEGACY == dict(gap=15, method='bt', longonly=True, smooth_mode='whole') and sel.GAP == 15 and sel.RESCUE_POINTS == 10.0 and sel.RESCUE_SAR_PP == 0.10
+    assert sel.LEGACY == dict(gap=15, method='bt', longonly=True, smooth_mode='whole', window_mode='legacy_exit') and sel.GAP == 15 and sel.RESCUE_POINTS == 10.0 and sel.RESCUE_SAR_PP == 0.10
 
 def test_real_pipeline_vs_prev():
     """不 patch：合成股價＋repo 的 reference.parquet，真正跑 metrics／score／select；LEGACY 與 min_period 逐位元組相同；production 只有短期 final 可能不同，且不同時必須符合 C1／C2／C3。"""
     ref = pd.read_parquet(ROOT / 'data' / 'reference.parquet'); n_diff = 0; n_new = 0
-    nolg = lambda kw: {k: v for k, v in kw.items() if k != 'smooth_mode'}
+    nolg = lambda kw: {k: v for k, v in kw.items() if k not in ('smooth_mode', 'window_mode')}
     for seed in (3, 11, 29, 41, 57, 88):
         df = data.normalize(synth(seed)); M = metrics.compute_metrics(df); S = score.score_table(M, ref, pct_mode='pooled')
-        for kw in (sel.LEGACY, dict(final_rule='min_period', smooth_mode='whole')): assert sel.select(df, S, **kw) == PREV.select(df, S, **nolg(kw))
-        a, b = sel.select(df, S, smooth_mode='whole'), PREV.select(df, S)
+        for kw in (sel.LEGACY, dict(final_rule='min_period', smooth_mode='whole', window_mode='legacy_exit')): assert sel.select(df, S, **kw) == PREV.select(df, S, **nolg(kw))
+        a, b = sel.select(df, S, smooth_mode='whole', window_mode='legacy_exit'), PREV.select(df, S)
         assert a['中期'] == b['中期'] and a['長期'] == b['長期'] and a['短期']['cands'] == b['短期']['cands']
         if a['短期']['final'] != b['短期']['final']:
             n_diff += 1; c = a['短期']['cands']; best = max(x['反手報酬'] for x in c); sb = min(c, key=lambda x: (-x['結構分'], x['均線'])); f = next(x for x in c if x['均線'] == b['短期']['final'])

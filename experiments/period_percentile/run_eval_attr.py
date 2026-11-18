@@ -5,7 +5,7 @@ from multiprocessing import Pool
 def job(a):
     s, tk, p, cut = a; df = E.bars(p); df = df.iloc[:len(df) - cut].reset_index(drop=True); M = pd.read_pickle(f'{E.MD}/{tk}_{cut}.pkl'); rows = []
     for cfg in ('pct_period_only', 'smooth_range_only'):
-        pm, sm = E.CONFIGS[cfg]; R = E.sel.select(df, E.score.score_table(M, E.REF, pct_mode=pm), smooth_mode=sm)
+        pm, sm = E.CONFIGS[cfg]; R = E.sel.select(df, E.score.score_table(M, E.REF, pct_mode=pm), smooth_mode=sm, window_mode='legacy_exit')
         for nm in R: rows.append(dict(set=s, ticker=tk, cut=cut, config=cfg, range=nm, final=R[nm]['final'], top=R[nm]['cands'][0]['均線']))
     return rows
 if __name__ == '__main__':

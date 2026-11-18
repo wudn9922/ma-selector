@@ -131,7 +131,7 @@ def main():
     cands, prod_final, arrs = {}, {}, {}
     for tk in tks:
         Sx = score.score_table(newM[tk], ref, pct_mode='pooled'); P_, Ss = sel.smoothed_scores(Sx, 'whole'); sm = dict(zip(P_, Ss)); df = dfs[tk]   # 凍結時的分數（pooled＋whole）
-        r = sel.select(df, Sx, gap=GAP, method='sar', smooth_mode='whole')['短期']                                                   # production 規則 B
+        r = sel.select(df, Sx, gap=GAP, method='sar', smooth_mode='whole', window_mode='legacy_exit')['短期']                                                   # production 規則 B
         cands[tk] = [dict(period=c['均線'], s=float(c['結構分']), r=c['反手報酬'], n=c['反手筆數'], mdd=c['反手回撤']) for c in r['cands']]; prod_final[tk] = r['final']
         assert all(c['s'] == float(sm[c['period']]) for c in cands[tk])
         arrs[tk] = tuple(df[k].to_numpy(float) for k in ('open', 'high', 'low', 'close')) + (data.wilder_atr(df), df.close)
@@ -153,7 +153,7 @@ def main():
         O, H, L, C, atr, close = arrs[tk]; N = len(C); lo = max(N - W, 0); rows = []
         for c in cands[tk]:
             ma = close.rolling(c['period']).mean().to_numpy(); rets, eq, tot = sar_daily_returns(O, H, L, C, atr, ma, lo)
-            prod = sel.sar_stats(O, H, L, C, atr, ma, lo)['報酬']; comp = compound(rets); d = abs(comp - prod)
+            prod = sel.sar_stats(O, H, L, C, atr, ma, lo, window_mode='legacy_exit')['報酬']; comp = compound(rets); d = abs(comp - prod)
             rec.append(dict(ticker=tk, period=c['period'], production=prod, select_value=c['r'], reconstructed=comp, abs_diff=d)); rows.append(rets)
             if not (d <= TOL) or abs(prod - c['r']) > 0: recon_bad.append(f"{tk} MA{c['period']}: production {prod!r} vs 重建 {comp!r} 差 {d:.3e}（select {c['r']!r}）")
         daily[tk] = np.array(rows)

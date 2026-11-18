@@ -33,7 +33,7 @@ def job_sel(a):
     s, tk, p, cut = a; df = bars(p); df = df.iloc[:len(df) - cut].reset_index(drop=True); M = pd.read_pickle(f'{MD}/{tk}_{cut}.pkl'); rows = []
     for cfg, (pm, sm) in CONFIGS.items():
         if cut and cfg in ('pct_period_only', 'smooth_range_only'): continue
-        S = score.score_table(M, REF, pct_mode=pm); R = sel.select(df, S, smooth_mode=sm)
+        S = score.score_table(M, REF, pct_mode=pm); R = sel.select(df, S, smooth_mode=sm, window_mode='legacy_exit')
         for nm, lo, hi, _W in sel.RANGES:
             r = R[nm]; f = next(c for c in r['cands'] if c['均線'] == r['final'])
             rows.append(dict(set=s, ticker=tk, cut=cut, config=cfg, range=nm, final=r['final'], top=r['cands'][0]['均線'], cands=' '.join(str(c['均線']) for c in r['cands']),

@@ -80,7 +80,7 @@ def test_select_uses_range_scores():
 
 def test_defaults_are_new_mode():
     check(score.PCT_MODE == 'period' and score.PCT_MODES == ('period', 'band', 'pooled') and sel.SMOOTH_MODE == 'range' and sel.SMOOTH_MODES == ('range', 'whole'), 'production 預設：pct_mode=period、smooth_mode=range')
-    check(sel.LEGACY == dict(gap=15, method='bt', longonly=True, smooth_mode='whole'), 'LEGACY 釘在整條平滑（分數表要配 pct_mode=pooled）')
+    check(sel.LEGACY == dict(gap=15, method='bt', longonly=True, smooth_mode='whole', window_mode='legacy_exit'), 'LEGACY 釘在整條平滑與舊視窗會計（分數表要配 pct_mode=pooled）')
     df = data.normalize(synth(42)); M = metrics.compute_metrics(df)
     Sn, So = score.score_table(M, REF, pct_mode='period'), score.score_table(M, REF, pct_mode='pooled')
     check(score.score_table(M, REF).equals(Sn) and not Sn.equals(So), 'score_table 預設＝period（≠ pooled）')
@@ -91,7 +91,7 @@ def test_defaults_are_new_mode():
     check(r['suitability'] == dict(short=round(sel.suitability(Sn, 'range')[0], 1), long=round(sel.suitability(Sn, 'range')[1], 1)), 'recommend 的 suitability 用新版')
     check(sd.range_bests(Sn) == sd.range_bests(Sn, 'range') and sd.ref_stock_bests(REF).equals(sd.ref_stock_bests(REF, pct_mode='period', smooth_mode='range')), 'standardize 預設＝period＋range')
     V = sv.select_v2(df, M, REF2); check(V['短期']['final1'] == sv.select_v2(df, M, REF2, pct_mode='period')['短期']['final1'], 'select_v2 預設＝period')
-    O = sel.select(df, So, smooth_mode='whole'); print(f"# 這檔 old→new final：{[O[nm]['final'] for nm, *_ in sel.RANGES]} → {[Rn[nm]['final'] for nm, *_ in sel.RANGES]}")
+    O = sel.select(df, So, smooth_mode='whole', window_mode='legacy_exit'); print(f"# 這檔 old→new final：{[O[nm]['final'] for nm, *_ in sel.RANGES]} → {[Rn[nm]['final'] for nm, *_ in sel.RANGES]}")
 
 def test_invalid_and_format():
     F = score.make_features(M_of(3))

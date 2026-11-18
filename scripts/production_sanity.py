@@ -19,7 +19,12 @@ PREV_COMMIT = '85b77549d2d785a649fb6f492a4a094b523595a6'          # 改動前（
 
 def prev_select():
     src = subprocess.run(['git', 'show', f'{PREV_COMMIT}:core/select.py'], cwd=ROOT, capture_output=True, check=True).stdout.decode()
-    m = types.ModuleType('core._select_prev'); m.__package__ = 'core'; exec(compile(src, 'core/select.py@prev', 'exec'), m.__dict__); return m
+    m = types.ModuleType('core._select_prev'); m.__package__ = 'core'; exec(compile(src, 'core/select.py@prev', 'exec'), m.__dict__)
+    # The frozen selector imports today's engine: explicitly retain its old accounting.
+    from functools import partial
+    from core import backtest
+    m.bt = types.SimpleNamespace(run=partial(backtest.run, window_mode='legacy_exit'))
+    return m
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument('--asof', default='2026-09-24'); ap.add_argument('--out', default='experiments/production_sanity'); ap.add_argument('--work')
@@ -33,9 +38,9 @@ def main():
     prod, rows, bad, prev_diff, trig = {}, [], [], [], []; PREV = prev_select()
     for tk in tks:
         Sx = score.score_table(newM[tk], ref, pct_mode='pooled'); P_, Ss = sel.smoothed_scores(Sx, 'whole'); smo = dict(zip(P_, Ss))   # 凍結時的分數（全池百分位＋整條平滑），保持可重現
-        prod[tk] = sel.select(dfs[tk], Sx, smooth_mode='whole')                               # production 規則（gap=sel.GAP、反手、規則 B＋短期 rescue）
+        prod[tk] = sel.select(dfs[tk], Sx, smooth_mode='whole', window_mode='legacy_exit')                               # production 規則（gap=sel.GAP、反手、規則 B＋短期 rescue）
         before = PREV.select(dfs[tk], Sx)                                                      # 改動前的 production（同一份資料與分數表）
-        old = sel.select(dfs[tk], Sx, final_rule='min_period', smooth_mode='whole')['短期']                          # 同一批候選，只為取得候選清單
+        old = sel.select(dfs[tk], Sx, final_rule='min_period', smooth_mode='whole', window_mode='legacy_exit')['短期']                          # 同一批候選，只為取得候選清單
         c = [dict(period=x['均線'], s=float(smo[x['均線']]), r=x['反手報酬']) for x in prod[tk]['短期']['cands']]
         ruleB = fr.pick('B_STRUCTURAL_TIEBREAK', c); ev = RR.evaluate(c); indep = ev['rescue_final']
         if ev['current_final'] != ruleB or indep != prod[tk]['短期']['final'] or [x['均線'] for x in old['cands']] != [x['均線'] for x in prod[tk]['短期']['cands']]: bad.append(tk)

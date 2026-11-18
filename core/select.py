@@ -21,7 +21,9 @@ RANGES = (('短期', 15, 33, 252), ('中期', 34, 45, 504), ('長期', 46, 110, 
 GAP = 15                                   # 候選：與最高分差距上限（網頁可調 3–30）
 SMOOTH_MODES = ('range', 'whole')
 SMOOTH_MODE = 'range'                      # production 預設：區間內平滑；舊版＝'whole'
-LEGACY = dict(gap=15, method='bt', longonly=True, smooth_mode='whole')   # 研究版 v22 的設定（只供 regression 使用；分數表要搭配 pct_mode='pooled'）
+WINDOW_MODE = bt.WINDOW_MODE
+WINDOW_MODES = bt.WINDOW_MODES
+LEGACY = dict(gap=15, method='bt', longonly=True, smooth_mode='whole', window_mode='legacy_exit')   # 研究版 v22 的設定（只供 regression 使用；分數表要搭配 pct_mode='pooled'）
 SAR_PP = 0.05                              # 規則 B：反手報酬距最佳 ≤ 5 個百分點者為 finalists
 RESCUE_POINTS, RESCUE_SAR_PP = 10.0, 0.10        # STRUCTURAL_RESCUE_10PT_10PP：結構分優勢 10.0 分、反手報酬差距 10 個百分點（凍結；只用於短期）
 
@@ -38,11 +40,15 @@ def smoothed_scores(S, smooth_mode=SMOOTH_MODE):
         if m.any(): out[m] = smooth(s[m])
     return P, out
 
-def sar_stats(O, H, L, C, atr, ma, lo, cost=ev.COST):
+def sar_stats(O, H, L, C, atr, ma, lo, cost=ev.COST, window_mode=WINDOW_MODE):
     """多空反手（events_v22）：回傳 dict(報酬, 回撤, 勝率, 筆數)。
-    報酬＝視窗內（出場日 ≥ lo）各筆淨報酬（已扣成本 cost，預設 0.1%）複利；回撤＝逐日盤後市值（持倉中按收盤估值）的最大回撤。"""
+    mark_to_market（預設）：跨視窗持倉以 C[lo-1] 的帳戶淨值為起點，只計視窗內損益；保留原持倉單位（空單不重設槓桿）。
+    legacy_exit：出場日 ≥ lo 的整筆報酬，精確保留舊版。成本在出場扣除；回撤與報酬使用同一淨值基準。"""
+    bt.validate_window(window_mode, lo, len(C))
     N = len(C); _b, _w, _r, plog, trades = ev.events(O, H, L, C, ma, atr, cost=cost)
     ep = {(a, b, sg): e for a, b, sg, e, _x, _k in plog}; tr = sorted([t for t in trades if t[1] >= lo], key=lambda t: (t[0], t[1]))
+    if window_mode != 'legacy_exit':
+        return _marked_sar(C, lo, ep, tr)
     eq = np.ones(N); cap = 1.; last = lo
     for tin, tout, sg, r, _k in tr:
         e = ep.get((tin, tout, sg))
@@ -51,6 +57,33 @@ def sar_stats(O, H, L, C, atr, ma, lo, cost=ev.COST):
         cap *= (1 + r); eq[max(tout, lo):] = cap
     seg = np.r_[1., eq[lo:]]; mdd = float((seg / np.maximum.accumulate(seg) - 1).min()); rr = np.array([t[3] for t in tr])
     return dict(報酬=float(cap - 1), 回撤=mdd, 勝率=float((rr > 0).mean()) if len(rr) else np.nan, 筆數=len(rr))
+
+def _marked_sar(C, lo, entries, trades):
+    """Replay unchanged events, mark carried equity at the preceding close.
+
+    Short positions retain their original units (no re-leveraging at lo). Cost
+    is charged on exit, as in events. Zero equity is absorbing: no negative
+    capital may multiply later losses into artificial positive returns.
+    """
+    eq = np.ones(len(C)); cap = 1.; returns = []
+    for tin, tout, sg, raw_return, _kind in trades:
+        e = entries.get((tin, tout, sg))
+        basis = 1 + sg * (C[lo - 1] / e - 1) if tin < lo and e is not None else 1.
+        if basis <= 0:
+            eq[lo:] = 0.; cap = 0.; break
+        if e is not None:
+            for t in range(max(tin, lo), tout):
+                eq[t] = cap * (1 + sg * (C[t] / e - 1)) / basis
+                if eq[t] <= 0:
+                    eq[t:] = 0.; cap = 0.; returns.append(-1.); break
+            if cap == 0: break
+        r = max(-1., (1 + raw_return) / basis - 1)
+        returns.append(r); cap *= 1 + r; eq[tout:] = cap
+        if cap <= 0: break
+    seg = np.r_[1., eq[lo:]]
+    rr = np.asarray(returns)
+    return dict(報酬=float(cap - 1), 回撤=float((seg / np.maximum.accumulate(seg) - 1).min()),
+                勝率=float((rr > 0).mean()) if len(rr) else np.nan, 筆數=len(rr))
 
 def structural_rescue(cands, finalists, final):
     """STRUCTURAL_RESCUE_10PT_10PP（只給短期、method='sar'、規則 B 用）。cands／finalists／final 是 select() 的候選 dict；
@@ -62,10 +95,12 @@ def structural_rescue(cands, finalists, final):
     c3 = sb['反手報酬'] >= best_sar - RESCUE_SAR_PP                                  # 反手報酬 ≥ 最佳 − 10pp
     return sb if (c1 and c2 and c3) else final
 
-def select(df, S, gap=GAP, method='sar', longonly=True, final_rule='structural', kind='SMA', smooth_mode=SMOOTH_MODE, cost=ev.COST):
+def select(df, S, gap=GAP, method='sar', longonly=True, final_rule='structural', kind='SMA', smooth_mode=SMOOTH_MODE, cost=ev.COST, window_mode=WINDOW_MODE):
     # kind 只換均線序列（SMA／EMA），規則 B 與短期 rescue 兩種都一樣；smooth_mode 見 smoothed_scores
     # cost＝每筆來回成本（比例），同時用在只做多回測與反手回測；預設 0.1%＝舊行為（各市場的成本見 core/market.py）。成本只改報酬，不改分數、候選
+    if window_mode not in WINDOW_MODES: raise ValueError(f'window_mode must be one of {WINDOW_MODES}')
     skw = {} if cost == ev.COST else dict(cost=cost)   # 預設成本不傳給 sar_stats（與既有呼叫／monkeypatch 完全相容）
+    if window_mode != WINDOW_MODE: skw['window_mode'] = window_mode
     O, H, L, C, V = (df[k].to_numpy(float) for k in ('open', 'high', 'low', 'close', 'volume')); atr = wilder_atr(df); N = len(C)
     P, Ss = smoothed_scores(S, smooth_mode); out = {}
     for nm, lo, hi, W in RANGES:
@@ -75,8 +110,8 @@ def select(df, S, gap=GAP, method='sar', longonly=True, final_rule='structural',
             if sm[i] < best - gap: break
             if all(abs(pm[i] - c['均線']) > 2 for c in cands):
                 ma = moving_average(df.close, int(pm[i]), kind); lo_ = max(N - W, 0)
-                s1, _ = bt.run(O, H, L, C, V, ma, atr, lo=lo_, mode='simple', longonly=longonly, cost=cost)
-                s2, _ = bt.run(O, H, L, C, V, ma, atr, lo=lo_, mode='complex', longonly=longonly, cost=cost)
+                s1, _ = bt.run(O, H, L, C, V, ma, atr, lo=lo_, mode='simple', longonly=longonly, cost=cost, window_mode=window_mode)
+                s2, _ = bt.run(O, H, L, C, V, ma, atr, lo=lo_, mode='complex', longonly=longonly, cost=cost, window_mode=window_mode)
                 c = {'均線': int(pm[i]), '分數': round(float(sm[i]), 1), '結構分': float(sm[i]), '簡單報酬': s1['總報酬'], '簡單回撤': s1['最大回撤'], '複雜報酬': s2['總報酬'], '複雜回撤': s2['最大回撤']}
                 if method == 'sar':
                     a = sar_stats(O, H, L, C, atr, ma, lo_, **skw); c.update({'反手報酬': a['報酬'], '反手回撤': a['回撤'], '反手勝率': a['勝率'], '反手筆數': a['筆數']})

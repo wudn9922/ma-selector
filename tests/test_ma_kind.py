@@ -13,7 +13,9 @@ from core.ma import KINDS, moving_average
 OLD_COMMIT = 'ff8e4f4'          # 加入 kind 之前
 def old_module(name):
     src = subprocess.run(['git', 'show', f'{OLD_COMMIT}:core/{name}.py'], cwd=ROOT, capture_output=True, check=True).stdout.decode()
-    m = types.ModuleType(f'core._{name}_old'); m.__package__ = 'core'; m.__file__ = str(ROOT / 'core' / f'{name}.py'); exec(compile(src, f'core/{name}.py@old', 'exec'), m.__dict__); return m
+    m = types.ModuleType(f'core._{name}_old'); m.__package__ = 'core'; m.__file__ = str(ROOT / 'core' / f'{name}.py'); exec(compile(src, f'core/{name}.py@old', 'exec'), m.__dict__)
+    if name == 'select': m.bt = old_module('backtest')
+    return m
 OLD_M, OLD_S, OLD_C = old_module('metrics'), old_module('select'), old_module('charts')
 REF = pd.read_parquet(ROOT / 'data/reference.parquet'); SEEDS = (3, 11, 29)
 def check(cond, msg): print(('PASS ' if cond else 'FAIL ') + msg); assert cond, msg
@@ -33,9 +35,9 @@ def test_sma_select_identical():
     for seed in SEEDS:
         df = stock(seed); S = S_of(OLD_M.compute_metrics(df))
         for nm, kw in (('預設', dict()), ('LEGACY', sel.LEGACY), ('min_period', dict(final_rule='min_period'))):
-            kw = dict(kw, smooth_mode='whole'); o = OLD_S.select(df, S, **{k: v for k, v in kw.items() if k != 'smooth_mode'})   # 舊版 select 只有整條平滑
+            kw = dict(kw, smooth_mode='whole', window_mode='legacy_exit'); o = OLD_S.select(df, S, **{k: v for k, v in kw.items() if k not in ('smooth_mode', 'window_mode')})   # 舊版 select 只有整條平滑
             check(sel.select(df, S, **kw) == o and sel.select(df, S, kind='SMA', **kw) == o, f'seed {seed}：select({nm}，smooth_mode=whole) 預設與 kind=SMA 對舊版 =='); n += 1
-            kn = {k: v for k, v in kw.items() if k != 'smooth_mode'}; a = sel.select(df, S, **kn)
+            kn = {k: v for k, v in kw.items() if k not in ('smooth_mode', 'window_mode')}; a = sel.select(df, S, **kn)
             check(a == sel.select(df, S, kind='SMA', **kn) == sel.select(df, S, smooth_mode='range', **kn), f'seed {seed}：select({nm}，production 區間內平滑) 預設＝kind=SMA')
     check(n == 9, f'共 {n} 組 select 比對')
 

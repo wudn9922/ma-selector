@@ -72,19 +72,24 @@ def test_v2_fields_match_selector_v2_and_ranking():
 # ── VERSION 3 ──
 def old_recommend():
     src = subprocess.run(['git', 'show', f'{BASE_COMMIT}:core/recommend.py'], cwd=ROOT, capture_output=True, check=True).stdout.decode()
-    m = types.ModuleType('core._recommend_base'); m.__package__ = 'core'; exec(compile(src, 'core/recommend.py@base', 'exec'), m.__dict__); return m
-V3_NEW = {'market', 'costPct', 'referencePool', 'adjusted', 'scoring'}; V3_NEW_RANGE = {'unsuitable', 'held', 'previousFinal', 'computedFinal'}
+    m = types.ModuleType('core._recommend_base'); m.__package__ = 'core'; exec(compile(src, 'core/recommend.py@base', 'exec'), m.__dict__)
+    # Frozen recommendation source imports today's selectors: retain its exit-day accounting.
+    from functools import partial
+    m.sel = types.SimpleNamespace(**vars(sel)); m.sel.select = partial(sel.select, window_mode='legacy_exit')
+    m.select_v2 = types.SimpleNamespace(**vars(select_v2)); m.select_v2.select_v2 = partial(select_v2.select_v2, window_mode='legacy_exit')
+    return m
+V3_NEW = {'market', 'costPct', 'referencePool', 'adjusted', 'scoring', 'windowMode'}; V3_NEW_RANGE = {'unsuitable', 'held', 'previousFinal', 'computedFinal'}
 def strip_v3(r):
     """VERSION 3 的輸出拿掉新增欄位 → 應該等於 VERSION 2 的輸出（version 除外）"""
     o = {k: v for k, v in r.items() if k not in V3_NEW and k != 'version'}; o['ranges'] = [{k: v for k, v in g.items() if k not in V3_NEW_RANGE} for g in r['ranges']]
-    if 'v2' in o: o['v2'] = {k: v for k, v in o['v2'].items() if k != 'referencePool'}
+    if 'v2' in o: o['v2'] = {k: v for k, v in o['v2'].items() if k not in ('referencePool', 'windowMode')}
     return o
 
 def test_version3_keeps_every_version2_key():
     OLD = old_recommend(); df = data.normalize(synth(42)); B, B2 = standardize.ref_stock_bests(REF), standardize.ref_stock_bests_v2(REF_V2)
     check(OLD.VERSION == 2, '比對基準（改動前 HEAD）是 VERSION 2')
     for kw in (dict(), dict(ref_bests=B, ref_v2=REF_V2, ref_bests_v2=B2, reference_asof='2026-09-24')):
-        o = OLD.recommend(df, REF, 'TEST', **kw); n = recommend(df, REF, 'TEST', **kw)
+        o = OLD.recommend(df, REF, 'TEST', **kw); n = recommend(df, REF, 'TEST', window_mode='legacy_exit', **kw)
         check(repr(strip_v3(n)) == repr({k: v for k, v in o.items() if k != 'version'}), f"美股（預設成本）：拿掉 VERSION 3 新增欄位後與 VERSION 2 輸出逐項相同（{'含排名／近2年分數／v2' if kw else '基本'}）")
         check(n['version'] == 3 and set(n) - set(o) == V3_NEW and all(set(g) - set(og) == V3_NEW_RANGE for g, og in zip(n['ranges'], o['ranges'])), f"新增的頂層欄位正好是 {sorted(V3_NEW)}，每個區間正好多 {sorted(V3_NEW_RANGE)}")
         json.dumps(n, allow_nan=False)
@@ -92,7 +97,7 @@ def test_version3_keeps_every_version2_key():
 
 def test_version3_fields_and_market():
     df = data.normalize(synth(42)); us = recommend(df, REF, 'AAA'); tw = recommend(df, REF, '2330.TW'); two = recommend(df, REF, '6274.TWO')
-    check((us['market'], us['costPct'], us['referencePool'], us['adjusted'], us['scoring']) == ('US', 0.1, 'US', False, f'{score.PCT_MODE}+{sel.SMOOTH_MODE}') and us['scoring'] == 'period+range', f"美股：{ {k: us[k] for k in sorted(V3_NEW)} }")
+    check((us['market'], us['costPct'], us['referencePool'], us['adjusted'], us['scoring']) == ('US', 0.1, 'US', False, f'{score.PCT_MODE}+{sel.SMOOTH_MODE}+{sel.WINDOW_MODE}') and us['scoring'] == 'period+range+mark_to_market', f"美股：{ {k: us[k] for k in sorted(V3_NEW)} }")
     check((tw['market'], tw['costPct'], two['market'], two['costPct']) == ('TW', 0.585, 'TW', 0.585), '台股（.TW／.TWO）：market TW、costPct 0.585（百分比）')
     check(tw['referencePool'] == 'US', '呼叫端沒說明基準池 → 記為 US（目前傳進來的是美股池）')
     for a, b in zip(us['ranges'], tw['ranges']):
@@ -101,7 +106,7 @@ def test_version3_fields_and_market():
     check(us['suitability'] == tw['suitability'], 'suitability 與成本無關')
     d2 = df.copy(); d2.attrs['adjusted'] = True; check(recommend(d2, REF, 'AAA')['adjusted'] is True and recommend(df, REF, 'AAA', ref_pool='TW')['referencePool'] == 'TW', 'adjusted 來自 df.attrs；ref_pool 照呼叫端記錄')
     o = (score.PCT_MODE, sel.SMOOTH_MODE); score.PCT_MODE = 'pooled'; sel.SMOOTH_MODE = 'whole'
-    try: check(recommend(df, REF, 'AAA')['scoring'] == 'pooled+whole', 'scoring 由 score.PCT_MODE／select.SMOOTH_MODE 組成（沒有寫死第二份）')
+    try: check(recommend(df, REF, 'AAA')['scoring'] == 'pooled+whole+mark_to_market', 'scoring 由 score.PCT_MODE／select.SMOOTH_MODE 組成（沒有寫死第二份）')
     finally: score.PCT_MODE, sel.SMOOTH_MODE = o
 
 def _bars_dir(d, tickers, cut=0, rename=None):
@@ -138,7 +143,7 @@ def test_batch_hysteresis_end_to_end():
             check(all(a['best'] == b['best'] and a['candidates'][:len([c for c in b['candidates']])] == b['candidates'] for a, b in zip(r3[tk]['ranges'], c0[tk]['ranges'])) and r3[tk]['suitability'] == c0[tk]['suitability'], f'{tk}：候選、分數、適合度與對照組相同（held 時只在尾端多一條舊 final）')
         print(f'# 三次月更共 {held_n} 個區間沿用了舊 final')
         idx = json.loads((out / 'index.json').read_text()); s = {x['ticker']: x for x in idx['symbols']}
-        check(idx['version'] == 3 and idx['kind'] == 'SMA' and idx['scoring'] == 'period+range' and idx['costPct'] == {'TW': 0.585, 'US': 0.1} and idx['hystPoints'] == 5.0 and idx['referenceAsofTW'] == _tw_asof() and idx['updated'] == len(TK), f"index.json：version 3、scoring、costPct、hystPoints（保留原有鍵）")
+        check(idx['version'] == 3 and idx['kind'] == 'SMA' and idx['scoring'] == 'period+range+mark_to_market' and idx['costPct'] == {'TW': 0.585, 'US': 0.1} and idx['hystPoints'] == 5.0 and idx['referenceAsofTW'] == _tw_asof() and idx['updated'] == len(TK), f"index.json：version 3、scoring、costPct、hystPoints（保留原有鍵）")
         check(all(s[tk]['final'] == dict(zip(('short', 'medium', 'long'), _fin(r3[tk]))) and s[tk]['market'] == 'US' and s[tk]['referencePool'] == 'US' and s[tk]['fresh'] and set(s[tk]['held']) == {'short', 'medium', 'long'} == set(s[tk]['unsuitable'])
                   and s[tk]['held'] == {g['key']: g['held'] for g in r3[tk]['ranges']} for tk in TK), 'index.json 的 symbols：final／market／referencePool／held／unsuitable')
         check(set(idx) >= {'version', 'kind', 'generatedAt', 'referenceAsof', 'referenceV2Asof', 'requested', 'updated', 'symbols', 'failed'}, '保留原本的 index.json 鍵')

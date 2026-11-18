@@ -22,22 +22,62 @@ v1 變更：只做多（預設 longonly=True）；加入回測進場（多方，
 import numpy as np
 SV = 0.10
 ENTRY_MODES = ('gap_open', 'fixed_band')
+WINDOW_MODES = ('mark_to_market', 'legacy_exit')
+WINDOW_MODE = 'mark_to_market'
+
+def validate_window(window_mode, lo, n):
+    if window_mode not in WINDOW_MODES: raise ValueError(f'window_mode must be one of {WINDOW_MODES}')
+    if window_mode != 'legacy_exit' and not 0 <= lo < n:
+        raise ValueError('lo must identify a bar in the input')
 def _side(C, ma, atr, t):
     d = C[t] - ma[t]; s = SV * atr[t]
     return 1 if d > s else (-1 if d < -s else 0)
 def run(O, H, L, C, V, ma, atr, lo=0, x=.01, c=.015, cost=.001, mode='simple', longonly=True, retest=True,
-        tp=.03, surge_pct=.05, surge_atr=1.5, ex_close=True, ex_day2=True, ex_vol=False, return_eq=False, entry_mode='gap_open'):
+        tp=.03, surge_pct=.05, surge_atr=1.5, ex_close=True, ex_day2=True, ex_vol=False, return_eq=False, entry_mode='gap_open', window_mode=WINDOW_MODE):
+    """Window returns preserve position units and normalize equity at C[lo-1].
+
+    Actual entry price remains the basis for targets/stops. Pre-window partial
+    proceeds remain cash in boundary equity; only subsequent P&L is counted.
+    Costs accrue on exits. legacy_exit reproduces historical exit-day accounting.
+    """
+    validate_window(window_mode, lo, len(C))
+    legacy = window_mode == 'legacy_exit'
     if entry_mode not in ENTRY_MODES: raise ValueError(f'entry_mode 必須是 {ENTRY_MODES}，收到 {entry_mode!r}')
     fixed = entry_mode == 'fixed_band'
     N = len(C); mp = np.r_[np.nan, ma[:-1]]; U = mp * (1 + x); Lb = mp * (1 - c)
     eq = np.ones(N); cap = 1.; trades = []; last = 0; since = 0; dep = False; rt = None; kind = 'B'
     pos = 0; size = 0.; e = 0.; tin = 0; realized = 0.; tp_done = False; be = False; half_low = None
+    basis = 1.; insolvent = False
+    def finish(t, opened=False):
+        nonlocal cap, insolvent
+        r = realized if legacy else (1 + realized) / basis - 1
+        if not legacy: r = max(-1., r)
+        if t >= lo:
+            tr = dict(tin=tin, tout=t, side=pos, ret=r)
+            if opened: tr['open'] = True
+            tr['kind'] = kind
+            trades.append(tr); cap *= 1 + r
+            if not legacy and cap <= 0: cap = 0.; insolvent = True
     def close_part(frac, price):
         nonlocal size, realized
         q = min(frac, size); realized += q * ((price / e - 1) * pos - cost); size -= q
+    def mark(t):
+        nonlocal cap, insolvent
+        eq[t] = cap * (1 + (realized + size * ((C[t] / e - 1) * pos) if pos else 0)) / (basis if pos and not legacy else 1.) if t >= lo else 1.
+        if not legacy and t >= lo and eq[t] <= 0:
+            if pos: trades.append(dict(tin=tin, tout=t, side=pos, ret=-1., kind=kind))
+            cap = 0.; insolvent = True; eq[t:] = 0.
     for t in range(1, N):
+        if not legacy and t == lo and pos:
+            basis = 1 + realized + size * (C[t - 1] / e - 1) * pos
+            if basis <= 0:
+                cap = 0.; insolvent = True
+        if insolvent:
+            eq[t:] = 0.; break
         if np.isnan(mp[t]) or np.isnan(atr[t]):
-            eq[t] = cap; continue
+            if legacy: eq[t] = cap
+            else: mark(t)
+            continue
         if pos != 0 and t > tin:
             sg = pos
             if mode == 'simple':
@@ -67,16 +107,16 @@ def run(O, H, L, C, V, ma, atr, lo=0, x=.01, c=.015, cost=.001, mode='simple', l
                             close_part(size / 2, min(O[t], stop) if sg == 1 else max(O[t], stop))
                             half_low = L[t] if sg == 1 else H[t]
             if size <= 1e-9:
-                if t >= lo: trades.append(dict(tin=tin, tout=t, side=pos, ret=realized, kind=kind))
-                cap *= (1 + realized) if t >= lo else 1; pos = 0; size = 0.
+                finish(t); pos = 0; size = 0.
         # 只剩尾倉（≤20%）時遇到反向訊號 → 平掉尾倉（不反手）
         if pos != 0 and size <= 0.2 + 1e-9 and t > tin:
             opp = -pos; band2 = U[t] if opp == 1 else Lb[t]
             opp_sig = last == -opp and ((H[t] >= band2) if opp == 1 else (L[t] <= band2)) and ((C[t] > ma[t] + SV * atr[t]) if opp == 1 else (C[t] < ma[t] - SV * atr[t]))
             if opp_sig:
                 close_part(size, max(O[t], band2) if opp == 1 else min(O[t], band2))   # 只平倉，不反手
-                if t >= lo: trades.append(dict(tin=tin, tout=t, side=pos, ret=realized, kind=kind))
-                cap *= (1 + realized) if t >= lo else 1; pos = 0; size = 0.
+                finish(t); pos = 0; size = 0.
+        if insolvent:
+            eq[t:] = 0.; break
         # 回測狀態（多方）
         if retest and pos == 0 and rt is not None:
             st, bounced = rt
@@ -85,7 +125,7 @@ def run(O, H, L, C, V, ma, atr, lo=0, x=.01, c=.015, cost=.001, mode='simple', l
                 if C[t] > O[t] and C[t] > C[t - 1]: rt = (st, True)
             elif H[t] >= U[t]:
                 pos = 1; size = 1.; e = U[t] if fixed else max(O[t], U[t]); tin = t; kind = 'R'
-                realized = 0.; tp_done = False; be = False; half_low = None; rt = None
+                realized = 0.; basis = 1.; tp_done = False; be = False; half_low = None; rt = None
                 if mode == 'complex' and H[t] >= e * (1 + tp): close_part(0.5, e * (1 + tp)); tp_done = True; be = True
         # 進場
         if pos == 0:
@@ -94,7 +134,7 @@ def run(O, H, L, C, V, ma, atr, lo=0, x=.01, c=.015, cost=.001, mode='simple', l
                 band = U[t] if sg == 1 else Lb[t]
                 if last == -sg and ((H[t] >= band) if sg == 1 else (L[t] <= band)):
                     pos = sg; size = 1.; e = band if fixed else (max(O[t], band) if sg == 1 else min(O[t], band)); tin = t; kind = 'B'; rt = None
-                    realized = 0.; tp_done = False; be = False; half_low = None
+                    realized = 0.; basis = 1.; tp_done = False; be = False; half_low = None
                     wick = not ((C[t] > ma[t] + SV * atr[t]) if sg == 1 else (C[t] < ma[t] - SV * atr[t]))
                     volok = V[t - 1] > 0 and V[t] >= 1.1 * V[t - 1]
                     if mode == 'simple':
@@ -104,8 +144,7 @@ def run(O, H, L, C, V, ma, atr, lo=0, x=.01, c=.015, cost=.001, mode='simple', l
                         elif size > 0 and ((H[t] >= e * (1 + tp)) if sg == 1 else (L[t] <= e * (1 - tp))):
                             close_part(0.5, e * (1 + tp * sg)); tp_done = True; be = True
                     if size <= 1e-9:
-                        if t >= lo: trades.append(dict(tin=tin, tout=t, side=pos, ret=realized, kind=kind))
-                        cap *= (1 + realized) if t >= lo else 1; pos = 0; size = 0.
+                        finish(t); pos = 0; size = 0.
                     break
         s = _side(C, ma, atr, t)
         if s and s != last: last = s; since = t; dep = False; rt = None
@@ -113,10 +152,12 @@ def run(O, H, L, C, V, ma, atr, lo=0, x=.01, c=.015, cost=.001, mode='simple', l
         if last == 1 and t - since >= 5: dep = True
         if retest and pos == 0 and rt is None and last == 1 and dep and L[t] <= ma[t] + SV * atr[t] and C[t] >= ma[t] - SV * atr[t]:
             rt = (t, False); dep = False
-        eq[t] = cap * (1 + (realized + size * ((C[t] / e - 1) * pos) if pos else 0)) if t >= lo else 1.
-    if pos != 0:
-        close_part(size, C[-1]); trades.append(dict(tin=tin, tout=N - 1, side=pos, ret=realized, open=True, kind=kind)); cap *= (1 + realized)
-    seg = eq[lo:]
+        mark(t)
+        if insolvent: break
+    if pos != 0 and not insolvent:
+        close_part(size, C[-1]); finish(N - 1, opened=True)
+    if not legacy: eq[-1] = cap  # Include final liquidation costs in drawdown/equity.
+    seg = eq[lo:] if legacy else np.r_[1., eq[lo:]]
     peak = np.maximum.accumulate(seg); mdd = float((seg / peak - 1).min())
     r = np.array([tr['ret'] for tr in trades]) if trades else np.array([])
     w = r[r > 0]; l = r[r <= 0]

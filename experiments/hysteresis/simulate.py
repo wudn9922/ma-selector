@@ -24,7 +24,7 @@ def run_ticker(tk):
         for thr in THRS:
             rec.HYST_POINTS = thr; prev = None
             for run, cut in enumerate(CUTS, 1):
-                r = rec.recommend(df.iloc[:len(df) - cut].reset_index(drop=True), REF, tk, prev=prev); prev = r
+                r = rec.recommend(df.iloc[:len(df) - cut].reset_index(drop=True), REF, tk, prev=prev, window_mode='legacy_exit'); prev = r
                 for g in r['ranges']:
                     by = {c['period']: c for c in g['candidates']}; fin, cmp_ = by[g['final']], by[g['computedFinal']]
                     rows.append(dict(thr=thr, ticker=tk, run=run, cut=cut, asof=r['asof'], range=g['key'], final=g['final'], computed=g['computedFinal'], held=g['held'], previous=g['previousFinal'],

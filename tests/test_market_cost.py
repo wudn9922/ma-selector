@@ -21,7 +21,7 @@ def old_module(name, **inject):
     m = types.ModuleType(f'core._{name}_base'); m.__package__ = 'core'; m.__file__ = str(ROOT / 'core' / f'{name}.py'); exec(compile(src, f'core/{name}.py@{BASE_COMMIT}', 'exec'), m.__dict__)
     for k, v in inject.items(): setattr(m, k, v)
     return m
-OLD_EV = old_module('events'); OLD_SEL = old_module('select', ev=OLD_EV)       # 舊 select 也改用舊 events（完全是改動前的程式）
+OLD_EV = old_module('events'); OLD_SEL = old_module('select', ev=OLD_EV, bt=old_module('backtest'))       # 舊 select 也改用舊 events（完全是改動前的程式）
 _D = {}
 def bars(tk):
     if tk not in _D:
@@ -56,10 +56,10 @@ def test_default_cost_identical_to_base():
             o = OLD_EV.events(O, H, L, C, ma, atr); n = ev.events(O, H, L, C, ma, atr); e = ev.events(O, H, L, C, ma, atr, cost=ev.COST); e2 = ev.events(O, H, L, C, ma, atr, cost=0.001)
             check(R(o) == R(n) == R(e) == R(e2), f'{tk} SMA{p}：events（預設／明確傳 COST／0.001）與改動前逐位元組相同（{len(o[4])} 筆）')
             for W in (252, 504, 756):
-                a = OLD_SEL.sar_stats(O, H, L, C, atr, ma, N - W); b = sel.sar_stats(O, H, L, C, atr, ma, N - W); c = sel.sar_stats(O, H, L, C, atr, ma, N - W, cost=0.001)
+                a = OLD_SEL.sar_stats(O, H, L, C, atr, ma, N - W); b = sel.sar_stats(O, H, L, C, atr, ma, N - W, window_mode='legacy_exit'); c = sel.sar_stats(O, H, L, C, atr, ma, N - W, cost=0.001, window_mode='legacy_exit')
                 check(R(a) == R(b) == R(c), f'{tk} SMA{p} 近{W // 252}年：sar_stats 與改動前相同')
-        o = OLD_SEL.select(df, S); check(R(o) == R(sel.select(df, S)) == R(sel.select(df, S, cost=0.001)) == R(sel.select(df, S, cost=ev.COST)), f'{tk}：select（預設／明確 0.001）與改動前逐位元組相同，final＝{[o[k]["final"] for k in o]}')
-        o = OLD_SEL.select(df, Sp, **sel.LEGACY); check(R(o) == R(sel.select(df, Sp, **sel.LEGACY)) == R(sel.select(df, Sp, cost=0.001, **sel.LEGACY)), f'{tk}：LEGACY（pooled、whole、只做多）與改動前相同')
+        o = OLD_SEL.select(df, S); check(R(o) == R(sel.select(df, S, window_mode='legacy_exit')) == R(sel.select(df, S, cost=0.001, window_mode='legacy_exit')) == R(sel.select(df, S, cost=ev.COST, window_mode='legacy_exit')), f'{tk}：select（預設／明確 0.001）與改動前逐位元組相同，final＝{[o[k]["final"] for k in o]}')
+        o = OLD_SEL.select(df, Sp, **{k: v for k, v in sel.LEGACY.items() if k != 'window_mode'}); check(R(o) == R(sel.select(df, Sp, **sel.LEGACY)) == R(sel.select(df, Sp, cost=0.001, **sel.LEGACY)), f'{tk}：LEGACY（pooled、whole、只做多）與改動前相同')
     # bt.run 預設 cost 本來就是 .001
     df, M, S, Sp = bars('ADM'); (O, H, L, C), atr = arrays(df); ma = moving_average(df.close, 24); V = df.volume.to_numpy(float)
     check(R(bt.run(O, H, L, C, V, ma, atr, lo=len(C) - 252)) == R(bt.run(O, H, L, C, V, ma, atr, lo=len(C) - 252, cost=.001)), 'bt.run 預設 cost＝.001')

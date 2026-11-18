@@ -26,7 +26,12 @@ def clean(o):
 def prev_select():
     import importlib.util, types
     src = subprocess.run(['git', 'show', f'{PREV_COMMIT}:core/select.py'], cwd=ROOT, capture_output=True, check=True).stdout.decode()
-    m = types.ModuleType('core._select_prev'); m.__package__ = 'core'; exec(compile(src, 'core/select.py@prev', 'exec'), m.__dict__); return m
+    m = types.ModuleType('core._select_prev'); m.__package__ = 'core'; exec(compile(src, 'core/select.py@prev', 'exec'), m.__dict__)
+    # The frozen selector imports today's engine: explicitly retain its old accounting.
+    from functools import partial
+    from core import backtest
+    m.bt = types.SimpleNamespace(run=partial(backtest.run, window_mode='legacy_exit'))
+    return m
 
 def close(a, b):
     if isinstance(a, dict): return a.keys() == b.keys() and all(close(a[k], b[k]) for k in a)
@@ -49,7 +54,7 @@ def one(tk):
     meta = json.loads((RAW / tk / 'meta.json').read_text(encoding='utf-8'))
     df = data.normalize(pd.read_csv(io.BytesIO(blob), float_precision='round_trip'), meta['asof'])
     ref = pd.read_parquet(io.BytesIO(sealed_reference()))                     # 封存時的 reference（不是每月重建後的 HEAD 版本）
-    S = score.score_table(metrics.compute_metrics(df), ref, pct_mode='pooled'); R = sel.select(df, S, smooth_mode='whole'); R0 = prev_select().select(df, S)   # 封存時的分數（pooled＋whole）
+    S = score.score_table(metrics.compute_metrics(df), ref, pct_mode='pooled'); R = sel.select(df, S, smooth_mode='whole', window_mode='legacy_exit'); R0 = prev_select().select(df, S)   # 封存時的分數（pooled＋whole）
     return tk, (clean(R), clean(R0))
 
 def main():
