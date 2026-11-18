@@ -28,7 +28,8 @@ def test_sar_metrics_identical():
     for seed in SEEDS:
         df = stock(seed); o = OLD_M.compute_metrics(df); oc = list(o.columns)
         for nm, n in (('預設', metrics.compute_metrics(df)), ('kind=SMA', metrics.compute_metrics(df, kind='SMA'))):
-            check(list(n.columns)[:len(oc)] == oc and n[oc].equals(o) and list(n.columns)[len(oc):] == new756, f'seed {seed}：compute_metrics {nm} 既有欄位對舊版 DataFrame.equals，且多出的欄位正好是 @756 七欄')
+            ok = [c for c in oc if not c.startswith('quickfail_')]   # quickfail_* 定義已改（未成熟穿越不計），其餘欄位須與舊版相同
+            check(list(n.columns)[:len(oc)] == oc and n[ok].equals(o[ok]) and list(n.columns)[len(oc):] == new756, f'seed {seed}：compute_metrics {nm} 既有欄位對舊版 DataFrame.equals，且多出的欄位正好是 @756 七欄')
 
 def test_sma_select_identical():
     n = 0

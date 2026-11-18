@@ -21,22 +21,26 @@ def test_row_matches_metrics():
         for p in (15, 22, 33, 45, 60, 110):
             m = M.loc[p]; ma = df.close.rolling(p).mean().to_numpy(); cc = rs.cross_counts(C, ma, atr)
             for y, _ in rs.YEARS:                                                      # 分母重算後，比率與 metrics 的 quickfail 完全相同
-                xw, q = cc[y]; assert (q / xw if xw else 0.) == m[f'quickfail_{y}'], (seed, p, y)
+                xw, q, _pd = cc[y]; assert (q / xw if xw else 0.) == m[f'quickfail_{y}'], (seed, p, y)
             r = rs.raw_row(m, cc)
             exp = lambda rate, n: '— (n=0)' if not n else f'{rate * 100:.1f}% (n={int(n)})'
             assert r['突破成功率'] == exp(m['A_raw@252'], m['A_raw_n@252']) and r['二日成功率'] == exp(m['A_d2@252'], m['A_d2_n@252']) and r['回測成功率'] == exp(m['A_rt@252'], m['A_rt_n@252'])
             assert r['假突破次數'] == int(m['A_wick@252']) and r['突破次數(已判定)'] == int(m['A_raw_n@252'])
             assert r['糾結次數/年(1y/2y/3y)'] == ' / '.join(f"{m[f'tg4_{y}']:.2f}" for y, _ in rs.YEARS) and r['穿插日/年(1y/2y/3y)'] == ' / '.join(f"{m[f'qday_{y}']:.1f}" for y, _ in rs.YEARS)
-            assert r['快敗率(1y/2y/3y)'] == ' / '.join(exp(m[f'quickfail_{y}'], cc[y][0]) for y, _ in rs.YEARS)
+            assert r['快敗率(1y/2y/3y)'] == ' / '.join(exp(m[f'quickfail_{y}'], cc[y][0]).replace(')', f'，觀察中 {cc[y][2]})') if cc[y][2] else exp(m[f'quickfail_{y}'], cc[y][0]) for y, _ in rs.YEARS)
     check(True, '原始欄位（A_raw／A_d2／A_rt／A_wick／tg4／qday／quickfail）顯示值與 metrics 欄位逐項一致（2 檔 × 6 條均線）')
 
 def test_zero_denominators():
     m = pd.Series({'A_raw@252': np.nan, 'A_raw_n@252': 0, 'A_d2@252': np.nan, 'A_d2_n@252': 0, 'A_rt@252': np.nan, 'A_rt_n@252': 0, 'A_wick@252': 0,
                    'tg4_1y': 0., 'tg4_2y': 0., 'tg4_3y': 0., 'qday_1y': 0., 'qday_2y': 0., 'qday_3y': 0., 'quickfail_1y': 0., 'quickfail_2y': 0., 'quickfail_3y': 0.})
-    r = rs.raw_row(m, {'1y': (0, 0), '2y': (0, 0), '3y': (0, 0)})
+    r = rs.raw_row(m, {'1y': (0, 0, 0), '2y': (0, 0, 0), '3y': (0, 0, 0)})
     check(all(r[k] == '— (n=0)' for k in ('突破成功率', '二日成功率', '回測成功率', '假突破比例')), '沒有任何事件：成功率與假突破比例都是「— (n=0)」')
     check(r['快敗率(1y/2y/3y)'] == '— (n=0) / — (n=0) / — (n=0)', '沒有明顯穿越：快敗率顯示「— (n=0)」，不是 0%')
     check(r['糾結次數/年(1y/2y/3y)'] == '0.00 / 0.00 / 0.00', '糾結次數/年＝0.00（頻率，真的是 0 次）')
+
+def test_pending_display():
+    check(rs.fmt_qf(.25, (12, 3, 1)) == '25.0% (n=12，觀察中 1)', '快敗率附觀察中：25.0% (n=12，觀察中 1)')
+    check(rs.fmt_qf(.25, (12, 3, 0)) == '25.0% (n=12)' and rs.fmt_qf(0., (0, 0, 2)) == '— (n=0，觀察中 2)', '觀察中為 0 不附；n=0 仍顯示破折號')
 
 def test_read_only():
     df = data.normalize(synth(7)); M = metrics.compute_metrics(df); before = M.copy(); rs.raw_row(M.set_index('period').loc[25])
