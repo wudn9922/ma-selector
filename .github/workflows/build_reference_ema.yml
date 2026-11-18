@@ -2,7 +2,7 @@ name: build-reference-ema
 on:
   workflow_dispatch:
   schedule:
-    - cron: '20 3 1 * *'   # 每月 1 號
+    - cron: '20 6 1 * *'   # 每月 1 號，台北 14:20（美股池後 20 分鐘）
   push:
     branches: ['claude/**']
     paths: ['scripts/build_reference.py', 'core/ma.py', '.github/workflows/build_reference_ema.yml']

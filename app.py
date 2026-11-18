@@ -6,6 +6,7 @@ import numpy as np, pandas as pd, streamlit as st
 from core import data, metrics, score, select as sel, backtest as bt, charts, rawstats, market
 from core import score_v2, select_v2, standardize
 from core.ma import moving_average
+from app_cache import data_fingerprint, reference_key, ref_bests
 
 st.set_page_config(page_title="均線選參數", layout="wide")
 ROOT = Path(__file__).parent
@@ -23,37 +24,31 @@ def ref_path(kind, mkt='US'):   # SMA：data/reference.parquet；EMA：data/refe
 @st.cache_data(ttl=6 * 3600, show_spinner="抓取資料中…")
 def fetch(tk, day): return data.fetch_yahoo(tk)          # day 只當 cache key：每天重抓
 @st.cache_data(show_spinner="計算 96 條均線的指標（約 5–10 秒）…")
-def calc_metrics(tk, last, n, kind, _df): return metrics.compute_metrics(_df, kind=kind)
+def calc_metrics(tk, last, n, data_key, kind, _df): return metrics.compute_metrics(_df, kind=kind)
 @st.cache_data
 def _read_ref(path, mtime):   # path、mtime 只當 cache key：檔案換了就重讀
     f = Path(path); meta = f.with_suffix('.json'); return pd.read_parquet(f), (json.loads(meta.read_text()) if meta.exists() else {})
 def load_ref(kind, mkt='US'):
     f = ref_path(kind, mkt)
     if not f.exists(): return None, None
-    return _read_ref(str(f), f.stat().st_mtime)
+    return _read_ref(*reference_key(f))
 @st.cache_data(show_spinner="候選均線回測中…")
-def calc_select(tk, last, n, ws_key, gap, kind, cost, _df, _S): return sel.select(_df, _S, gap=gap, kind=kind, cost=cost)   # 選參數用多空反手（events_v22）的回測；cost＝市場的來回成本（也是 cache key）
+def calc_select(tk, last, n, data_key, ws_key, gap, kind, ref_key, cost, _df, _S): return sel.select(_df, _S, gap=gap, kind=kind, cost=cost)   # 選參數用多空反手（events_v22）的回測；資料、基準路徑／mtime、來回成本都當 cache key
 @st.cache_data(show_spinner="實驗選線 v2 計算中…")
-def calc_select_v2(tk, last, n, ws_key, gap, ref_key, cost, _df, _M, _ref, _ws, _long):   # 實驗選線 v2（只支援 SMA）；ref_key＝v2 基準檔的 mtime，檔案換了就重算
+def calc_select_v2(tk, last, n, data_key, ws_key, gap, ref_key, cost, _df, _M, _ref, _ws, _long):   # 實驗選線 v2（只支援 SMA）；ref_key 含 v2 與長期沿用的 SMA 基準路徑／mtime
     out = select_v2.select_v2(_df, _M, _ref, ws=_ws, gap=gap, kind='SMA', long_result=_long, cost=cost)
     T = score_v2.score_table_v2(_M, _ref, _ws).sort_values('period')
     curve = pd.DataFrame({f'分數_{y}（平滑）': sel.smooth(T[f'分數_{y}'].to_numpy()) for y in ('1y', '2y', '3y')}, index=pd.Index(T['period'].to_numpy(), name='均線週期'))
     return out, curve
-@st.cache_data(show_spinner="基準股票的區間最高分計算中…")
-def calc_ref_bests(kind, mtime, ws_key, _ref, _ws):   # 股票層級排名（只顯示）：基準每檔的區間最高分；kind＋基準檔 mtime＋權重當 cache key
-    return standardize.ref_stock_bests_v2(_ref, _ws) if kind == 'V2' else standardize.ref_stock_bests(_ref, _ws)
-def ref_bests(kind, ref_df, ws_, ws_key_):   # 失敗就回 None（排名只是參考，不能讓選線頁面掛掉）
-    try: return calc_ref_bests(kind, str(ref_path(kind).stat().st_mtime), ws_key_, ref_df, ws_)
-    except Exception: return None
 def rank_cap(label, x, B, col):   # 「贏過 71% 的基準股票」：x（這檔的區間最高分）在基準每檔區間最高分 B[col] 中的百分位
     if B is None: return f"{label}：—"
     pc, n = standardize.rank_pct(B[col].to_numpy(float), x)
     return f"{label}：贏過 {pc:.0f}% 的基準股票（{n} 檔；區間最高分對區間最高分）" if pc == pc else f"{label}：—"
 @st.cache_data(show_spinner=False)
-def calc_score2y(tk, last, n, ws_key, ref_key, _M, _ref, _ws):   # 現行短期／中期候選表的「近2年分數(參考)」：v2 的 2 年分數（短期公式、SMA15–110 整條平滑），只顯示
+def calc_score2y(tk, last, n, data_key, ws_key, ref_key, _M, _ref, _ws):   # 現行短期／中期候選表的「近2年分數(參考)」：v2 的 2 年分數（短期公式、SMA15–110 整條平滑），只顯示
     T = score_v2.score_table_v2(_M, _ref, _ws).sort_values('period'); return dict(zip(T['period'].tolist(), sel.smooth(T['分數_2y'].to_numpy()).tolist()))
 @st.cache_data(show_spinner="畫圖中…")
-def render(tk, last, n, p, title, kind, _df): return charts.chart_png(_df, p, title, kind=kind)
+def render(tk, last, n, data_key, p, title, kind, _df): return charts.chart_png(_df, p, title, kind=kind)
 
 ref, meta = load_ref('SMA')
 st.markdown("#### 趨勢分界均線選參數")
@@ -95,13 +90,13 @@ try:
     df = data.normalize(pd.read_csv(up)) if up is not None else fetch(tk, dt.date.today().isoformat())
 except Exception as e:
     st.error(f"抓不到 {tk} 的資料：{e}"); st.stop()
-N = len(df); last = str(df.date.iloc[-1].date())
+N = len(df); last = str(df.date.iloc[-1].date()); data_key = data_fingerprint(df)
 if N < 250 + 126: st.error(f"資料只有 {N} 根，太少"); st.stop()
 if N < 756 + 110: st.warning(f"資料只有 {N} 根（約 {N/252:.1f} 年），長期／中期分數的視窗不足，僅供參考")
 ws_key = json.dumps(ws, sort_keys=True); M, S, R, SUIT = {}, {}, {}, {}
 for k in KINDS:
-    M[k] = calc_metrics(tk, last, N, k, df); S[k] = score.score_table(M[k], REFS[k], ws)
-    R[k] = calc_select(tk, last, N, ws_key, gap, k, COST, df, S[k]); SUIT[k] = sel.suitability(S[k])
+    M[k] = calc_metrics(tk, last, N, data_key, k, df); S[k] = score.score_table(M[k], REFS[k], ws)
+    R[k] = calc_select(tk, last, N, data_key, ws_key, gap, k, reference_key(ref_path(k, MKT)), COST, df, S[k]); SUIT[k] = sel.suitability(S[k])
 
 # ── 實驗選線 v2（勾選才算；只支援 SMA；基準 data/reference_v2.parquet 不存在就跳過）──
 V2, V2_NOTE = None, None
@@ -111,14 +106,14 @@ if show_v2:
         ref_v2, _meta_v2 = load_ref('V2', MKT)
         if ref_v2 is None: V2_NOTE = ('info', "v2 基準分佈尚未建立（data/reference_v2.parquet）。請到 GitHub → Actions → build-reference-v2 → Run workflow 產生，或在本機執行 `python scripts/build_reference_v2.py`。目前不顯示實驗選線 v2。")
         else:
-            try: V2 = calc_select_v2(tk, last, N, ws_key, gap, str(ref_path('V2', MKT).stat().st_mtime), COST, df, M['SMA'], ref_v2, ws, R['SMA']['長期'])
+            try: V2 = calc_select_v2(tk, last, N, data_key, ws_key, gap, (reference_key(ref_path('V2', MKT)), reference_key(ref_path('SMA', MKT))), COST, df, M['SMA'], ref_v2, ws, R['SMA']['長期'])
             except Exception as e: V2_NOTE = ('warning', f"實驗選線 v2 計算失敗：{e}")
 
 SC2Y = None   # 近2年分數(參考)：只給 SMA；reference_v2 不存在或失敗就不顯示這欄
 if 'SMA' in KINDS:
     try:
         _r2, _ = load_ref('V2', MKT)
-        if _r2 is not None: SC2Y = calc_score2y(tk, last, N, ws_key, str(ref_path('V2', MKT).stat().st_mtime), M['SMA'], _r2, ws)
+        if _r2 is not None: SC2Y = calc_score2y(tk, last, N, data_key, ws_key, reference_key(ref_path('V2', MKT)), M['SMA'], _r2, ws)
     except Exception: SC2Y = None
 if tk and st.query_params.get("ticker") != tk: st.query_params["ticker"] = tk   # 網址跟著代號，方便分享
 st.markdown(f"**{tk}**　<span style='font-size:0.85rem;color:gray'>資料到 {last}（{N} 根）</span>　[在 Atlas 看圖表 ↗]({ATLAS_CHART}{quote(tk)})", unsafe_allow_html=True)
@@ -129,14 +124,16 @@ for k in KINDS:
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("股票適合度（短期最高分）" + sfx, f"{suit_s:.0f} / 100"); c2.metric("長期最高分" + sfx, f"{suit_l:.0f} / 100")
     c3.metric("短期最後選擇" + sfx, f"{k}{R[k]['短期']['final']}"); c4.metric("長期最後選擇" + sfx, f"{k}{R[k]['長期']['final']}")
-    RB, bst = ref_bests(k, REFS[k], ws, ws_key), standardize.range_bests(S[k]); d1, d2, d3 = st.columns(3)   # 股票層級排名（只顯示；中期最高分只用來排名）
+    RB, bst = ref_bests(k, ref_path(k, MKT), REFS[k], ws, ws_key), standardize.range_bests(S[k]); d1, d2, d3 = st.columns(3)   # 股票層級排名（只顯示；中期最高分只用來排名）
     for d, (nm, lo, hi, _w) in zip((d1, d2, d3), sel.RANGES): d.caption(rank_cap(f"{nm}{sfx}最高分 {bst[nm]:.1f}", bst[nm], RB, nm))
 st.caption("股票層級排名（參考）：基準＝83 檔大型股，排名＝這檔的區間最高分（平滑後）在 83 檔各自的區間最高分中贏過幾 %；只是參考，不影響選線。")
 
 pct = lambda x: f"{x*100:+.1f}%"
 Mi = {k: M[k].set_index('period') for k in KINDS}; _C = df.close.to_numpy(float); _ATR = data.wilder_atr(df)
 def cc_arrays(p, k='SMA'): return _C, moving_average(df.close, int(p), k), _ATR                  # 快敗率分母（明顯穿越次數）用；k＝均線類型
+DAY2_NOTE = "二日成功率＝事後符合二日條件的突破，從原始突破進場點計算是否先達 3%；不是看到二日確認後才進場的成功率。"
 RAW_NOTE = ("成功率＝成功次數／已判定次數（括號內 n＝已判定次數；n=0 顯示「— (n=0)」不顯示 0%）。突破／二日／回測／假突破使用與評分相同的近 1 年（252 根）視窗；假突破比例＝假突破次數／(假突破＋已判定突破)。"
+            f"{DAY2_NOTE}"
             "糾結次數/年、穿插日/年是**年化頻率（次/年）**，不是機率；快敗率＝明顯穿越均線後 5 天內又穿回的比例（括號內 n＝明顯穿越次數）。1y／2y／3y＝近 1／2／3 年視窗。")
 ENTRY_LABELS = ["跳空用開盤價（現行）", "固定均線門檻價"]; ENTRY_MODE = {ENTRY_LABELS[0]: 'gap_open', ENTRY_LABELS[1]: 'fixed_band'}
 tab1, tab2, tab3 = st.tabs(["候選與選擇", "判定圖", "回測"])
@@ -187,7 +184,7 @@ with tab1:
                 a3.markdown(f"**長期（SMA46–110，近 3 年）**\n\nv2：SMA{lg['final']}（同現行）"); a3.caption(f"現行：SMA{cur['長期']['final']}")
                 b1, b2, b3 = st.columns(3)
                 b1.metric("v2 短期適合度（2 年最高分）", f"{su['short_2y']:.1f} / 100"); b2.metric("v2 短期（1 年最高分）", f"{su['short_1y']:.1f} / 100"); b3.metric("v2 中期（3 年最高分）", f"{su['mid_3y']:.1f} / 100")
-                RB2 = ref_bests('V2', ref_v2, ws, ws_key)   # 股票層級排名（只顯示）：對 v2 基準每檔的同一指標
+                RB2 = ref_bests('V2', ref_path('V2', MKT), ref_v2, ws, ws_key)   # 股票層級排名（只顯示）：對 v2 基準每檔的同一指標
                 b1.caption(rank_cap("短期（2 年最高分）", su['short_2y'], RB2, 'short_2y')); b2.caption(rank_cap("短期（1 年最高分）", su['short_1y'], RB2, 'short_1y')); b3.caption(rank_cap("中期（3 年最高分）", su['mid_3y'], RB2, 'mid_3y'))
                 def v2_rows(cs, cols, stars):
                     rows = [{'': stars.get(c['均線'], ''), **{k_: c[k_] for k_ in cols}} for c in cs]
@@ -227,8 +224,8 @@ with tab2:
              f"{bt_line('近1年', 252)}｜{bt_line('近2年', 504)}")
     rr = rawstats.raw_row(Miv.loc[p], rawstats.cross_counts(*cc_arrays(p, k)))
     st.markdown(f"**{k}{p} 原始統計（實際機率／比率／頻率；不是 percentile）**　突破成功率 {rr['突破成功率']}｜二日成功率 {rr['二日成功率']}｜回測成功率 {rr['回測成功率']}｜假突破比例 {rr['假突破比例']}｜"
-                f"糾結次數/年(1y/2y/3y) {rr['糾結次數/年(1y/2y/3y)']}｜穿插日/年(1y/2y/3y) {rr['穿插日/年(1y/2y/3y)']}｜快敗率(1y/2y/3y) {rr['快敗率(1y/2y/3y)']}")
-    st.image(render(tk, last, N, p, title, k, df), width='stretch')
+                f"糾結次數/年(1y/2y/3y) {rr['糾結次數/年(1y/2y/3y)']}｜穿插日/年(1y/2y/3y) {rr['穿插日/年(1y/2y/3y)']}｜快敗率(1y/2y/3y) {rr['快敗率(1y/2y/3y)']}", help=DAY2_NOTE)
+    st.image(render(tk, last, N, data_key, p, title, k, df), width='stretch')
     if not charts.setup_font(): st.info("找不到中文字型，圖上的中文可能顯示成方框（請確認 packages.txt 的 fonts-noto-cjk）。")
     st.markdown("**圖例**"); st.text(charts.LEG)
 
