@@ -1,0 +1,19 @@
+name: notify-test
+# 手動執行：送一則測試訊息到 Discord，確認 secret DISCORD_WEBHOOK_URL1 設定正確（沒設或送不出去會失敗）
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send test message
+        env:
+          DISCORD_WEBHOOK_URL1: ${{ secrets.DISCORD_WEBHOOK_URL1 }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK_URL1" ]; then echo "::error::尚未設定 secret DISCORD_WEBHOOK_URL1"; exit 1; fi
+          curl -sS --fail-with-body -X POST -A 'DiscordBot (https://github.com/wudn9922/ma-selector, 1.0)' -H 'Content-Type: application/json' \
+            -d "{\"content\":\"ma-selector 通知測試：基準更新排程失敗時會發到這裡（${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}）\"}" \
+            "$DISCORD_WEBHOOK_URL1"
+          echo "已送出"
