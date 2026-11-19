@@ -36,6 +36,6 @@ jobs:
           DISCORD_WEBHOOK_URL1: ${{ secrets.DISCORD_WEBHOOK_URL1 }}
         run: |
           if [ -z "$DISCORD_WEBHOOK_URL1" ]; then echo "No webhook configured"; exit 0; fi
-          curl -sS -X POST -H 'Content-Type: application/json' \
+          curl -sS --fail-with-body -X POST -A 'DiscordBot (https://github.com/wudn9922/ma-selector, 1.0)' -H 'Content-Type: application/json' \
             -d "{\"content\":\"ma-selector ${GITHUB_WORKFLOW} 失敗：${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"}" \
-            "$DISCORD_WEBHOOK_URL1" || true
+            "$DISCORD_WEBHOOK_URL1" || echo "::warning::Discord 通知送出失敗"

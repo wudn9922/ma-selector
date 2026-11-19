@@ -31,3 +31,12 @@ jobs:
             echo "push 失敗，第 $i 次，稍後重試"; git rebase --abort 2>/dev/null || true; sleep $((i * 10))
           done
           echo "push 3 次都失敗" >&2; exit 1
+      - name: Notify failure
+        if: failure()
+        env:
+          DISCORD_WEBHOOK_URL1: ${{ secrets.DISCORD_WEBHOOK_URL1 }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK_URL1" ]; then echo "No webhook configured"; exit 0; fi
+          curl -sS --fail-with-body -X POST -A 'DiscordBot (https://github.com/wudn9922/ma-selector, 1.0)' -H 'Content-Type: application/json' \
+            -d "{\"content\":\"ma-selector ${GITHUB_WORKFLOW} 失敗：${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"}" \
+            "$DISCORD_WEBHOOK_URL1" || echo "::warning::Discord 通知送出失敗"
