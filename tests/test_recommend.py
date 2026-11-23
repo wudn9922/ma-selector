@@ -31,16 +31,25 @@ def test_batch_script():
         for i, tk in enumerate(('AAA', '2330.TW', 'SHORT')): synth(i, n=1300 if tk != 'SHORT' else 200).to_csv(bars / f'{tk}.csv', index=False)
         (bars / '^TWII.csv').write_text('time,open,high,low,close,volume\n')
         out.mkdir(); (out / 'GONE.json').write_text('{}'); (out / 'SHORT.json').write_text(json.dumps(dict(asof='2026-01-02', ranges=[dict(key='short', final=20)])))
-        br.main(['--from-dir', str(bars), '--bars-dir', str(bars), '--out', str(out), '--workers', '2'])
+        br.main(['--from-dir', str(bars), '--bars-dir', str(bars), '--out', str(out), '--workers', '2', '--min-success', '1'])
         idx = json.loads((out / 'index.json').read_text()); names = sorted(p.name for p in out.glob('*.json'))
         check(names == ['2330.TW.json', 'AAA.json', 'SHORT.json', 'index.json'], f'輸出檔：{names}（略過 ^ 指數、刪掉不在清單的舊檔）')
-        check(idx['requested'] == 3 and idx['updated'] == 2 and [f['ticker'] for f in idx['failed']] == ['SHORT'], '資料不足的股票列為失敗')
+        check(idx['requested'] == 3 and idx['updated'] == 2 and idx['failed'] == [], '有資料不足時，其餘成功率仍為 100%')
+        record = idx['insufficient'][0]
+        check(record['ticker'] == 'SHORT' and record['bars'] == 200 and bool(record['checkedAt']), '記錄資料不足的根數與檢查日')
         short = [s for s in idx['symbols'] if s['ticker'] == 'SHORT'][0]; check(not short['fresh'] and short['asof'] == '2026-01-02', '失敗的股票沿用上一次的檔案')
         r = json.loads((out / '2330.TW.json').read_text()); check(r['ticker'] == '2330.TW' and len(r['ranges']) == 3, '台股代號檔名與內容')
         check('v2' in r and 'rank' in r['ranges'][0] and 'score2y' in r['ranges'][0]['candidates'][0] and idx['referenceV2Asof'], '批次輸出含排名、近2年分數、v2')
-        try: br.main(['--tickers', 'SHORT', '--bars-dir', str(bars), '--out', str(out), '--workers', '1']); ok = False
+        br.main(['--tickers', 'SHORT', '--bars-dir', str(bars), '--out', str(out), '--workers', '1'])
+        idx_path = out / 'index.json'
+        before = idx_path.read_text()
+        idx = json.loads(before)
+        check(idx['processed'] == 0 and idx['insufficient'] == [record], '冷卻時保留記錄，完全沒有可重算的股票也能寫 index')
+
+        (bars / 'BROKEN.csv').write_text('unexpected\n1\n')
+        try: br.main(['--tickers', 'BROKEN', 'SHORT', '--bars-dir', str(bars), '--out', str(out), '--workers', '1']); ok = False
         except SystemExit: ok = True
-        check(ok, '成功率低於 50% → 不寫檔並以錯誤結束')
+        check(ok and idx_path.read_text() == before, '真正的錯誤仍觸發低成功率門檻，既有 index 原樣保留')
 
 def test_v2_fields_match_selector_v2_and_ranking():
     df = data.normalize(synth(42)); base = recommend(df, REF, 'TEST')
