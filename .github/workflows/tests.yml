@@ -1,0 +1,56 @@
+name: tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [core, app, recommendations, archive]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install pandas numpy matplotlib pyarrow pytest 'streamlit>=1.51'
+      - name: Install chart fonts
+        if: matrix.group == 'app'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk
+      - name: Run tests
+        env:
+          TEST_GROUP: ${{ matrix.group }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$TEST_GROUP" == archive ]]; then
+            python tests/run_archived_batch_tests.py
+            exit
+          fi
+          for test_file in tests/test_*.py; do
+            case "$test_file" in
+              tests/test_app_*) group=app ;;
+              tests/test_recommend*) group=recommendations ;;
+              *) group=core ;;
+            esac
+            [[ "$group" == "$TEST_GROUP" ]] || continue
+            if [[ "$test_file" == tests/test_window_accounting.py ]]; then
+              python -m pytest -q "$test_file"
+            else
+              python "$test_file"
+            fi
+          done
