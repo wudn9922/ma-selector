@@ -1,5 +1,6 @@
 """scripts/build_recommendations.py 的分批（--shard／--max-missing／--tickers-file／--no-prune）測試；用封存的 bars，不連 Yahoo。
 用法：python tests/test_recommend_shard.py"""
+import datetime as dt
 import json, sys, tempfile, zlib
 from pathlib import Path
 import pandas as pd
@@ -33,6 +34,30 @@ def test_plan():
         todo, b = br.plan(TK, out, (0, 3), -1); check(todo == mine and b['missingAdded'] == 0, '其他批已有檔 → 只算本批')
         todo, b = br.plan(TK, out, None, 0); check(todo == TK and b['shard'] is None, '不分批 → 全部（同過去）')
 
+def test_insufficient_cooldown():
+    with tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp)
+        today = dt.date(2026, 11, 23)
+        mine = [t for t in TK if br.shard_of(t, 3) == 0]
+        others = [t for t in TK if t not in mine]
+        index = out / 'index.json'
+        index.write_text(json.dumps({'symbols': []}))
+        todo, batch = br.plan(TK, out, (0, 3), 1, today=today)
+        check(todo == sorted(mine + others[:1]) and batch['insufficientSkipped'] == 0, '舊 index 沒有 insufficient 仍可分批')
+
+        index.write_text(json.dumps({'insufficient': [
+            dict(ticker=mine[0], bars=100, checkedAt=(today - dt.timedelta(days=89)).isoformat()),
+            dict(ticker=others[0], bars=200, checkedAt=today.isoformat()),
+            dict(ticker=others[1], bars=360, checkedAt=(today - dt.timedelta(days=90)).isoformat()),
+            dict(ticker=others[2], bars=100, checkedAt='invalid-date'),
+        ]}))
+        todo, batch = br.plan(TK, out, (0, 3), 1, today=today)
+        check(todo == sorted(mine[1:] + [others[1]]) and batch['missingAdded'] == 1 and batch['insufficientSkipped'] == 2,
+              '冷卻期同時排除本批與缺檔名額，90 天後可重試')
+        todo, _ = br.plan(TK, out, None, 0, today=today)
+        check(todo == [t for t in TK if t not in (mine[0], others[0])], '全量計算也略過未滿 90 天的股票')
+
+
 def test_batch_end_to_end():
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp); bd, out = tmp / 'bars', tmp / 'out'; _bars(bd)
@@ -41,7 +66,7 @@ def test_batch_end_to_end():
         br.main(['--tickers-file', str(lst), '--bars-dir', str(bd), '--out', str(out), '--workers', '2', '--shard', '1/3', '--max-missing', '0'])
         idx = json.loads((out / 'index.json').read_text())
         check(set(_mtimes(out)) == mine and idx['processed'] == len(mine) and idx['requested'] == len(TK), f'第一批：只產生本批 {len(mine)} 檔；requested＝清單 {len(TK)} 檔')
-        check(idx['refresh'] == dict(shard=1, shards=3, inShard=len(mine), missingAdded=0, missingLeft=len(TK) - len(mine)), f"index.refresh 記錄分批：{idx['refresh']}")
+        check(idx['refresh'] == dict(shard=1, shards=3, inShard=len(mine), missingAdded=0, missingLeft=len(TK) - len(mine), insufficientSkipped=0, insufficientFound=0), f"index.refresh 記錄分批：{idx['refresh']}")
         br.main(['--tickers-file', str(lst), '--bars-dir', str(bd), '--out', str(out), '--workers', '2', '--shard', '2/3', '--max-missing', '-1'])
         t1 = _mtimes(out); idx = json.loads((out / 'index.json').read_text())
         check(set(t1) == set(TK) and len(idx['symbols']) == len(TK), 'shard 2 ＋全部缺檔 → 清單內每檔都有檔案，index 全列')
@@ -58,4 +83,4 @@ def test_batch_end_to_end():
         check(not (out / 'ZZZZ.json').exists() and set(_mtimes(out)) == set(TK), '預設：清單外的舊檔刪除，清單內全保留')
 
 if __name__ == '__main__':
-    test_shard_helpers(); test_plan(); test_batch_end_to_end(); print('ALL PASS')
+    test_shard_helpers(); test_plan(); test_insufficient_cooldown(); test_batch_end_to_end(); print('ALL PASS')

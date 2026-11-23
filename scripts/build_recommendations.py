@@ -3,7 +3,8 @@
 用法：python scripts/build_recommendations.py --from-dir ../data --out ../docs/report/ma-selector [--workers 4] [--bars-dir 快取] [--limit 20]
   --from-dir：用目錄內 *.csv 的檔名當股票清單（略過 ^ 開頭的指數）；--tickers：直接列代號
   --bars-dir：從該目錄讀 <ticker>.csv（time/date,open,high,low,close,volume），沒有才抓 Yahoo 5 年日K
-抓不到或資料不足的股票保留上一次的檔案；成功率 < --min-success（預設 50%）時不寫任何檔案並以錯誤結束。
+抓不到或資料不足的股票保留上一次的檔案。資料不足記入 index.json，90 天內不重抓，也不納入成功率；
+成功率 < --min-success（預設 50%）時不寫任何檔案並以錯誤結束。
 市場：.TW／.TWO 用台股成本（來回 0.585%）與台股基準池 data/reference_tw(_v2).parquet（檔案不存在就退回美股檔，記在 referencePool）；其餘用美股（0.1%、美股基準）。
 hysteresis：讀 --out 裡該檔現有的 <ticker>.json 當 prev（讀不了就當沒有），規則見 core/recommend.py::_hold；設定簽章（scoring／referencePool／adjusted／costPct／kind）不同時不沿用。
 分批（全市場約 7,000 檔時用）：--shard K/N 只重算 crc32(代號) % N == K 的股票，再加上還沒有輸出檔的股票（最多 --max-missing 檔，-1＝全部）；
@@ -17,6 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from core import data, standardize, market
 from core.recommend import recommend, VERSION, HYST_POINTS, scoring_id
 ROOT = Path(__file__).resolve().parents[1]; SAFE = re.compile(r'^[A-Z0-9][A-Z0-9.\-]{0,31}$')
+INSUFFICIENT_COOLDOWN_DAYS = 90
 _POOLS = {}; _BARS = _OUT = None     # _POOLS：{'US'|'TW': (sma 池 dict, v2 池 dict 或 None)}；每個 worker 只載入一次，台股池不存在就與美股共用同一份（不重算）
 
 def _load(path, v2, pool):
@@ -52,10 +54,11 @@ def _bars(tk):
 def work(tk):
     try:
         sma, v2 = _POOLS[market.market_of(tk)]
-        r = recommend(_bars(tk), sma['ref'], tk, reference_asof=sma['meta'].get('asof'), ref_bests=sma['bests'], ref_v2=v2 and v2['ref'], ref_bests_v2=v2 and v2['bests'],
+        bars = _bars(tk)
+        r = recommend(bars, sma['ref'], tk, reference_asof=sma['meta'].get('asof'), ref_bests=sma['bests'], ref_v2=v2 and v2['ref'], ref_bests_v2=v2 and v2['bests'],
                       prev=_prev(tk), ref_pool=sma['pool'], ref_pool_v2=v2 and v2['pool'])
-        return tk, r, None if r else '資料不足'
-    except Exception as e: return tk, None, f'{type(e).__name__}: {e}'[:200]
+        return tk, r, None, None if r else len(bars)
+    except Exception as e: return tk, None, f'{type(e).__name__}: {e}'[:200], None
 
 def tickers_from(a):
     tks = list(a.tickers or [])
@@ -73,13 +76,48 @@ def parse_shard(v):
     if not (n >= 1 and 0 <= k < n): raise ValueError(f'--shard 必須是 K/N 且 0 ≤ K < N，得到 {v!r}')
     return k, n
 
-def plan(tks, out, shard, max_missing):
-    """→ (這次要算的代號, 分批資訊 dict)。shard=None → 全部"""
-    if shard is None: return tks, dict(shard=None, shards=1, inShard=len(tks), missingAdded=0, missingLeft=0)
-    k, n = shard; mine = [t for t in tks if shard_of(t, n) == k]; mset = set(mine)
-    missing = [t for t in tks if t not in mset and not (out / f'{t}.json').exists()]
+def load_insufficient(out):
+    try:
+        index = json.loads((out / 'index.json').read_text())
+    except (OSError, ValueError):
+        return {}
+    records = index.get('insufficient') if isinstance(index, dict) else None
+    if not isinstance(records, list):
+        return {}
+    result = {}
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        ticker, bars, checked_at = (record.get(key) for key in ('ticker', 'bars', 'checkedAt'))
+        if not isinstance(ticker, str) or not SAFE.fullmatch(ticker) or type(bars) is not int or bars < 0:
+            continue
+        try:
+            checked_date = dt.date.fromisoformat(checked_at)
+        except (TypeError, ValueError):
+            continue
+        result[ticker] = dict(ticker=ticker, bars=bars, checkedAt=checked_date.isoformat())
+    return result
+
+
+def plan(tks, out, shard, max_missing, *, insufficient=None, today=None):
+    """→ (這次要算的代號, 分批資訊 dict)。先略過仍在冷卻期的股票。"""
+    if today is None:
+        today = dt.datetime.now(dt.timezone.utc).date()
+    if insufficient is None:
+        insufficient = load_insufficient(out)
+    cooling = {
+        ticker for ticker, record in insufficient.items()
+        if 0 <= (today - dt.date.fromisoformat(record['checkedAt'])).days < INSUFFICIENT_COOLDOWN_DAYS
+    }
+    eligible = [ticker for ticker in tks if ticker not in cooling]
+    skipped = len(tks) - len(eligible)
+    if shard is None:
+        return eligible, dict(shard=None, shards=1, inShard=len(eligible), missingAdded=0, missingLeft=0, insufficientSkipped=skipped)
+    k, n = shard; mine = [t for t in eligible if shard_of(t, n) == k]; mset = set(mine)
+    missing = [t for t in eligible if t not in mset and not (out / f'{t}.json').exists()]
     add = missing if max_missing < 0 else missing[:max_missing]; aset = set(add)
-    return [t for t in tks if t in mset or t in aset], dict(shard=k, shards=n, inShard=len(mine), missingAdded=len(add), missingLeft=len(missing) - len(add))
+    return [t for t in eligible if t in mset or t in aset], dict(shard=k, shards=n, inShard=len(mine), missingAdded=len(add),
+                                                              missingLeft=len(missing) - len(add), insufficientSkipped=skipped)
 
 def main(argv=None):
     ap = argparse.ArgumentParser(); ap.add_argument('--tickers', nargs='*'); ap.add_argument('--from-dir'); ap.add_argument('--out', default='out/recommendations')
@@ -87,16 +125,27 @@ def main(argv=None):
     ap.add_argument('--tickers-file'); ap.add_argument('--shard'); ap.add_argument('--max-missing', type=int, default=-1); ap.add_argument('--no-prune', action='store_true')
     a = ap.parse_args(argv); tks = tickers_from(a)
     if not tks: sys.exit('沒有股票清單（--tickers、--tickers-file 或 --from-dir）')
-    out = Path(a.out); todo, batch = plan(tks, out, parse_shard(a.shard), a.max_missing)
+    out = Path(a.out)
+    today = dt.datetime.now(dt.timezone.utc).date()
+    insufficient = load_insufficient(out)
+    todo, batch = plan(tks, out, parse_shard(a.shard), a.max_missing, insufficient=insufficient, today=today)
     print(f'清單 {len(tks)} 檔；這次重算 {len(todo)} 檔（分批 {batch}）', flush=True)
-    t0 = time.time(); results = {}; errors = {}
+    t0 = time.time(); results = {}; errors = {}; insufficient_found = 0
     if todo:
         with ProcessPoolExecutor(max(1, a.workers), initializer=_init, initargs=(a.bars_dir, a.out)) as ex:
-            for i, (tk, r, err) in enumerate(ex.map(work, todo, chunksize=4), 1):
-                if r: results[tk] = r
-                else: errors[tk] = err
-                if i % 50 == 0 or i == len(todo): print(f'{i}/{len(todo)} 成功 {len(results)} 失敗 {len(errors)}（{time.time() - t0:.0f}s）', flush=True)
-    if len(results) < a.min_success * len(todo): sys.exit(f'成功 {len(results)}/{len(todo)} 低於 {a.min_success:.0%}，不寫檔')
+            for i, (tk, r, err, bars) in enumerate(ex.map(work, todo, chunksize=4), 1):
+                if r:
+                    results[tk] = r
+                    insufficient.pop(tk, None)
+                elif bars is not None:
+                    insufficient[tk] = dict(ticker=tk, bars=bars, checkedAt=today.isoformat())
+                    insufficient_found += 1
+                else:
+                    errors[tk] = err
+                if i % 50 == 0 or i == len(todo): print(f'{i}/{len(todo)} 成功 {len(results)} 失敗 {len(errors)} 資料不足 {insufficient_found}（{time.time() - t0:.0f}s）', flush=True)
+    attempted = len(results) + len(errors)
+    if len(results) < a.min_success * attempted: sys.exit(f'成功 {len(results)}/{attempted} 低於 {a.min_success:.0%}，不寫檔')
+    batch['insufficientFound'] = insufficient_found
     out.mkdir(parents=True, exist_ok=True)
     for tk, r in results.items(): (out / f'{tk}.json').write_text(json.dumps(r, ensure_ascii=False, separators=(',', ':')))
     keep = set(tks)
@@ -113,7 +162,9 @@ def main(argv=None):
     asof = lambda name: json.loads((ROOT / 'data' / name).read_text()).get('asof') if (ROOT / 'data' / name).exists() else None
     index = dict(version=VERSION, kind='SMA', generatedAt=dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'), referenceAsof=asof('reference.json'), referenceAsofTW=asof('reference_tw.json'),
                  referenceV2Asof=asof('reference_v2.json'), costPct={m: round(c * 100, 4) for m, c in market.COSTS.items()}, scoring=scoring_id(), hystPoints=HYST_POINTS,
-                 requested=len(tks), processed=len(todo), updated=len(results), refresh=batch, symbols=symbols, failed=[dict(ticker=k, reason=v) for k, v in sorted(errors.items())])
+                 requested=len(tks), processed=len(todo), updated=len(results), refresh=batch, symbols=symbols,
+                 failed=[dict(ticker=k, reason=v) for k, v in sorted(errors.items())],
+                 insufficient=[record for tk, record in sorted(insufficient.items()) if a.no_prune or tk in keep])
     (out / 'index.json').write_text(json.dumps(index, ensure_ascii=False, separators=(',', ':')))
     print(f'寫入 {out}：更新 {len(results)}、沿用舊檔 {len(symbols) - len(results)}、失敗 {len(errors)}（{time.time() - t0:.0f}s）')
 
